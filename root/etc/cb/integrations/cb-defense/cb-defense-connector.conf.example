@@ -1,0 +1,49 @@
+[general]
+
+#
+# Template for syslog output.
+# This is a jinja 2 template
+# NOTE: The source variable corresponds to the Cb Defense Server used to retrieve results
+#
+template = {{source}}|{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
+
+#
+# Specify a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog
+#
+ca_cert = /etc/cb/integrations/cb-defense/cert.pem
+
+#
+# Specify a host to send notifications from all Cb Defense Servers
+#
+tcp_tls_host = localhost
+
+#
+# Specify the port to send notifications
+#
+tcp_tls_port = 8888
+
+[cbdefenseserver1]
+
+#
+# Cb Defense Connector ID
+#
+connector_id = F8KFGNF100
+
+#
+# Cb Defense API Key
+#
+api_key = WT9T3QDP4UGCK2NS96999999
+
+#
+# Cb Defense Server URL
+# NOTE: this is not the url to the web ui, but to the url of sensor checkins
+#
+server_url = https://server.yourcompany.com
+
+#
+# For more than one Cb Defense Servers, add another server using the following template including the stanza
+#
+#[cbdefenseserver2]
+#connector_id = F8KFGNFVS6
+#api_key = WT9T3QDP4UGCK2NS96JSGTDZ
+#server_url = https://server.yourcompany.com
