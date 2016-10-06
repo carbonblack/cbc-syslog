@@ -24,7 +24,7 @@ logger.addHandler(syslog_handler)
 
 def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
 
-    logger.info("Attempting to connect to url: ", url)
+    logger.info("Attempting to connect to url: " + url)
 
     #
     # First we need to create a session
@@ -38,9 +38,11 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
         return None
 
     json_response = response.json()
-    #
-    # TODO got 'error':'forbidden' handle this error
-    #
+
+    if u'sessionId' not in json_response:
+        logger.error("Error: Session creation failed")
+        return None
+
     notification_data = {'apiKey': api_key, 'sessionId': str(json_response[u'sessionId'])}
 
     #
@@ -95,7 +97,7 @@ def send_syslog_tls(server_url, port, data):
     client_socket.close()
 
 
-def parse_cb_defense_response(response):
+def parse_cb_defense_response(response, source):
     version = 'CEF:0'
     vendor = 'Confer'
     product = 'Confer_Syslog_Connector'
@@ -194,7 +196,8 @@ def parse_cb_defense_response(response):
                                  'signature': signature,
                                  'name': name,
                                  'severity': severity,
-                                 'extension': extension})
+                                 'extension': extension,
+                                 'source': source})
     return log_messages
 
 
@@ -245,6 +248,7 @@ def verify_config_parse_servers():
             server['server_url'] = config.get(section, 'server_url')
             server['connector_id'] = config.get(section, 'connector_id')
             server['api_key'] = config.get(section, 'api_key')
+            server['source'] = section
             server_list.append(server)
         else:
             logger.error("The {} section does not contain the necessary arguments".format(section))
@@ -280,14 +284,19 @@ def main():
     for server in server_list:
         logger.info("Handling notifications for {}".format(server.get('server_url')))
 
+
         if args.debug:
             p = json.dumps(test_data)
             json_response = json.loads(p)
         else:
             response = cb_defense_server_request(server.get('server_url'),
-                                                 server.get('defense_api_key'),
+                                                 server.get('api_key'),
                                                  server.get('connector_id'),
                                                  False)
+
+            if not response:
+                logger.error("Error: got no response from Cb Defense Server")
+                sys.exit(-1)
 
             #
             # perform fixups
@@ -295,14 +304,11 @@ def main():
             response = fix_response(response.content)
             json_response = json.loads(response)
 
-            if not response:
-                logger.error("Error: got no response from Cb Defense Server")
-                sys.exit(-1)
 
         #
         # parse the Cb Defense Response and get a list of log messages to send to tcp_tls_host:tcp_tls_port
         #
-        log_messages = parse_cb_defense_response(json_response)
+        log_messages = parse_cb_defense_response(json_response, server.get('source', ''))
         if not log_messages:
             logger.info("There are no messages to forward to tcp+tls host")
             sys.exit(0)
@@ -319,6 +325,7 @@ def main():
             send_syslog_tls(config.get('general', 'tcp_tls_host'),
                             int(config.get('general', 'tcp_tls_port')),
                             template.render(log))
+            print template.render(log)
 
 
 if __name__ == "__main__":
