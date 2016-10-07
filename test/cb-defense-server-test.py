@@ -59,7 +59,10 @@ def tcp_tls_server():
 def main():
     tcp_server = FuncThread(tcp_tls_server)
     tcp_server.start()
-    app.run()
+    #
+    # Default port is 5000
+    #
+    app.run(host='0.0.0.0')
 
 if __name__ == "__main__":
     main()
