@@ -284,26 +284,20 @@ def main():
     for server in server_list:
         logger.info("Handling notifications for {}".format(server.get('server_url')))
 
+        response = cb_defense_server_request(server.get('server_url'),
+                                             server.get('api_key'),
+                                             server.get('connector_id'),
+                                             False)
 
-        if args.debug:
-            p = json.dumps(test_data)
-            json_response = json.loads(p)
-        else:
-            response = cb_defense_server_request(server.get('server_url'),
-                                                 server.get('api_key'),
-                                                 server.get('connector_id'),
-                                                 False)
+        if not response:
+            logger.error("Error: got no response from Cb Defense Server")
+            sys.exit(-1)
 
-            if not response:
-                logger.error("Error: got no response from Cb Defense Server")
-                sys.exit(-1)
-
-            #
-            # perform fixups
-            #
-            response = fix_response(response.content)
-            json_response = json.loads(response)
-
+        #
+        # perform fixups
+        #
+        response = fix_response(response.content)
+        json_response = json.loads(response)
 
         #
         # parse the Cb Defense Response and get a list of log messages to send to tcp_tls_host:tcp_tls_port
@@ -330,7 +324,6 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config-file', help="Absolute path to configuration file")
-    parser.add_argument('--debug', action="store_true")
     parser.add_argument('--log-file', help="Log file location")
 
     global args
@@ -343,10 +336,6 @@ if __name__ == "__main__":
         file_handler = logging.FileHandler(args.log_file)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
-
-    if args.debug:
-        from test_data import test_data
-        logger.info("Debug mode enabled")
 
     try:
         main()
