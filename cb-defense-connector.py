@@ -325,7 +325,6 @@ def main():
             send_syslog_tls(config.get('general', 'tcp_tls_host'),
                             int(config.get('general', 'tcp_tls_port')),
                             template.render(log))
-            print template.render(log)
 
 
 if __name__ == "__main__":

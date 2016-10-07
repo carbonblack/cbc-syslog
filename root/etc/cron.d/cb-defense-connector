@@ -1,0 +1,20 @@
+# This file defines the schedule for Carbon Black Enterprise Server's maintenance jobs
+#
+# This file is sourced from /etc/cb/cron/cb.cron.template each time CB Enterprise is started.
+# If you would like to make changes to the crontab, please make sure they are reflected in
+# /etc/cb/cron/cb.cron.template as /etc/cron.d/cb will be overwritten as part of the
+# CB Enterprise startup process.
+
+# Cron job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+
+#
+# Uncomment to enable the cb-defense-connector with cron
+#
+#  0  *  *  *  * cb /usr/share/cb/integrations/cb-defense/cb-defense-connector --config-file /etc/cb/integrations/cb-defense/cb-defense-connector.conf --log-file /var/log/cb/cb-defense-connector.log
