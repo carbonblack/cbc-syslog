@@ -11,7 +11,7 @@
 2. Install the rpm:
 
     ```
-    rpm -ivh python-cb-yara-manager-1.0-1.x86_64.rpm
+    rpm -ivh python-cb-defense-connector-1.0-0.x86_64.rpm
     ```
 
 3. Copy the example config file:
