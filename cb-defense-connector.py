@@ -99,8 +99,8 @@ def send_syslog_tls(server_url, port, data):
 
 def parse_cb_defense_response(response, source):
     version = 'CEF:0'
-    vendor = 'Confer'
-    product = 'Confer_Syslog_Connector'
+    vendor = 'CarbonBlack'
+    product = 'CbDefense_Syslog_Connector'
     dev_version = '2.0'
     splitDomain = True
 
@@ -212,14 +212,21 @@ def verify_config_parse_servers():
         logger.error('Error: A tcp_tls_host is required in the general stanza')
         sys.exit(-1)
     if not config.get('general', 'tcp_tls_port'):
-        logger.error('Error: A tcp_tls_port isrequired in the general stanza')
+        logger.error('Error: A tcp_tls_port is required in the general stanza')
         sys.exit(-1)
     if not config.get('general', 'template'):
         logger.error('Error: A template is required in the general stanza')
         sys.exit(-1)
     if not config.get('general', 'ca_cert'):
-        logger.error('Error: A ca_cert is required in general stanza')
-        sys.exit(-1)
+        #
+        # A ca_cert is not required
+        #
+        config.set('general', 'ca_cert', '')
+        #
+        # Warn the user that certificate verification will not occur
+        #
+        logger.warning('Warning: A ca_cert was not found.  The remote tcp server certificate can NOT be verified')
+
 
     #
     # Sanity check the port
@@ -241,11 +248,17 @@ def verify_config_parse_servers():
             # ignore the general section
             #
             continue
-        if config.has_option(section,'server_url') and \
-                config.has_option(section,'connector_id') and \
+        if config.has_option(section, 'server_url') and \
+                config.has_option(section, 'connector_id') and \
                 config.has_option(section, 'api_key'):
 
+            if not config.get(section,'server_url').startswith('http'):
+                logger.error('Error: Stanza {} server_url entry does not start with http or https'.format(section))
+                logger.error('Error: Example: https://server.yourcompany.com')
+                sys.exit(-1)
+
             server['server_url'] = config.get(section, 'server_url')
+
             server['connector_id'] = config.get(section, 'connector_id')
             server['api_key'] = config.get(section, 'api_key')
             server['source'] = section
