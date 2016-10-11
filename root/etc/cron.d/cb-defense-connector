@@ -17,4 +17,4 @@
 #
 # Uncomment to enable the cb-defense-connector with cron
 #
-#  0  *  *  *  * cb /usr/share/cb/integrations/cb-defense/cb-defense-connector --config-file /etc/cb/integrations/cb-defense/cb-defense-connector.conf --log-file /var/log/cb/cb-defense-connector.log
+#  0  *  *  *  * daemon /usr/share/cb/integrations/cb-defense/cb-defense-connector --config-file /etc/cb/integrations/cb-defense/cb-defense-connector.conf --log-file /var/log/cb/cb-defense-connector.log
