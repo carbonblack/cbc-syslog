@@ -8,9 +8,19 @@
 template = {{source}}|{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
 
 #
+# Specify whether to use TLS over TCP connection.  If false, then the connector will use unencrypted tcp connection
+#
+tls_enabled = true
+
+#
 # Specify a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog
 #
 ca_cert = /etc/cb/integrations/cb-defense/cert.pem
+
+#
+# Uncomment tls_verify and set to "false" in order to disable verification of the peer server certificate
+#
+tls_verify = true
 
 #
 # Specify a host to send notifications from all Cb Defense Servers
@@ -22,17 +32,17 @@ tcp_tls_host = localhost
 #
 tcp_tls_port = 8888
 
-[cbdefenseserver1]
+[cbdefense1]
 
 #
 # Cb Defense Connector ID
 #
-connector_id = F8KFGNF100
+connector_id = F8KF111111
 
 #
 # Cb Defense API Key
 #
-api_key = WT9T3QDP4UGCK2NS96999999
+api_key = WT9T3QDP4UGCK2NS96111111
 
 #
 # Cb Defense Server URL
@@ -41,9 +51,10 @@ api_key = WT9T3QDP4UGCK2NS96999999
 server_url = https://server.yourcompany.com
 
 #
-# For more than one Cb Defense Servers, add another server using the following template including the stanza
+# For more than one Cb Defense Server, add another server using the following template including the stanza
 #
 #[cbdefenseserver2]
-#connector_id = F8KFGNFVS6
-#api_key = WT9T3QDP4UGCK2NS96JSGTDZ
-#server_url = https://server.yourcompany.com
+#connector_id = F8KF111111
+#api_key = WT9T3QDP4UGCK2NS96111111
+#server_url = https://server2.yourcompany.com
+

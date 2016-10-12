@@ -88,10 +88,20 @@ def fix_response(data):
 def send_syslog_tls(server_url, port, data):
 
     unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket = ssl.wrap_socket(unsecured_client_socket,
-                                    ca_certs=config.get('general', 'ca_cert'),
-                                    cert_reqs=ssl.CERT_REQUIRED,
-                                    ssl_version=ssl.PROTOCOL_TLSv1)
+
+    if config.getboolean('general', 'tls_verify'):
+        cert_reqs = ssl.CERT_REQUIRED
+    else:
+        cert_reqs = ssl.CERT_NONE
+
+    if config.getboolean('general', 'tls_enabled'):
+        client_socket = ssl.wrap_socket(unsecured_client_socket,
+                                        ca_certs=config.get('general', 'ca_cert'),
+                                        cert_reqs=cert_reqs,
+                                        ssl_version=ssl.PROTOCOL_TLSv1)
+    else:
+        client_socket = unsecured_client_socket
+
     client_socket.connect((server_url, port))
     client_socket.send(data)
     client_socket.close()
@@ -208,34 +218,47 @@ def verify_config_parse_servers():
     #
     # Sanity check the general stanza this includes the tcp/tls host, port, template, and cert
     #
-    if not config.get('general', 'tcp_tls_host'):
+    if not config.has_option('general', 'tcp_tls_host'):
         logger.error('Error: A tcp_tls_host is required in the general stanza')
         sys.exit(-1)
-    if not config.get('general', 'tcp_tls_port'):
+    if not config.has_option('general', 'tcp_tls_port'):
         logger.error('Error: A tcp_tls_port is required in the general stanza')
         sys.exit(-1)
-    if not config.get('general', 'template'):
+    if not config.has_option('general', 'template'):
         logger.error('Error: A template is required in the general stanza')
         sys.exit(-1)
-    if not config.get('general', 'ca_cert'):
-        #
-        # A ca_cert is not required
-        #
-        config.set('general', 'ca_cert', '')
-        #
-        # Warn the user that certificate verification will not occur
-        #
-        logger.warning('Warning: A ca_cert was not found.  The remote tcp server certificate can NOT be verified')
-
+    if not config.has_option('general', 'ca_cert'):
+        logger.error("Error: Must specify ca_cert file path in the general stanza")
+        sys.exit(-1)
+    if not config.has_option('general', 'tls_enabled'):
+        logger.error("Error: Must specify tls_enabled in the general stanza")
+        sys.exit(-1)
+    if not config.has_option('general', 'tls_verify'):
+        logger.error("Error: Must specify tls_verify in config file")
+        sys.exit(-1)
 
     #
     # Sanity check the port
     #
     try:
-        int(config.get('general', 'tcp_tls_port'))
-    except Exception as e:
+        config.getint('general', 'tcp_tls_port')
+    except ValueError as e:
         logger.error(e.message)
         logger.error("Error: tcp_tls_port must be an integer")
+        sys.exit(-1)
+
+    try:
+        config.getboolean('general', 'tls_enabled')
+    except ValueError as e:
+        logger.error(e.message)
+        logger.error("Error: tls_enabled must be either true or false")
+        sys.exit(-1)
+
+    try:
+        config.getboolean('general', 'tls_verify')
+    except ValueError as e:
+        logger.error(e.message)
+        logger.error("Error: tls_verify must be either true or false")
         sys.exit(-1)
 
     #
