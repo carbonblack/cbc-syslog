@@ -21,7 +21,7 @@ def notification():
     #
     # Yes str vs json since this emulates what the Cb Defense returns
     #
-    return str(test_data)
+    return Flask.jsonify(test_data)
 
 
 class FuncThread(threading.Thread):

@@ -8,29 +8,50 @@
 template = {{source}}|{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
 
 #
+# Configure the specific output.
+# Valid options are: 'udp', 'tcp', 'tcp+tls'
+#
+#  udp     - Have the events sent over a UDP socket
+#  tcp     - Have the events sent over a TCP socket
+#  tcp+tls - Have the events sent over a TLS+TCP socket
+#
+output_type=tcp
+
+#
+# tcpout=IP:port - ie 1.2.3.5:8080
+#
+tcp_out=
+
+#
+# udpout=IP:port - ie 1.2.3.5:8080
+#
+udp_out=
+
+[tls]
+#
 # Specify whether to use TLS over TCP connection.  If false, then the connector will use unencrypted tcp connection
 #
-tls_enabled = true
+#tls_enabled = true
 
 #
 # Specify a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog
 #
-ca_cert = /etc/cb/integrations/cb-defense/cert.pem
+#ca_cert = /etc/cb/integrations/cb-defense/cert.pem
 
 #
 # Uncomment tls_verify and set to "false" in order to disable verification of the peer server certificate
 #
-tls_verify = true
+#tls_verify = true
 
 #
 # Specify a host to send notifications from all Cb Defense Servers
 #
-tcp_tls_host = localhost
+#tcp_tls_host = localhost
 
 #
 # Specify the port to send notifications
 #
-tcp_tls_port = 8888
+#tcp_tls_port = 8888
 
 [cbdefense1]
 
