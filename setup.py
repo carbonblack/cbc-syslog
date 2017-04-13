@@ -144,7 +144,7 @@ scripts = {
 
 setup(
     name='python-cb-defense-connector',
-    version='1.0',
+    version='1.2',
     packages=[],
     url='https://github.com/carbonblack/cb-defense-connector',
     license='MIT',
