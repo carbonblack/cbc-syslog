@@ -244,21 +244,21 @@ def verify_config_parse_servers():
         #
         # User has specified tcp.  So no TLS.
         #
-        if not config.has_option('general', 'tcpout'):
+        if not config.has_option('general', 'tcp_out'):
             logger.error('tcpout parameter is required for tcp output_type')
             sys.exit(-1)
-        output_params['output_host'] = config.get('general', 'tcpout').strip().split(":")[0]
-        output_params['output_port'] = int(config.get('general', 'tcpout').strip().split(':')[1])
+        output_params['output_host'] = config.get('general', 'tcp_out').strip().split(":")[0]
+        output_params['output_port'] = int(config.get('general', 'tcp_out').strip().split(':')[1])
     elif output_type == 'udp':
 
         #
         # User specified udp out
         #
-        if not config.has_option('general', 'udpout'):
+        if not config.has_option('general', 'udp_out'):
             logger.error('udpout parameter is required for udp output_type')
             sys.exit(-1)
-        output_params['output_host'] = config.get('general', 'udpout').strip().split(":")[0]
-        output_params['output_port'] = int(config.get('general', 'udpout').strip().split(':')[1])
+        output_params['output_host'] = config.get('general', 'udp_out').strip().split(":")[0]
+        output_params['output_port'] = int(config.get('general', 'udp_out').strip().split(':')[1])
     elif output_type == 'tcp+tls':
 
         #
@@ -353,7 +353,7 @@ def main():
         # perform fixups
         #
         #response = fix_response(response.content)
-        json_response = json.loads(response)
+        json_response = json.loads(response.content)
 
         #
         # parse the Cb Defense Response and get a list of log messages to send to tcp_tls_host:tcp_tls_port
