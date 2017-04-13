@@ -11,11 +11,11 @@ import time
 import logging
 import logging.handlers
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
 
 def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
 
@@ -25,6 +25,7 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
     # First we need to create a session
     #
     session_data = {'apiKey': api_key, 'connectorId': connector_id}
+    logger.info("connectorID = {}".format(connector_id))
     try:
         response = requests.post(url + '/integrationServices/v2/session', json=session_data, timeout=15, verify=False)
         logger.info(response)
@@ -37,6 +38,8 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
     if u'sessionId' not in json_response:
         logger.error("Session creation failed")
         return None
+
+    logger.info("sessionId = {}".format(str(json_response[u'sessionId'])))
 
     notification_data = {'apiKey': api_key, 'sessionId': str(json_response[u'sessionId'])}
 
@@ -245,7 +248,7 @@ def verify_config_parse_servers():
         # User has specified tcp.  So no TLS.
         #
         if not config.has_option('general', 'tcp_out'):
-            logger.error('tcpout parameter is required for tcp output_type')
+            logger.error('tcp_out parameter is required for tcp output_type')
             sys.exit(-1)
         output_params['output_host'] = config.get('general', 'tcp_out').strip().split(":")[0]
         output_params['output_port'] = int(config.get('general', 'tcp_out').strip().split(':')[1])
@@ -276,8 +279,8 @@ def verify_config_parse_servers():
             logger.error(e.message)
             logger.error("tls_verify must be either true or false")
             sys.exit(-1)
-        output_params['output_host'] = config.get('general', 'tcpout').strip().split(":")[0]
-        output_params['output_port'] = int(config.get('general', 'tcpout').strip().split(':')[1])
+        output_params['output_host'] = config.get('general', 'tcp_out').strip().split(":")[0]
+        output_params['output_port'] = int(config.get('general', 'tcp_out').strip().split(':')[1])
 
     #
     # Parse out multiple servers
@@ -353,6 +356,7 @@ def main():
         # perform fixups
         #
         #response = fix_response(response.content)
+        logger.info(response.content)
         json_response = json.loads(response.content)
 
         #
