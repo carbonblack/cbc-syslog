@@ -11,16 +11,11 @@ import time
 import logging
 import logging.handlers
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-syslog_handler = logging.handlers.SysLogHandler(address='/dev/log')
-syslog_handler.setFormatter(formatter)
-
-logger.addHandler(syslog_handler)
-
 
 def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
 
@@ -30,6 +25,7 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
     # First we need to create a session
     #
     session_data = {'apiKey': api_key, 'connectorId': connector_id}
+    logger.info("connectorID = {}".format(connector_id))
     try:
         response = requests.post(url + '/integrationServices/v2/session', json=session_data, timeout=15, verify=False)
         logger.info(response)
@@ -40,8 +36,10 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
     json_response = response.json()
 
     if u'sessionId' not in json_response:
-        logger.error("Error: Session creation failed")
+        logger.error("Session creation failed")
         return None
+
+    logger.info("sessionId = {}".format(str(json_response[u'sessionId'])))
 
     notification_data = {'apiKey': api_key, 'sessionId': str(json_response[u'sessionId'])}
 
@@ -74,38 +72,51 @@ def parse_config():
         return config
 
 
-def fix_response(data):
-    data = data.replace('None,', 'null,')
-    data = re.sub(r"ime': (\d+)L", r"ime': \1", data)
-    data = data.replace("True", "true")
-    data = data.replace("False", "false")
-    data = data.replace("u'", "'")
-    data = data.replace("\n", "")
-    data = data.replace("'", "\"")
-    return data
+def send_syslog_tls(server_url, port, data, output_type):
 
+    if output_type == 'tcp+tls':
+        unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-def send_syslog_tls(server_url, port, data):
+        try:
 
-    unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if config.getboolean('tls', 'tls_verify'):
+                cert_reqs = ssl.CERT_REQUIRED
+            else:
+                cert_reqs = ssl.CERT_NONE
 
-    if config.getboolean('general', 'tls_verify'):
-        cert_reqs = ssl.CERT_REQUIRED
-    else:
-        cert_reqs = ssl.CERT_NONE
+            client_socket = ssl.wrap_socket(unsecured_client_socket,
+                                            ca_certs=config.get('tls', 'ca_cert'),
+                                            cert_reqs=cert_reqs,
+                                            ssl_version=ssl.PROTOCOL_TLSv1)
 
-    if config.getboolean('general', 'tls_enabled'):
-        client_socket = ssl.wrap_socket(unsecured_client_socket,
-                                        ca_certs=config.get('general', 'ca_cert'),
-                                        cert_reqs=cert_reqs,
-                                        ssl_version=ssl.PROTOCOL_TLSv1)
-    else:
+            client_socket.connect((server_url, port))
+            client_socket.send(data)
+        except Exception as e:
+            logger.error(e.message)
+        finally:
+            client_socket.close()
+
+    elif output_type == 'tcp':
+        unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
         client_socket = unsecured_client_socket
 
-    client_socket.connect((server_url, port))
-    client_socket.send(data)
-    client_socket.close()
+        try:
+            client_socket.connect((server_url, port))
+            client_socket.send(data)
+        except Exception as e:
+            logger.error(e.message)
+        finally:
+            client_socket.close()
 
+    elif output_type == 'udp':
+        unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            unsecured_client_socket.sendto(data, (server_url, port))
+        except Exception as e:
+            logger.error(e.message)
+        finally:
+            unsecured_client_socket.close()
 
 def parse_cb_defense_response(response, source):
     version = 'CEF:0'
@@ -212,61 +223,71 @@ def parse_cb_defense_response(response, source):
 
 
 def verify_config_parse_servers():
+    """
+    Validate configuration parameters
+    """
 
+    output_params = {}
     server_list = []
 
-    #
-    # Sanity check the general stanza this includes the tcp/tls host, port, template, and cert
-    #
-    if not config.has_option('general', 'tcp_tls_host'):
-        logger.error('Error: A tcp_tls_host is required in the general stanza')
-        sys.exit(-1)
-    if not config.has_option('general', 'tcp_tls_port'):
-        logger.error('Error: A tcp_tls_port is required in the general stanza')
-        sys.exit(-1)
     if not config.has_option('general', 'template'):
-        logger.error('Error: A template is required in the general stanza')
-        sys.exit(-1)
-    if not config.has_option('general', 'ca_cert'):
-        logger.error("Error: Must specify ca_cert file path in the general stanza")
-        sys.exit(-1)
-    if not config.has_option('general', 'tls_enabled'):
-        logger.error("Error: Must specify tls_enabled in the general stanza")
-        sys.exit(-1)
-    if not config.has_option('general', 'tls_verify'):
-        logger.error("Error: Must specify tls_verify in config file")
+        logger.error('A template is required in the general stanza')
         sys.exit(-1)
 
-    #
-    # Sanity check the port
-    #
-    try:
-        config.getint('general', 'tcp_tls_port')
-    except ValueError as e:
-        logger.error(e.message)
-        logger.error("Error: tcp_tls_port must be an integer")
+    if not config.has_option('general', 'output_type'):
+        logger.error('An output_type is required in the general stanza')
         sys.exit(-1)
 
-    try:
-        config.getboolean('general', 'tls_enabled')
-    except ValueError as e:
-        logger.error(e.message)
-        logger.error("Error: tls_enabled must be either true or false")
+    output_type = config.get('general', 'output_type')
+    if output_type not in ['tcp', 'udp', 'tcp+tls']:
+        logger.error('output_type is invalid.  Must be tcp, udp, or tcp+tls')
         sys.exit(-1)
 
-    try:
-        config.getboolean('general', 'tls_verify')
-    except ValueError as e:
-        logger.error(e.message)
-        logger.error("Error: tls_verify must be either true or false")
-        sys.exit(-1)
+    if output_type == 'tcp':
+        #
+        # User has specified tcp.  So no TLS.
+        #
+        if not config.has_option('general', 'tcp_out'):
+            logger.error('tcp_out parameter is required for tcp output_type')
+            sys.exit(-1)
+        output_params['output_host'] = config.get('general', 'tcp_out').strip().split(":")[0]
+        output_params['output_port'] = int(config.get('general', 'tcp_out').strip().split(':')[1])
+    elif output_type == 'udp':
+
+        #
+        # User specified udp out
+        #
+        if not config.has_option('general', 'udp_out'):
+            logger.error('udpout parameter is required for udp output_type')
+            sys.exit(-1)
+        output_params['output_host'] = config.get('general', 'udp_out').strip().split(":")[0]
+        output_params['output_port'] = int(config.get('general', 'udp_out').strip().split(':')[1])
+    elif output_type == 'tcp+tls':
+
+        #
+        # User specified TLS tcp
+        #
+        if not config.has_option('tls', 'tls_verify'):
+            logger.error("Must specify tls_verify in config file")
+            sys.exit(-1)
+        if not config.has_option('tls', 'ca_cert'):
+            logger.error("Must specify ca_cert file path in the general stanza")
+            sys.exit(-1)
+        try:
+            config.getboolean('tls', 'tls_verify')
+        except ValueError as e:
+            logger.error(e.message)
+            logger.error("tls_verify must be either true or false")
+            sys.exit(-1)
+        output_params['output_host'] = config.get('general', 'tcp_out').strip().split(":")[0]
+        output_params['output_port'] = int(config.get('general', 'tcp_out').strip().split(':')[1])
 
     #
     # Parse out multiple servers
     #
     for section in config.sections():
         server = {}
-        if section == 'general':
+        if section == 'general' or section == 'tls':
             #
             # ignore the general section
             #
@@ -276,8 +297,8 @@ def verify_config_parse_servers():
                 config.has_option(section, 'api_key'):
 
             if not config.get(section,'server_url').startswith('http'):
-                logger.error('Error: Stanza {} server_url entry does not start with http or https'.format(section))
-                logger.error('Error: Example: https://server.yourcompany.com')
+                logger.error('Stanza {} server_url entry does not start with http or https'.format(section))
+                logger.error('Example: https://server.yourcompany.com')
                 sys.exit(-1)
 
             server['server_url'] = config.get(section, 'server_url')
@@ -290,7 +311,9 @@ def verify_config_parse_servers():
             logger.error("The {} section does not contain the necessary arguments".format(section))
             sys.exit(-1)
 
-    return server_list
+    output_params['output_type'] = config.get('general', 'output_type')
+
+    return output_params, server_list
 
 
 def main():
@@ -303,13 +326,13 @@ def main():
     #
     # verify the config file and get the Cb Defense Server list
     #
-    server_list = verify_config_parse_servers()
+    output_params, server_list = verify_config_parse_servers()
 
     #
     # Error or not, there is nothing to do
     #
     if len(server_list) == 0:
-        logger.info("Error: no configured Cb Defense Servers")
+        logger.info("no configured Cb Defense Servers")
         sys.exit(-1)
 
     logger.info("Found {} Cb Defense Servers in config file".format(len(server_list)))
@@ -326,52 +349,60 @@ def main():
                                              False)
 
         if not response:
-            logger.error("Error: got no response from Cb Defense Server")
+            logger.error("got no response from Cb Defense Server")
             sys.exit(-1)
 
         #
         # perform fixups
         #
-        response = fix_response(response.content)
-        json_response = json.loads(response)
+        #response = fix_response(response.content)
+        logger.info(response.content)
+        json_response = json.loads(response.content)
 
         #
         # parse the Cb Defense Response and get a list of log messages to send to tcp_tls_host:tcp_tls_port
         #
         log_messages = parse_cb_defense_response(json_response, server.get('source', ''))
         if not log_messages:
-            logger.info("There are no messages to forward to tcp+tls host")
+            logger.info("There are no messages to forward to host")
             sys.exit(0)
 
         logger.info("Sending {} messages to {}:{}".format(len(log_messages),
-                                                          config.get('general', 'tcp_tls_host'),
-                                                          config.get('general', 'tcp_tls_port')))
+                                                          output_params['output_host'],
+                                                          output_params['output_port']))
 
         #
         # finally send the messages
         #
         for log in log_messages:
             template = Template(config.get('general', 'template'))
-            send_syslog_tls(config.get('general', 'tcp_tls_host'),
-                            int(config.get('general', 'tcp_tls_port')),
-                            template.render(log))
+            template = Template(config.get('general', 'template'))
+            send_syslog_tls(output_params['output_host'],
+                            output_params['output_port'],
+                            template.render(log),
+                            output_params['output_type'])
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config-file', help="Absolute path to configuration file")
-    parser.add_argument('--log-file', help="Log file location")
+    parser.add_argument('--config-file', '-c', help="Absolute path to configuration file")
+    parser.add_argument('--log-file', '-l', help="Log file location")
 
     global args
     args = parser.parse_args()
     if not args.config_file:
-        logger.error("Error: a config file must be supplied")
+        logger.error("a config file must be supplied")
         sys.exit(-1)
 
     if args.log_file:
         file_handler = logging.FileHandler(args.log_file)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
+    else:
+        syslog_handler = logging.handlers.SysLogHandler(address='/dev/log')
+        syslog_handler.setFormatter(formatter)
+
+        logger.addHandler(syslog_handler)
 
     try:
         main()

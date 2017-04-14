@@ -133,20 +133,20 @@ def get_data_files(rootdir):
     return results
 
 data_files = get_data_files("root")
-data_files.append('cb-defense-connector.spec')
-data_files.append('cb-defense-connector.py')
+data_files.append('cb-defense-syslog.spec')
+data_files.append('cb-defense-syslog.py')
 scripts = {
-    'cb-defense-connector': {
-        'spec': 'cb-defense-connector.spec',
-        'dest': '/usr/share/cb/integrations/cb-defense/cb-defense-connector'
+    'cb-defense-syslog': {
+        'spec': 'cb-defense-syslog.spec',
+        'dest': '/usr/share/cb/integrations/cb-defense-syslog/cb-defense-syslog'
     }
 }
 
 setup(
-    name='python-cb-defense-connector',
-    version='1.0',
+    name='python-cb-defense-syslog',
+    version='1.2',
     packages=[],
-    url='https://github.com/carbonblack/cb-defense-connector',
+    url='https://github.com/carbonblack/cb-defense-syslog-tls',
     license='MIT',
     author='Carbon Black Developer Network',
     author_email='dev-support@carbonblack.com',

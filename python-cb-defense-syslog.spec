@@ -1,12 +1,12 @@
-%define name python-cb-defense-connector
-%define version 1.0
-%define unmangled_version 1.0
+%define name python-cb-defense-syslog
+%define version 1.2
+%define unmangled_version 1.2
 %define release 0
 %global _enable_debug_package 0
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 
-Summary: Cb Defense Connector
+Summary: Cb Defense Syslog
 Name: %{name}
 Version: %{version}
 Release: %{release}
@@ -16,7 +16,7 @@ Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Prefix: %{_prefix}
 BuildArch: x86_64
-Vendor: Carbon Black <support@carbonblack.com>
+Vendor: Carbon Black Developer Network<dev-support@carbonblack.com>
 Url: http://www.carbonblack.com/
 
 %description
@@ -26,7 +26,7 @@ UNKNOWN
 %setup -n %{name}-%{unmangled_version}
 
 %build
-pyinstaller cb-defense-connector.spec
+pyinstaller cb-defense-syslog.spec
 
 %install
 python setup.py install_cb --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
@@ -35,9 +35,9 @@ python setup.py install_cb --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 rm -rf $RPM_BUILD_ROOT
 
 %posttrans
-mkdir -p /usr/share/cb/integrations/cb-defense
-#chkconfig --add cb-defense-connector
-#chkconfig --level 345 cb-defense-connector on
+mkdir -p /usr/share/cb/integrations/cb-defense-syslog
+#chkconfig --add cb-defense-syslog
+#chkconfig --level 345 cb-defense-syslog on
 
 # not auto-starting because conf needs to be updated
 #/etc/init.d/cb-yara-connector start
@@ -47,10 +47,10 @@ mkdir -p /usr/share/cb/integrations/cb-defense
 
 # only delete the chkconfig entry when we uninstall for the last time,
 # not on upgrades
-if [ "X$1" = "X0" ]
-then
-    chkconfig --del cb-defense-connector
-fi
+#if [ "X$1" = "X0" ]
+#then
+#    chkconfig --del cb-defense-syslog
+#fi
 
 %files -f INSTALLED_FILES
 %defattr(-,root,root)
