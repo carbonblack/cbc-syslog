@@ -25,10 +25,13 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
     # First we need to create a session
     #
     session_data = {'apiKey': api_key, 'connectorId': connector_id}
-    logger.info("connectorID = {}".format(connector_id))
+    logger.info("connectorID = {0}".format(connector_id))
     try:
         response = requests.post(url + '/integrationServices/v2/session', json=session_data, timeout=15, verify=False)
         logger.info(response)
+        if response.status_code == 401:
+            logger.warn("Authentication failed check config file for proper Connector ID and API key")
+            sys.exit(1)
     except Exception as e:
         logging.error(e, exc_info=True)
         return None
@@ -39,7 +42,7 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
         logger.error("Session creation failed")
         return None
 
-    logger.info("sessionId = {}".format(str(json_response[u'sessionId'])))
+    logger.info("sessionId = {0}".format(str(json_response[u'sessionId'])))
 
     notification_data = {'apiKey': api_key, 'sessionId': str(json_response[u'sessionId'])}
 
@@ -131,7 +134,7 @@ def parse_cb_defense_response(response, source):
 
         if len(response[u'notifications']) < 1:
             logger.info('successfully connected, no alerts at this time')
-            sys.exit(0)
+            return None
 
         for note in response[u'notifications']:
             if 'type' not in note:
@@ -297,7 +300,7 @@ def verify_config_parse_servers():
                 config.has_option(section, 'api_key'):
 
             if not config.get(section,'server_url').startswith('http'):
-                logger.error('Stanza {} server_url entry does not start with http or https'.format(section))
+                logger.error('Stanza {0} server_url entry does not start with http or https'.format(section))
                 logger.error('Example: https://server.yourcompany.com')
                 sys.exit(-1)
 
@@ -308,7 +311,7 @@ def verify_config_parse_servers():
             server['source'] = section
             server_list.append(server)
         else:
-            logger.error("The {} section does not contain the necessary arguments".format(section))
+            logger.error("The {0} section does not contain the necessary arguments".format(section))
             sys.exit(-1)
 
     output_params['output_type'] = config.get('general', 'output_type')
@@ -327,21 +330,20 @@ def main():
     # verify the config file and get the Cb Defense Server list
     #
     output_params, server_list = verify_config_parse_servers()
-
+    
     #
     # Error or not, there is nothing to do
     #
     if len(server_list) == 0:
         logger.info("no configured Cb Defense Servers")
         sys.exit(-1)
-
-    logger.info("Found {} Cb Defense Servers in config file".format(len(server_list)))
-
+    
+    logger.info("Found {0} Cb Defense Servers in config file".format(len(server_list)))
     #
     # Iterate through our Cb Defense Server list
     #
     for server in server_list:
-        logger.info("Handling notifications for {}".format(server.get('server_url')))
+        logger.info("Handling notifications for {0}".format(server.get('server_url')))
 
         response = cb_defense_server_request(server.get('server_url'),
                                              server.get('api_key'),
@@ -365,19 +367,18 @@ def main():
         log_messages = parse_cb_defense_response(json_response, server.get('source', ''))
         if not log_messages:
             logger.info("There are no messages to forward to host")
-            sys.exit(0)
-
-        logger.info("Sending {} messages to {}:{}".format(len(log_messages),
+        else:
+            logger.info("Sending {0} messages to {1}:{2}".format(len(log_messages),
                                                           output_params['output_host'],
                                                           output_params['output_port']))
 
-        #
-        # finally send the messages
-        #
-        for log in log_messages:
-            template = Template(config.get('general', 'template'))
-            template = Template(config.get('general', 'template'))
-            send_syslog_tls(output_params['output_host'],
+            #
+            # finally send the messages
+            #
+            for log in log_messages:
+                template = Template(config.get('general', 'template'))
+                template = Template(config.get('general', 'template'))
+                send_syslog_tls(output_params['output_host'],
                             output_params['output_port'],
                             template.render(log),
                             output_params['output_type'])
@@ -409,4 +410,5 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(e, exc_info=True)
         sys.exit(-1)
+
 
