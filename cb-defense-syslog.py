@@ -32,6 +32,9 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
         if response.status_code == 401:
             logger.warn("Authentication failed check config file for proper Connector ID and API key")
             sys.exit(1)
+        elif response.status_code != 200:
+            logger.warn("Cb Defense API did not return a Success code. Exiting the loop.")
+            return None 
     except Exception as e:
         logging.error(e, exc_info=True)
         return None
@@ -76,10 +79,10 @@ def parse_config():
 
 
 def send_syslog_tls(server_url, port, data, output_type):
-
+    data += '\n'
     if output_type == 'tcp+tls':
         unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+        
         try:
 
             if config.getboolean('tls', 'tls_verify'):
@@ -351,14 +354,13 @@ def main():
                                              False)
 
         if not response:
-            logger.error("got no response from Cb Defense Server")
-            sys.exit(-1)
+            logger.warn("Received unexpected (or no) response from Cb Defense Server {0}. Proceeding to next connector.".format(server.get('server_url')))
+            continue
 
         #
         # perform fixups
         #
-        #response = fix_response(response.content)
-        logger.info(response.content)
+        logger.debug(response.content)
         json_response = json.loads(response.content)
 
         #
@@ -376,7 +378,6 @@ def main():
             # finally send the messages
             #
             for log in log_messages:
-                template = Template(config.get('general', 'template'))
                 template = Template(config.get('general', 'template'))
                 send_syslog_tls(output_params['output_host'],
                             output_params['output_port'],
