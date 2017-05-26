@@ -79,10 +79,10 @@ def parse_config():
 
 
 def send_syslog_tls(server_url, port, data, output_type):
-
+    data += '\n'
     if output_type == 'tcp+tls':
         unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+        
         try:
 
             if config.getboolean('tls', 'tls_verify'):
@@ -354,7 +354,7 @@ def main():
                                              False)
 
         if not response:
-            logger.warn("Got no response from Cb Defense Server {0}. Proceeding to next connector".format(server.get('server_url')))
+            logger.warn("Received unexpected (or no) response from Cb Defense Server {0}. Proceeding to next connector.".format(server.get('server_url')))
             #sys.exit(-1)
             continue
 
