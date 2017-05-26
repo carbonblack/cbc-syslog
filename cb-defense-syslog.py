@@ -355,7 +355,6 @@ def main():
 
         if not response:
             logger.warn("Received unexpected (or no) response from Cb Defense Server {0}. Proceeding to next connector.".format(server.get('server_url')))
-            #sys.exit(-1)
             continue
 
         #
