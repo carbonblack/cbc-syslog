@@ -32,6 +32,9 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
         if response.status_code == 401:
             logger.warn("Authentication failed check config file for proper Connector ID and API key")
             sys.exit(1)
+        elif response.status_code != 200:
+            logger.warn("Cb Defense API did not return a Success code. Exiting the loop.")
+            return None 
     except Exception as e:
         logging.error(e, exc_info=True)
         return None
@@ -351,8 +354,9 @@ def main():
                                              False)
 
         if not response:
-            logger.error("Got no response from Cb Defense Server {0}".format(server.get('server_url')))
-            sys.exit(-1)
+            logger.warn("Got no response from Cb Defense Server {0}. Proceeding to next connector".format(server.get('server_url')))
+            #sys.exit(-1)
+            continue
 
         #
         # perform fixups
