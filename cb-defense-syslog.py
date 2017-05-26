@@ -351,14 +351,13 @@ def main():
                                              False)
 
         if not response:
-            logger.error("got no response from Cb Defense Server")
+            logger.error("Got no response from Cb Defense Server {0}".format(server.get('server_url')))
             sys.exit(-1)
 
         #
         # perform fixups
         #
-        #response = fix_response(response.content)
-        logger.info(response.content)
+        logger.debug(response.content)
         json_response = json.loads(response.content)
 
         #
