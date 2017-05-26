@@ -380,7 +380,6 @@ def main():
             #
             for log in log_messages:
                 template = Template(config.get('general', 'template'))
-                template = Template(config.get('general', 'template'))
                 send_syslog_tls(output_params['output_host'],
                             output_params['output_port'],
                             template.render(log),
