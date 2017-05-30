@@ -1,7 +1,7 @@
 %define name python-cb-defense-syslog
 %define version 1.2
 %define unmangled_version 1.2
-%define release 0
+%define release 2
 %global _enable_debug_package 0
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
@@ -17,7 +17,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Prefix: %{_prefix}
 BuildArch: x86_64
 Vendor: Carbon Black Developer Network<dev-support@carbonblack.com>
-Url: http://www.carbonblack.com/
+Url: https://developer.carbonblack.com
 
 %description
 UNKNOWN
@@ -36,21 +36,10 @@ rm -rf $RPM_BUILD_ROOT
 
 %posttrans
 mkdir -p /usr/share/cb/integrations/cb-defense-syslog
-#chkconfig --add cb-defense-syslog
-#chkconfig --level 345 cb-defense-syslog on
-
-# not auto-starting because conf needs to be updated
-#/etc/init.d/cb-yara-connector start
+mkdir -p /etc/cb/integrations/cb-defense-syslog
+mkdir -p /var/log/cb/integrations/cb-defense-syslog
 
 %preun
-#/etc/init.d/cb-yara-connector stop
-
-# only delete the chkconfig entry when we uninstall for the last time,
-# not on upgrades
-#if [ "X$1" = "X0" ]
-#then
-#    chkconfig --del cb-defense-syslog
-#fi
 
 %files -f INSTALLED_FILES
 %defattr(-,root,root)

@@ -256,8 +256,13 @@ def verify_config_parse_servers():
         if not config.has_option('general', 'tcp_out'):
             logger.error('tcp_out parameter is required for tcp output_type')
             sys.exit(-1)
-        output_params['output_host'] = config.get('general', 'tcp_out').strip().split(":")[0]
-        output_params['output_port'] = int(config.get('general', 'tcp_out').strip().split(':')[1])
+
+        try:
+            output_params['output_host'] = config.get('general', 'tcp_out').strip().split(":")[0]
+            output_params['output_port'] = int(config.get('general', 'tcp_out').strip().split(':')[1])
+        except Exception as e:
+            logger.error(e.message)
+            sys.exit(-1)
     elif output_type == 'udp':
 
         #
@@ -266,8 +271,12 @@ def verify_config_parse_servers():
         if not config.has_option('general', 'udp_out'):
             logger.error('udpout parameter is required for udp output_type')
             sys.exit(-1)
-        output_params['output_host'] = config.get('general', 'udp_out').strip().split(":")[0]
-        output_params['output_port'] = int(config.get('general', 'udp_out').strip().split(':')[1])
+        try:
+            output_params['output_host'] = config.get('general', 'udp_out').strip().split(":")[0]
+            output_params['output_port'] = int(config.get('general', 'udp_out').strip().split(':')[1])
+        except Exception as e:
+            logger.error(e.message)
+            sys.exit(-1)
     elif output_type == 'tcp+tls':
 
         #
