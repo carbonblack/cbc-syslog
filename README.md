@@ -11,24 +11,24 @@
 2. Install the rpm:
 
     ```
-    rpm -ivh python-cb-defense-connector-1.0-0.x86_64.rpm
+    rpm -ivh python-cb-defense-syslog-1.2-3.x86_64.rpm
     ```
 
 3. Copy the example config file:
 
     ```
-    cd /etc/cb/integrations/cb-defense
+    cd /etc/cb/integrations/cb-defense-syslog
 
-    cp cb-defense-connector.conf.example cb-defense-connector.conf
+    cp cb-defense-syslog.conf.example cb-defense-syslog.conf
     ```
 
 4. Modify the config file as needed
 
-5. Uncomment the Cb Defense Connector line from /etc/cron.d/cb-defense-connector
+5. Uncomment the Cb Defense Connector line from /etc/cron.d/cb-defense-syslog
 
 ## Debug Logs
 
-Debug Logs are stored in /var/log/cb/cb-defense.log
+Debug Logs are stored in /var/log/cb/integrations/cb-defense-syslog/
 
 ## Sample Config File
 
