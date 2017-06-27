@@ -1,28 +1,41 @@
 # Cb Defense Syslog TLS Connector
 
+This connector allows you to forward alert notifications from your Cb Defense cloud instance into local, on-premise
+SIEM systems that accept industry standard syslog notifications. By default, it will generate pipe-delimited syslog
+messages containing the key metadata associated with any alert identified by the Cb Defense streaming prevention
+system.
+
+The syslog connector will aggregate data from one or more Cb Defense organizations into a single syslog stream.
+The connector can be configured to use UDP, TCP, or encrypted (TCP over TLS) syslog protocols.
+
+This connector is distributed as a binary RPM package compatible with any Red Hat or CentOS Linux distribution,
+CentOS/RHEL 6.x and above, running on a 64-bit Intel platform.
+
 ## Installation
 
-1. Download latest release from:
+1. Install the software. As root on your Carbon Black or other RPM based 64-bit Linux distribution server:
 
     ```
-    https://github.com/carbonblack/cb-defense-syslog-tls/releases
+    cd /etc/yum.repos.d
+    ```
+    ```
+    curl -O https://opensource.carbonblack.com/release/x86_64/CbOpenSource.repo
+    ```
+    ```
+    yum install python-cb-defense-syslog
     ```
 
-2. Install the rpm:
-
-    ```
-    rpm -ivh python-cb-defense-syslog-1.2-3.x86_64.rpm
-    ```
 
 3. Copy the example config file:
 
     ```
     cd /etc/cb/integrations/cb-defense-syslog
-
+    ```
+    ```
     cp cb-defense-syslog.conf.example cb-defense-syslog.conf
     ```
 
-4. Modify the config file as needed
+4. Modify the config file `/etc/cb/integrations/cb-defense-syslog/cb-defense-syslog.conf` as needed
 
 5. Test the new connector. As root, execute:
 
@@ -50,80 +63,78 @@
     2017-06-27 09:24:10,889 - __main__ - INFO - There are no messages to forward to host
     ```
     
-6. Uncomment the Cb Defense Connector (remove the beginning `#` from the last line) in `/etc/cron.d/cb-defense-syslog`
+6. Start the connector by enabling it in `cron`. Uncomment the Cb Defense Connector (remove the beginning `#` from the last line) in `/etc/cron.d/cb-defense-syslog`.
+   By default, the connector will run once per hour.
 
 ## Debug Logs
 
-Debug Logs are stored in /var/log/cb/integrations/cb-defense-syslog/
+Debug Logs are stored in `/var/log/cb/integrations/cb-defense-syslog/`
 
 ## Sample Config File
 
-```
-[general]
-
-#
-# Template for syslog output.
-# This is a jinja 2 template
-# NOTE: The source variable corresponds to the Cb Defense Server used to retrieve results
-#
-template = {{source}}|{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
-
-#
-# Configure the specific output.
-# Valid options are: 'udp', 'tcp', 'tcp+tls'
-#
-#  udp     - Have the events sent over a UDP socket
-#  tcp     - Have the events sent over a TCP socket
-#  tcp+tls - Have the events sent over a TLS+TCP socket
-#
-output_type=tcp
-
-#
-# tcpout=IP:port - ie 1.2.3.5:8080
-#
-tcp_out=
-
-#
-# udpout=IP:port - ie 1.2.3.5:8080
-#
-udp_out=
-
-[tls]
-
-#
-# Specify a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog
-#
-#ca_cert = /etc/cb/integrations/cb-defense/cert.pem
-
-#
-# Uncomment tls_verify and set to "false" in order to disable verification of the peer server certificate
-#
-#tls_verify = true
-
-[cbdefense1]
-
-#
-# Cb Defense Connector ID
-#
-connector_id = F8KF111111
-
-#
-# Cb Defense API Key
-#
-api_key = WT9T3QDP4UGCK2NS96111111
-
-#
-# Cb Defense Server URL
-# NOTE: this is not the url to the web ui, but to the url of sensor checkins
-#
-server_url = https://server.yourcompany.com
-
-#
-# For more than one Cb Defense Server, add another server using the following template including the stanza
-#
-#[cbdefenseserver2]
-#connector_id = F8KF111111
-#api_key = WT9T3QDP4UGCK2NS96111111
-#server_url = https://server2.yourcompany.com
-
-```
+    [general]
+    
+    #
+    # Template for syslog output.
+    # This is a jinja 2 template
+    # NOTE: The source variable corresponds to the Cb Defense Server used to retrieve results
+    #
+    template = {{source}}|{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
+    
+    #
+    # Configure the specific output.
+    # Valid options are: 'udp', 'tcp', 'tcp+tls'
+    #
+    #  udp     - Have the events sent over a UDP socket
+    #  tcp     - Have the events sent over a TCP socket
+    #  tcp+tls - Have the events sent over a TLS+TCP socket
+    #
+    output_type=tcp
+    
+    #
+    # tcpout=IP:port - ie 1.2.3.5:8080
+    #
+    tcp_out=
+    
+    #
+    # udpout=IP:port - ie 1.2.3.5:8080
+    #
+    udp_out=
+    
+    [tls]
+    
+    #
+    # Specify a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog
+    #
+    #ca_cert = /etc/cb/integrations/cb-defense/cert.pem
+    
+    #
+    # Uncomment tls_verify and set to "false" in order to disable verification of the peer server certificate
+    #
+    #tls_verify = true
+    
+    [cbdefense1]
+    
+    #
+    # Cb Defense Connector ID
+    #
+    connector_id = F8KF111111
+    
+    #
+    # Cb Defense API Key
+    #
+    api_key = WT9T3QDP4UGCK2NS96111111
+    
+    #
+    # Cb Defense Server URL
+    # NOTE: this is not the url to the web ui, but to the url of sensor checkins
+    #
+    server_url = https://server.yourcompany.com
+    
+    #
+    # For more than one Cb Defense Server, add another server using the following template including the stanza
+    #
+    #[cbdefenseserver2]
+    #connector_id = F8KF111111
+    #api_key = WT9T3QDP4UGCK2NS96111111
+    #server_url = https://server2.yourcompany.com
