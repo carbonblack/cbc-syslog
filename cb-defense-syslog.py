@@ -6,6 +6,7 @@ import ConfigParser
 import requests
 from jinja2 import Template
 import re
+import os
 import json
 import time
 import logging
@@ -27,7 +28,7 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
     session_data = {'apiKey': api_key, 'connectorId': connector_id}
     logger.info("connectorID = {0}".format(connector_id))
     try:
-        response = requests.post(url + '/integrationServices/v2/session', json=session_data, timeout=15, verify=False)
+        response = requests.post(url + '/integrationServices/v2/session', json=session_data, timeout=15, verify=ssl_verify)
         logger.info(response)
         if response.status_code == 401:
             logger.warn("Authentication failed check config file for proper Connector ID and API key")
@@ -53,7 +54,7 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
     # Now we perform the request
     #
     try:
-        response = requests.post(url + '/integrationServices/v2/notification', json=notification_data, timeout=15, verify=False)
+        response = requests.post(url + '/integrationServices/v2/notification', json=notification_data, timeout=15, verify=ssl_verify)
         logger.info(response)
     except Exception as e:
         logging.error(e, exc_info=True)
@@ -262,6 +263,7 @@ def verify_config_parse_servers():
             output_params['output_port'] = int(config.get('general', 'tcp_out').strip().split(':')[1])
         except Exception as e:
             logger.error(e.message)
+            logger.error("tcp_out must be of format <ip>:<port>")
             sys.exit(-1)
     elif output_type == 'udp':
 
@@ -276,6 +278,7 @@ def verify_config_parse_servers():
             output_params['output_port'] = int(config.get('general', 'udp_out').strip().split(':')[1])
         except Exception as e:
             logger.error(e.message)
+            logger.error("udp_out must be of format <ip>:<port>")
             sys.exit(-1)
     elif output_type == 'tcp+tls':
 
@@ -333,6 +336,10 @@ def verify_config_parse_servers():
 
 def main():
 
+    cacert_pem_path = "/usr/share/cb/integrations/cb-defense-syslog/cacert.pem"
+    if os.path.isfile(cacert_pem_path):
+        os.environ["REQUESTS_CA_BUNDLE"] = cacert_pem_path
+
     config = parse_config()
     if not config:
         logger.error("Error parsing config file")
@@ -360,7 +367,7 @@ def main():
         response = cb_defense_server_request(server.get('server_url'),
                                              server.get('api_key'),
                                              server.get('connector_id'),
-                                             False)
+                                             True)
 
         if not response:
             logger.warn("Received unexpected (or no) response from Cb Defense Server {0}. Proceeding to next connector.".format(server.get('server_url')))
