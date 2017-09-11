@@ -127,7 +127,7 @@ Debug Logs are stored in `/var/log/cb/integrations/cb-defense-syslog/`
     
     #
     # Cb Defense Server URL
-    # NOTE: this is not the url to the web ui, but to the url of sensor checkins
+    # NOTE: this is not the url to the web ui, but to the API URL
     #
     server_url = https://server.yourcompany.com
     
