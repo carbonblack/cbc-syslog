@@ -11,12 +11,16 @@ import json
 import time
 import logging
 import logging.handlers
+import traceback
+import hashlib
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+store_forwarder_dir = '/usr/share/cb/integrations/cb-defense-syslog/store/'
 
 def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
 
@@ -78,9 +82,49 @@ def parse_config():
     else:
         return config
 
+def delete_store_notification(hash):
+    try:
+        os.remove(store_forwarder_dir + hash)
+    except:
+        logger.error(traceback.format_exc())
+
+def send_store_notifications():
+
+    logger.info("Number of files in store forward: {0}".format(len(os.listdir(store_forwarder_dir))))
+    for file_name in os.listdir(store_forwarder_dir):
+        file_data = open(store_forwarder_dir + file_name, 'rb').read()
+        #
+        # Store notifications just in case sending fails
+        #
+        if send_syslog_tls(output_params['output_host'],
+                           output_params['output_port'],
+                           file_data,
+                           output_params['output_type']):
+            #
+            # If the sending was successful, delete the stored data
+            #
+            delete_store_notification(file_name)
+
+
+def store_notifications(data):
+    #
+    # We hash the data to generate a unique filename
+    #
+    hash = hashlib.sha256(data).hexdigest()
+
+    try:
+        with open(store_forwarder_dir + hash, 'wb') as f:
+            f.write(data)
+    except:
+        logger.error(traceback.format_exc())
+        return None
+
+    return hash
+
 
 def send_syslog_tls(server_url, port, data, output_type):
-    data += '\n'
+
+    retval = True
     if output_type == 'tcp+tls':
         unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
@@ -99,7 +143,8 @@ def send_syslog_tls(server_url, port, data, output_type):
             client_socket.connect((server_url, port))
             client_socket.send(data)
         except Exception as e:
-            logger.error(e.message)
+            logger.error(traceback.format_exc())
+            retval = False
         finally:
             client_socket.close()
 
@@ -112,7 +157,8 @@ def send_syslog_tls(server_url, port, data, output_type):
             client_socket.connect((server_url, port))
             client_socket.send(data)
         except Exception as e:
-            logger.error(e.message)
+            logger.error(traceback.format_exc())
+            retval = False
         finally:
             client_socket.close()
 
@@ -121,9 +167,12 @@ def send_syslog_tls(server_url, port, data, output_type):
         try:
             unsecured_client_socket.sendto(data, (server_url, port))
         except Exception as e:
-            logger.error(e.message)
+            logger.error(traceback.format_exc())
+            retval = False
         finally:
             unsecured_client_socket.close()
+
+    return retval
 
 def parse_cb_defense_response(response, source):
     version = 'CEF:0'
@@ -133,6 +182,9 @@ def parse_cb_defense_response(response, source):
     splitDomain = True
 
     log_messages = []
+
+    if u'success' not in response:
+        return log_messages
 
     if response[u'success']:
 
@@ -154,7 +206,7 @@ def parse_cb_defense_response(response, source):
                 device_ip = str(note['deviceInfo']['internalIpAddress'])
                 link = str(note['url'])
                 tid = str(note['threatInfo']['incidentId'])
-                timestamp = time.strftime("%b %d %Y %H:%M:%S", time.localtime(int(seconds)))
+                timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
                 extension = ''
                 extension += 'rt="' + timestamp + '"'
 
@@ -183,7 +235,7 @@ def parse_cb_defense_response(response, source):
                 name = 'Confer Sensor Policy Action'
                 severity = ''
                 seconds = str(note['eventTime'])[:-3]
-                timestamp = time.strftime("%b %d %Y %H:%M:%S", time.localtime(int(seconds)))
+                timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
                 device_name = str(note['deviceInfo']['deviceName'])
                 user_name = str(note['deviceInfo']['email'])
                 device_ip = str(note['deviceInfo']['internalIpAddress'])
@@ -262,7 +314,7 @@ def verify_config_parse_servers():
             output_params['output_host'] = config.get('general', 'tcp_out').strip().split(":")[0]
             output_params['output_port'] = int(config.get('general', 'tcp_out').strip().split(':')[1])
         except Exception as e:
-            logger.error(e.message)
+            logger.error(traceback.format_exc())
             logger.error("tcp_out must be of format <ip>:<port>")
             sys.exit(-1)
     elif output_type == 'udp':
@@ -277,7 +329,7 @@ def verify_config_parse_servers():
             output_params['output_host'] = config.get('general', 'udp_out').strip().split(":")[0]
             output_params['output_port'] = int(config.get('general', 'udp_out').strip().split(':')[1])
         except Exception as e:
-            logger.error(e.message)
+            logger.error(traceback.format_exc())
             logger.error("udp_out must be of format <ip>:<port>")
             sys.exit(-1)
     elif output_type == 'tcp+tls':
@@ -294,7 +346,7 @@ def verify_config_parse_servers():
         try:
             config.getboolean('tls', 'tls_verify')
         except ValueError as e:
-            logger.error(e.message)
+            logger.error(traceback.format_exc())
             logger.error("tls_verify must be either true or false")
             sys.exit(-1)
         output_params['output_host'] = config.get('general', 'tcp_out').strip().split(":")[0]
@@ -335,6 +387,7 @@ def verify_config_parse_servers():
 
 
 def main():
+    global output_params
 
     cacert_pem_path = "/usr/share/cb/integrations/cb-defense-syslog/cacert.pem"
     if os.path.isfile(cacert_pem_path):
@@ -349,6 +402,11 @@ def main():
     # verify the config file and get the Cb Defense Server list
     #
     output_params, server_list = verify_config_parse_servers()
+
+    #
+    # Store Forward.  Attempt to send messages that have been saved but we were unable to reach the destination
+    #
+    send_store_notifications()
     
     #
     # Error or not, there is nothing to do
@@ -395,10 +453,24 @@ def main():
             #
             for log in log_messages:
                 template = Template(config.get('general', 'template'))
-                send_syslog_tls(output_params['output_host'],
-                            output_params['output_port'],
-                            template.render(log),
-                            output_params['output_type'])
+                final_data = template.render(log) + '\n'
+                #
+                # Store notifications just in case sending fails
+                #
+                hash = store_notifications(final_data)
+                if not hash:
+                    logger.error("We were unable to store notifications.")
+
+                if send_syslog_tls(output_params['output_host'],
+                                   output_params['output_port'],
+                                   final_data,
+                                   output_params['output_type']):
+                    #
+                    # If successful send, then we just delete the stored version
+                    #
+                    if hash:
+                        delete_store_notification(hash)
+
 
 
 if __name__ == "__main__":

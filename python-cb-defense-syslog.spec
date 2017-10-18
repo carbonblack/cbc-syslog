@@ -1,7 +1,7 @@
 %define name python-cb-defense-syslog
 %define version 1.2
 %define unmangled_version 1.2
-%define release 4
+%define release 5
 %global _enable_debug_package 0
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
@@ -35,7 +35,7 @@ python setup.py install_cb --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 rm -rf $RPM_BUILD_ROOT
 
 %posttrans
-mkdir -p /usr/share/cb/integrations/cb-defense-syslog
+mkdir -p /usr/share/cb/integrations/cb-defense-syslog/store
 mkdir -p /etc/cb/integrations/cb-defense-syslog
 mkdir -p /var/log/cb/integrations/cb-defense-syslog
 
