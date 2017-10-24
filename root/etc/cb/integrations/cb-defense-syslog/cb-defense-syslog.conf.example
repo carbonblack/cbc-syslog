@@ -8,6 +8,27 @@
 template = {{source}}|{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
 
 #
+# This sets the default severity level for POLICY_ACTION notifications.  By default it is 4.
+#
+# 0 - Emergency: System is unusable.
+#
+# 1 - Alert: Action must be taken immediately.
+#
+# 2 - Critical: Critical conditions.
+#
+# 3 - Error: Error conditions.
+#
+# 4 - Warning: Warning conditions.
+#
+# 5 - Notice: Normal but significant condition.
+#
+# 6 - Informational: Informational messages.
+#
+# 7 - Debug: Debug-level messages.
+#
+policy_action_severity = 4
+
+#
 # Configure the specific output.
 # Valid options are: 'udp', 'tcp', 'tcp+tls'
 #

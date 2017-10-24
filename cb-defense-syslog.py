@@ -14,16 +14,17 @@ import logging.handlers
 import traceback
 import hashlib
 
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-store_forwarder_dir = '/usr/share/cb/integrations/cb-defense-syslog/store/'
+store_forwarder_dir = '/usr/share/cb/integrations/cb-defense-syslog/store'
+
+policy_action_severity = 4
+
 
 def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
-
     logger.info("Attempting to connect to url: " + url)
 
     #
@@ -32,14 +33,15 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
     session_data = {'apiKey': api_key, 'connectorId': connector_id}
     logger.info("connectorID = {0}".format(connector_id))
     try:
-        response = requests.post(url + '/integrationServices/v2/session', json=session_data, timeout=15, verify=ssl_verify)
+        response = requests.post(url + '/integrationServices/v2/session', json=session_data, timeout=15,
+                                 verify=ssl_verify)
         logger.info(response)
         if response.status_code == 401:
             logger.warn("Authentication failed check config file for proper Connector ID and API key")
             sys.exit(1)
         elif response.status_code != 200:
             logger.warn("Cb Defense API did not return a Success code. Exiting the loop.")
-            return None 
+            return None
     except Exception as e:
         logging.error(e, exc_info=True)
         return None
@@ -58,7 +60,8 @@ def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
     # Now we perform the request
     #
     try:
-        response = requests.post(url + '/integrationServices/v2/notification', json=notification_data, timeout=15, verify=ssl_verify)
+        response = requests.post(url + '/integrationServices/v2/notification', json=notification_data, timeout=15,
+                                 verify=ssl_verify)
         logger.info(response)
     except Exception as e:
         logging.error(e, exc_info=True)
@@ -82,14 +85,15 @@ def parse_config():
     else:
         return config
 
+
 def delete_store_notification(hash):
     try:
         os.remove(store_forwarder_dir + hash)
     except:
         logger.error(traceback.format_exc())
 
-def send_store_notifications():
 
+def send_store_notifications():
     logger.info("Number of files in store forward: {0}".format(len(os.listdir(store_forwarder_dir))))
     for file_name in os.listdir(store_forwarder_dir):
         file_data = open(store_forwarder_dir + file_name, 'rb').read()
@@ -123,13 +127,11 @@ def store_notifications(data):
 
 
 def send_syslog_tls(server_url, port, data, output_type):
-
     retval = True
+    client_socket = None
     if output_type == 'tcp+tls':
         unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        
         try:
-
             if config.getboolean('tls', 'tls_verify'):
                 cert_reqs = ssl.CERT_REQUIRED
             else:
@@ -146,13 +148,12 @@ def send_syslog_tls(server_url, port, data, output_type):
             logger.error(traceback.format_exc())
             retval = False
         finally:
-            client_socket.close()
+            if client_socket:
+                client_socket.close()
 
     elif output_type == 'tcp':
         unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
         client_socket = unsecured_client_socket
-
         try:
             client_socket.connect((server_url, port))
             client_socket.send(data)
@@ -160,7 +161,8 @@ def send_syslog_tls(server_url, port, data, output_type):
             logger.error(traceback.format_exc())
             retval = False
         finally:
-            client_socket.close()
+            if client_socket:
+                client_socket.close()
 
     elif output_type == 'udp':
         unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -170,9 +172,11 @@ def send_syslog_tls(server_url, port, data, output_type):
             logger.error(traceback.format_exc())
             retval = False
         finally:
-            unsecured_client_socket.close()
+            if unsecured_client_socket:
+                unsecured_client_socket.close()
 
     return retval
+
 
 def parse_cb_defense_response(response, source):
     version = 'CEF:0'
@@ -233,7 +237,7 @@ def parse_cb_defense_response(response, source):
             elif note['type'] == 'POLICY_ACTION':
                 signature = 'Policy_Action'
                 name = 'Confer Sensor Policy Action'
-                severity = ''
+                severity = policy_action_severity
                 seconds = str(note['eventTime'])[:-3]
                 timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
                 device_name = str(note['deviceInfo']['deviceName'])
@@ -285,6 +289,7 @@ def verify_config_parse_servers():
     """
     Validate configuration parameters
     """
+    global policy_action_severity
 
     output_params = {}
     server_list = []
@@ -292,6 +297,9 @@ def verify_config_parse_servers():
     if not config.has_option('general', 'template'):
         logger.error('A template is required in the general stanza')
         sys.exit(-1)
+
+    if config.has_option('general', 'policy_action_severity'):
+        policy_action_severity = config.get('general', 'policy_action_severity')
 
     if not config.has_option('general', 'output_type'):
         logger.error('An output_type is required in the general stanza')
@@ -366,7 +374,7 @@ def verify_config_parse_servers():
                 config.has_option(section, 'connector_id') and \
                 config.has_option(section, 'api_key'):
 
-            if not config.get(section,'server_url').startswith('http'):
+            if not config.get(section, 'server_url').startswith('http'):
                 logger.error('Stanza {0} server_url entry does not start with http or https'.format(section))
                 logger.error('Example: https://server.yourcompany.com')
                 sys.exit(-1)
@@ -407,14 +415,14 @@ def main():
     # Store Forward.  Attempt to send messages that have been saved but we were unable to reach the destination
     #
     send_store_notifications()
-    
+
     #
     # Error or not, there is nothing to do
     #
     if len(server_list) == 0:
         logger.info("no configured Cb Defense Servers")
         sys.exit(-1)
-    
+
     logger.info("Found {0} Cb Defense Servers in config file".format(len(server_list)))
     #
     # Iterate through our Cb Defense Server list
@@ -428,7 +436,9 @@ def main():
                                              True)
 
         if not response:
-            logger.warn("Received unexpected (or no) response from Cb Defense Server {0}. Proceeding to next connector.".format(server.get('server_url')))
+            logger.warn(
+                "Received unexpected (or no) response from Cb Defense Server {0}. Proceeding to next connector.".format(
+                    server.get('server_url')))
             continue
 
         #
@@ -445,8 +455,8 @@ def main():
             logger.info("There are no messages to forward to host")
         else:
             logger.info("Sending {0} messages to {1}:{2}".format(len(log_messages),
-                                                          output_params['output_host'],
-                                                          output_params['output_port']))
+                                                                 output_params['output_host'],
+                                                                 output_params['output_port']))
 
             #
             # finally send the messages
@@ -470,7 +480,7 @@ def main():
                     #
                     if hash:
                         delete_store_notification(hash)
-
+            logger.info("Done Sending Notifications")
 
 
 if __name__ == "__main__":
@@ -479,6 +489,7 @@ if __name__ == "__main__":
     parser.add_argument('--log-file', '-l', help="Log file location")
 
     global args
+
     args = parser.parse_args()
     if not args.config_file:
         logger.error("a config file must be supplied")
@@ -495,9 +506,8 @@ if __name__ == "__main__":
         logger.addHandler(syslog_handler)
 
     try:
+
         main()
     except Exception as e:
         logger.error(e, exc_info=True)
         sys.exit(-1)
-
-
