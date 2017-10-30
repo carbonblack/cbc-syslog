@@ -23,8 +23,13 @@ def notification():
     #
     # Yes str vs json since this emulates what the Cb Defense returns
     #
+    list_data = test_data["notifications"]
+
+    for i in range(10):
+        test_data["notifications"].extend(list_data)
     return jsonify(test_data)
 
+    #return jsonify({})
 
 class FuncThread(threading.Thread):
     def __init__(self, target, *args):
@@ -45,7 +50,7 @@ def udp_server():
         data, address = sock.recvfrom(4096)
         print address
         print len(data)
-        print data
+        print repr(data)
 
 
 def tcp_server():
@@ -63,7 +68,7 @@ def tcp_server():
         print new_client_socket, address
         buffer = secured_client_socket.recv(4096)
         print len(buffer)
-        print buffer
+        print repr(buffer)
         secured_client_socket.close()
 
 def tcp_tls_server():
@@ -86,7 +91,7 @@ def tcp_tls_server():
         print new_client_socket, address
         buffer = secured_client_socket.recv()
         print len(buffer)
-        print buffer
+        print repr(buffer)
         secured_client_socket.close()
 
 
