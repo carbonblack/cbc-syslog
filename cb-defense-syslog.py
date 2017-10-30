@@ -5,7 +5,6 @@ import argparse
 import ConfigParser
 import requests
 from jinja2 import Template
-import re
 import os
 import json
 import time
@@ -13,6 +12,7 @@ import logging
 import logging.handlers
 import traceback
 import hashlib
+import fcntl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -202,7 +202,7 @@ def parse_cb_defense_response(response, source):
 
             if note['type'] == 'THREAT':
                 signature = 'Active_Threat'
-                seconds = str(note['threatInfo']['time'])[:-3]
+                seconds = str(note['eventTime'])[:-3]
                 name = str(note['threatInfo']['summary'])
                 severity = str(note['threatInfo']['score'])
                 device_name = str(note['deviceInfo']['deviceName'])
@@ -506,7 +506,14 @@ if __name__ == "__main__":
         logger.addHandler(syslog_handler)
 
     try:
-
+        pid_file = '/usr/share/cb/integrations/cb-defense-syslog.pid'
+        fp = open(pid_file, 'w')
+        try:
+            fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError:
+            logger.error("An instance of cb defense syslog connector is already running")
+            # another instance is running
+            sys.exit(0)
         main()
     except Exception as e:
         logger.error(e, exc_info=True)
