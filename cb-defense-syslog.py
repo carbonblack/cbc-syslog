@@ -480,7 +480,7 @@ def main():
                     #
                     if hash:
                         delete_store_notification(hash)
-            logger.info("Done Sending Notifications")
+    logger.info("Done Sending Notifications")
 
 
 if __name__ == "__main__":
