@@ -28,6 +28,12 @@ template = {{source}}|{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signa
 #
 policy_action_severity = 4
 
+
+#
+# Output format of the data sent. Currently support json or cef formats
+#
+output_format=cef
+
 #
 # Configure the specific output.
 # Valid options are: 'udp', 'tcp', 'tcp+tls'
