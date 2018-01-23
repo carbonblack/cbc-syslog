@@ -19,7 +19,7 @@ logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-store_forwarder_dir = '/usr/share/cb/integrations/cb-defense-syslog/store'
+store_forwarder_dir = '/usr/share/cb/integrations/cb-defense-syslog/store/'
 policy_action_severity = 4
 
 
@@ -534,18 +534,18 @@ if __name__ == "__main__":
 
         logger.addHandler(syslog_handler)
 
-    try:
-        pid_file = '/usr/share/cb/integrations/cb-defense-syslog.pid'
-        fp = open(pid_file, 'w')
-        try:
-            fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except IOError:
-            logger.error("An instance of cb defense syslog connector is already running")
-            # another instance is running
-            sys.exit(0)
-        main()
-    except Exception as e:
-        logger.error(e, exc_info=True)
-        sys.exit(-1)
+     try:
+         pid_file = '/usr/share/cb/integrations/cb-defense-syslog.pid'
+         fp = open(pid_file, 'w')
+         try:
+             fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
+         except IOError:
+             logger.error("An instance of cb defense syslog connector is already running")
+             # another instance is running
+             sys.exit(0)
+         main()
+     except Exception as e:
+         logger.error(e, exc_info=True)
+         sys.exit(-1)
 
     main()
