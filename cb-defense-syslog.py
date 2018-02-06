@@ -307,9 +307,21 @@ def verify_config_parse_servers():
     output_params = {}
     server_list = []
 
+    #
+    # Verify output_format
+    #
     if not config.has_option('general', 'output_format'):
-        logger.error('output_format of json or cef must be specified')
-        sys.exit(-1)
+        logger.error('output_format of json or cef was not specified')
+        logger.warn('Setting output format to CEF')
+        config.set('general', 'output_format', 'cef')
+
+    elif not config.get('general', 'output_format').lower() == 'cef' and \
+            not config.get('general', 'output_foramt').lower() == 'json':
+        logger.error('invalid output_format type was specified')
+        logger.error('Must specify JSON or CEF output format')
+        logger.warn('Setting output format to CEF')
+        config.set('general', 'output_format', 'cef')
+
 
     if not config.has_option('general', 'template'):
         logger.error('A template is required in the general stanza')
