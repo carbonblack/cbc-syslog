@@ -316,7 +316,7 @@ def verify_config_parse_servers():
         config.set('general', 'output_format', 'cef')
 
     elif not config.get('general', 'output_format').lower() == 'cef' and \
-            not config.get('general', 'output_foramt').lower() == 'json':
+            not config.get('general', 'output_format').lower() == 'json':
         logger.error('invalid output_format type was specified')
         logger.error('Must specify JSON or CEF output format')
         logger.warn('Setting output format to CEF')
@@ -559,5 +559,3 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(e, exc_info=True)
         sys.exit(-1)
-
-    main()
