@@ -92,6 +92,13 @@ Debug Logs are stored in `/var/log/cb/integrations/cb-defense-syslog/`
     output_type=tcp
     
     #
+	# Output format of the data sent. Currently support json or cef formats
+	#
+	# Warning: if using json output_format, we recommend NOT using UDP output_type
+	#
+	output_format=cef
+    
+    #
     # tcpout=IP:port - ie 1.2.3.5:8080
     #
     tcp_out=

@@ -3,6 +3,10 @@ from test_data import test_data
 import threading
 import socket
 import ssl
+import traceback
+import json
+import pprint
+
 
 app = Flask(__name__)
 
@@ -18,14 +22,33 @@ def session():
     return '{"sessionId":"348-5UH2SZ4S7GKA","success":true,"message":"Success"}'
 
 
+@app.route('/integrationServices/v3/notification', methods=['GET', 'POST'])
+def notificationv3():
+
+    try:
+        #
+        # Yes str vs json since this emulates what the Cb Defense returns
+        #
+        #list_data = test_data["notifications"]
+
+        #for i in range(1):
+        #    test_data["notifications"].extend(list_data)
+
+        print len(test_data["notifications"])
+        return jsonify(test_data)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({})
+
+
 @app.route('/integrationServices/v2/notification', methods=['GET', 'POST'])
-def notification():
+def notificationv2():
     #
     # Yes str vs json since this emulates what the Cb Defense returns
     #
     list_data = test_data["notifications"]
 
-    for i in range(10):
+    for i in range(1):
         test_data["notifications"].extend(list_data)
     return jsonify(test_data)
 
@@ -68,7 +91,11 @@ def tcp_server():
         print new_client_socket, address
         buffer = secured_client_socket.recv(4096)
         print len(buffer)
-        print repr(buffer)
+        try:
+            pprint.pprint(json.loads(buffer))
+        except:
+            print buffer
+            pass
         secured_client_socket.close()
 
 def tcp_tls_server():
@@ -108,7 +135,7 @@ def main():
     #
     # Default port is 5000
     #
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=5001)
 
 if __name__ == "__main__":
     main()

@@ -19,49 +19,46 @@ logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-store_forwarder_dir = '/usr/share/cb/integrations/cb-defense-syslog/store'
-
+store_forwarder_dir = '/usr/share/cb/integrations/cb-defense-syslog/store/'
 policy_action_severity = 4
+
+
+def get_audit_logs(url, api_key_query, connector_id_query, ssl_verify):
+    headers = {'X-Auth-Token': "{0}/{1}".format(api_key_query, connector_id_query)}
+    try:
+        response = requests.get("{0}/integrationServices/v3/auditlogs".format(url),
+                                headers=headers,
+                                timeout=15)
+
+        if response.status_code != 200:
+            logger.error("Could not retrieve audit logs: {0}".format(response.status_code))
+            return False
+
+        notifications = response.json()
+    except Exception as e:
+        logger.error("Exception {0} when retrieving audit logs".format(str(e)), exc_info=True)
+        return None
+
+    if notifications.get("success", False) != True:
+        logger.error("Unsuccessful HTTP response retrieving audit logs: {0}"
+                     .format(notifications.get("message")))
+        return False
+
+    notifications = notifications.get("notifications", [])
+    if not notifications:
+        logger.info("No audit logs available")
+        return False
+
+    return notifications
 
 
 def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
     logger.info("Attempting to connect to url: " + url)
 
-    #
-    # First we need to create a session
-    #
-    session_data = {'apiKey': api_key, 'connectorId': connector_id}
-    logger.info("connectorID = {0}".format(connector_id))
+    headers = {'X-Auth-Token': "{0}/{1}".format(api_key, connector_id)}
     try:
-        response = requests.post(url + '/integrationServices/v2/session', json=session_data, timeout=15,
-                                 verify=ssl_verify)
-        logger.info(response)
-        if response.status_code == 401:
-            logger.warn("Authentication failed check config file for proper Connector ID and API key")
-            sys.exit(1)
-        elif response.status_code != 200:
-            logger.warn("Cb Defense API did not return a Success code. Exiting the loop.")
-            return None
-    except Exception as e:
-        logging.error(e, exc_info=True)
-        return None
-
-    json_response = response.json()
-
-    if u'sessionId' not in json_response:
-        logger.error("Session creation failed")
-        return None
-
-    logger.info("sessionId = {0}".format(str(json_response[u'sessionId'])))
-
-    notification_data = {'apiKey': api_key, 'sessionId': str(json_response[u'sessionId'])}
-
-    #
-    # Now we perform the request
-    #
-    try:
-        response = requests.post(url + '/integrationServices/v2/notification', json=notification_data, timeout=15,
-                                 verify=ssl_verify)
+        response = requests.get(url + '/integrationServices/v3/notification', headers=headers, timeout=15,
+                                verify=ssl_verify)
         logger.info(response)
     except Exception as e:
         logging.error(e, exc_info=True)
@@ -178,7 +175,23 @@ def send_syslog_tls(server_url, port, data, output_type):
     return retval
 
 
-def parse_cb_defense_response(response, source):
+def parse_cb_defense_response_json(response, source):
+    if u'success' not in response:
+        return None
+
+    if response[u'success']:
+        if len(response[u'notifications']) < 1:
+            logger.info('successfully connected, no alerts at this time')
+            return None
+
+        for notification in response[u'notifications']:
+            if 'type' not in notification:
+                notification['type'] = 'THREAT'
+
+    return response[u'notifications']
+
+
+def parse_cb_defense_response_cef(response, source):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'
@@ -293,6 +306,22 @@ def verify_config_parse_servers():
 
     output_params = {}
     server_list = []
+
+    #
+    # Verify output_format
+    #
+    if not config.has_option('general', 'output_format'):
+        logger.error('output_format of json or cef was not specified')
+        logger.warn('Setting output format to CEF')
+        config.set('general', 'output_format', 'cef')
+
+    elif not config.get('general', 'output_format').lower() == 'cef' and \
+            not config.get('general', 'output_format').lower() == 'json':
+        logger.error('invalid output_format type was specified')
+        logger.error('Must specify JSON or CEF output format')
+        logger.warn('Setting output format to CEF')
+        config.set('general', 'output_format', 'cef')
+
 
     if not config.has_option('general', 'template'):
         logger.error('A template is required in the general stanza')
@@ -444,13 +473,19 @@ def main():
         #
         # perform fixups
         #
-        logger.debug(response.content)
+        # logger.debug(response.content)
         json_response = json.loads(response.content)
 
         #
         # parse the Cb Defense Response and get a list of log messages to send to tcp_tls_host:tcp_tls_port
         #
-        log_messages = parse_cb_defense_response(json_response, server.get('source', ''))
+        if config.get('general', 'output_format').lower() == 'json':
+            log_messages = parse_cb_defense_response_json(json_response, server.get('source', ''))
+        elif config.get('general', 'output_format').lower() == 'cef':
+            log_messages = parse_cb_defense_response_cef(json_response, server.get('source', ''))
+        else:
+            log_messages = None
+
         if not log_messages:
             logger.info("There are no messages to forward to host")
         else:
@@ -462,8 +497,14 @@ def main():
             # finally send the messages
             #
             for log in log_messages:
-                template = Template(config.get('general', 'template'))
-                final_data = template.render(log) + '\n'
+
+                if config.get('general', 'output_format').lower() == 'json':
+                    final_data = json.dumps(log) + '\n'
+
+                if config.get('general', 'output_format').lower() == 'cef':
+                    template = Template(config.get('general', 'template'))
+                    final_data = template.render(log) + '\n'
+
                 #
                 # Store notifications just in case sending fails
                 #
