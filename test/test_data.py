@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 null = ""
 true = "true"
 false = "false"
@@ -484,5 +487,51 @@ test_data = {"notifications": [{"threatInfo": {"incidentId": "Z7NG6", "score": 7
                                                   "targetPriorityType": "MEDIUM", "deviceId": 2004119,
                                                   "deviceName": "COMPANY\\Demo_Mac_Shell",
                                                   "deviceHostName": null, "targetPriorityCode": 0},
-                                   "ruleName": "syslog alert", "type": "THREAT"}], "success": true,
+                                   "ruleName": "syslog alert", "type": "THREAT"},
+                               {
+                                   "threatInfo": {"incidentId": "ZZ123", "score": 2,
+                                                  "summary": u"Test of various issues with ümlauts and Unicode characters ø.",
+                                                  "indicators": [{"indicatorName": "RUN_ANOTHER_APP",
+                                                                  "applicationName": "Payload.class",
+                                                                  "sha256Hash": "6750c319c5d1ba2d2937ef602c2e5c03df6fb60449566e5efb0331310a655c4e"},
+                                                                 {"indicatorName": "SCRIPT_COMMAND",
+                                                                  "applicationName": "Payload.class",
+                                                                  "sha256Hash": "6750c319c5d1ba2d2937ef602c2e5c03df6fb60449566e5efb0331310a655c4e"},
+                                                                 {"indicatorName": "SCRIPT_COMMAND",
+                                                                  "applicationName": "Payload.class",
+                                                                  "sha256Hash": "f84adcc7dc36e494dc89fd1c81c30233c91d0cb875c6cf5171dea19ab55cb72f"},
+                                                                 {"indicatorName": "RUN_ANOTHER_APP",
+                                                                  "applicationName": "éxplorer.exe",
+                                                                  "sha256Hash": "9afae0b82960d6fce7544efba1cb0509522dc29ba76539b63c30b5afce86388f"},
+                                                                 {"indicatorName": "RUN_ANOTHER_APP",
+                                                                  "applicationName": "Payload.class",
+                                                                  "sha256Hash": "f84adcc7dc36e494dc89fd1c81c30233c91d0cb875c6cf5171dea19ab55cb72f"}],
+                                                  "time": 1460752391454},
+                                   "url": "https://testserver.company.net/ui#investigate/events/device/2004119/incident/81RTK",
+                                   "eventTime": 1460752391454, "eventId": "f6357957035211e6be8701df2c083974",
+                                   "eventDescription": "[syslog alert] [Cb Defense has detected a threat against your company.] [https://testserver.company.net/ui#device/2004119/incident/81RTK] [Multiple commands were executed via a script.] [Incident id: 81RTK] [Threat score: 2] [Group: default] [Email: macReverseShell@company.net.demo] [Name: Demo_Mac_Shell] [Type and OS: MAC MAC OS X 10.9.0]\n",
+                                   "deviceInfo": {"email": u"COMPANY\\schloßuser",
+                                                  "groupName": "default", "internalIpAddress": null,
+                                                  "externalIpAddress": null, "deviceType": "MAC",
+                                                  "deviceVersion": "MAC OS X 10.9.0",
+                                                  "targetPriorityType": "MEDIUM", "deviceId": 2004119,
+                                                  "deviceName": u"COMPANY\\Demo_📋",
+                                                  "deviceHostName": null, "targetPriorityCode": 0},
+                                   "ruleName": "syslog alert", "type": "THREAT"}
+                               ], "success": true,
              "message": "Success"}
+
+
+expected_output = """test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|A known virus (Sality: Keylogger, Password or Data stealer, Backdoor) was detected running.|7|rt="Apr 15 2016 06:54:00" sntdom=COMPANY dvchost=Demo_CaretoPC duser=FirstName.LastName dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004118/incident/Z7NG6" cs4Label="Threat_ID" cs4="Z7NG6" act=Alert
+test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|A known virus (Sality: Keylogger, Password or Data stealer, Backdoor) was detected running.|7|rt="Apr 15 2016 06:54:00" sntdom=COMPANY dvchost=Demo_CaretoPC duser=FirstName.LastName@company.net.demo dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004118/incident/YL5RZ" cs4Label="Threat_ID" cs4="YL5RZ" act=Alert
+test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|A known virus (iWorm) is actively attempting a network connection.|7|rt="Apr 15 2016 20:11:37" sntdom=COMPANY dvchost=iworm_test duser=iworm_test dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004121/incident/IDWID" cs4Label="Threat_ID" cs4="IDWID" act=Alert
+test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|A known virus (iWorm) is actively attempting a network connection.|7|rt="Apr 15 2016 20:11:37" sntdom=COMPANY dvchost=iworm_test duser=iworm_test dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004121/incident/UHMZ3" cs4Label="Threat_ID" cs4="UHMZ3" act=Alert
+test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|An unknown, suspect or compromised application, has exhibited dangerous virus-like behavior.|3|rt="Apr 15 2016 20:27:11" dvchost=Demo_Mac_Injection duser=osxInjection@company.net.demo dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004120/incident/DKI00" cs4Label="Threat_ID" cs4="DKI00" act=Alert
+test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|A known virus (Thoper: Keylogger, Password or Data stealer, Backdoor) was detected running.|7|rt="Apr 15 2016 20:29:57" sntdom=COMPANY dvchost=Demo_RAT_01 duser=rat01@company.net.demo dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004116/incident/140XP" cs4Label="Threat_ID" cs4="140XP" act=Alert
+test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|A known virus (Keylogger, Password or Data stealer, Backdoor) was detected running.|7|rt="Apr 15 2016 20:29:58" sntdom=COMPANY dvchost=Demo_RAT_01 duser=rat01@company.net.demo dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004116/incident/VPJZJ" cs4Label="Threat_ID" cs4="VPJZJ" act=Alert
+test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|A known virus (FakeRean) was detected running.|3|rt="Apr 15 2016 20:32:01" sntdom=COMPANY dvchost=fakeav_driveby duser=fakeav_driveby@company.net.demo dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004122/incident/6OJFC" cs4Label="Threat_ID" cs4="6OJFC" act=Alert
+test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|An application has created an executable which is a known virus or on the Company Black List.|4|rt="Apr 15 2016 20:32:01" sntdom=COMPANY dvchost=fakeav_driveby duser=fakeav_driveby@company.net.demo dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004122/incident/DRE26" cs4Label="Threat_ID" cs4="DRE26" act=Alert
+test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|A known virus (Appetite: Keylogger, Password or Data stealer, Backdoor, Rootkit, Ransomware or Worm) attempted a network connection.|8|rt="Apr 15 2016 20:33:09" sntdom=COMPANY dvchost=Demo_CaretoMac duser=caretoOsx@company.net.demo dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004117/incident/8OI0O" cs4Label="Threat_ID" cs4="8OI0O" act=Alert
+test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|A known virus (Appetite: Keylogger, Password or Data stealer, Backdoor, Rootkit, Ransomware or Worm) attempted a network connection.|8|rt="Apr 15 2016 20:33:09" sntdom=COMPANY dvchost=Demo_CaretoMac duser=caretoOsx@company.net.demo dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004117/incident/3WTHN" cs4Label="Threat_ID" cs4="3WTHN" act=Alert
+test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|Multiple commands were executed via a script.|2|rt="Apr 15 2016 20:33:11" sntdom=COMPANY dvchost=Demo_Mac_Shell duser=macReverseShell@company.net.demo dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004119/incident/81RTK" cs4Label="Threat_ID" cs4="81RTK" act=Alert
+test|CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|Test of various issues with ümlauts and Unicode characters ø.|2|rt="Apr 15 2016 20:33:11" sntdom=COMPANY dvchost=Demo_📋 duser=schloßuser dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004119/incident/81RTK" cs4Label="Threat_ID" cs4="ZZ123" act=Alert"""

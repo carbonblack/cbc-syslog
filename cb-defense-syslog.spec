@@ -1,4 +1,4 @@
-a = Analysis(['cb-defense-syslog.py'],
+a = Analysis(['cb_defense_syslog.py'],
              pathex=['.'],
              hiddenimports=['unicodedata'],
              hookspath=None,

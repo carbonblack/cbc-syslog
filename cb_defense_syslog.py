@@ -14,6 +14,7 @@ import traceback
 import hashlib
 import fcntl
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -21,6 +22,14 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 
 store_forwarder_dir = '/usr/share/cb/integrations/cb-defense-syslog/store/'
 policy_action_severity = 4
+
+
+from six import PY2
+
+if PY2:
+    get_unicode_string = unicode
+else:
+    get_unicode_string = str
 
 
 def get_audit_logs(url, api_key_query, connector_id_query, ssl_verify):
@@ -36,7 +45,7 @@ def get_audit_logs(url, api_key_query, connector_id_query, ssl_verify):
 
         notifications = response.json()
     except Exception as e:
-        logger.error("Exception {0} when retrieving audit logs".format(str(e)), exc_info=True)
+        logger.error("Exception {0} when retrieving audit logs".format(get_unicode_string(e)), exc_info=True)
         return None
 
     if notifications.get("success", False) != True:
@@ -114,7 +123,7 @@ def store_notifications(data):
     hash = hashlib.sha256(data).hexdigest()
 
     try:
-        with open(store_forwarder_dir + hash, 'wb') as f:
+        with open(store_forwarder_dir + hash, 'wb', encoding="utf-8") as f:
             f.write(data)
     except:
         logger.error(traceback.format_exc())
@@ -140,7 +149,7 @@ def send_syslog_tls(server_url, port, data, output_type):
                                             ssl_version=ssl.PROTOCOL_TLSv1)
 
             client_socket.connect((server_url, port))
-            client_socket.send(data)
+            client_socket.send(data.encode("utf-8"))
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
@@ -153,7 +162,7 @@ def send_syslog_tls(server_url, port, data, output_type):
         client_socket = unsecured_client_socket
         try:
             client_socket.connect((server_url, port))
-            client_socket.send(data)
+            client_socket.send(data.encode("utf-8"))
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
@@ -164,7 +173,7 @@ def send_syslog_tls(server_url, port, data, output_type):
     elif output_type == 'udp':
         unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            unsecured_client_socket.sendto(data, (server_url, port))
+            unsecured_client_socket.sendto(data.encode("utf-8"), (server_url, port))
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
@@ -188,7 +197,7 @@ def parse_cb_defense_response_json(response, source):
             if 'type' not in notification:
                 notification['type'] = 'THREAT'
 
-    return response[u'notifications']
+    return response['notifications']
 
 
 def parse_cb_defense_response_cef(response, source):
@@ -215,14 +224,14 @@ def parse_cb_defense_response_cef(response, source):
 
             if note['type'] == 'THREAT':
                 signature = 'Active_Threat'
-                seconds = str(note['eventTime'])[:-3]
-                name = str(note['threatInfo']['summary'])
-                severity = str(note['threatInfo']['score'])
-                device_name = str(note['deviceInfo']['deviceName'])
-                user_name = str(note['deviceInfo']['email'])
-                device_ip = str(note['deviceInfo']['internalIpAddress'])
-                link = str(note['url'])
-                tid = str(note['threatInfo']['incidentId'])
+                seconds = get_unicode_string(note['eventTime'])[:-3]
+                name = get_unicode_string(note['threatInfo']['summary'])
+                severity = get_unicode_string(note['threatInfo']['score'])
+                device_name = get_unicode_string(note['deviceInfo']['deviceName'])
+                user_name = get_unicode_string(note['deviceInfo']['email'])
+                device_ip = get_unicode_string(note['deviceInfo']['internalIpAddress'])
+                link = get_unicode_string(note['url'])
+                tid = get_unicode_string(note['threatInfo']['incidentId'])
                 timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
                 extension = ''
                 extension += 'rt="' + timestamp + '"'
@@ -251,15 +260,15 @@ def parse_cb_defense_response_cef(response, source):
                 signature = 'Policy_Action'
                 name = 'Confer Sensor Policy Action'
                 severity = policy_action_severity
-                seconds = str(note['eventTime'])[:-3]
+                seconds = get_unicode_string(note['eventTime'])[:-3]
                 timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
-                device_name = str(note['deviceInfo']['deviceName'])
-                user_name = str(note['deviceInfo']['email'])
-                device_ip = str(note['deviceInfo']['internalIpAddress'])
-                sha256 = str(note['policyAction']['sha256Hash'])
-                action = str(note['policyAction']['action'])
-                app_name = str(note['policyAction']['applicationName'])
-                link = str(note['url'])
+                device_name = get_unicode_string(note['deviceInfo']['deviceName'])
+                user_name = get_unicode_string(note['deviceInfo']['email'])
+                device_ip = get_unicode_string(note['deviceInfo']['internalIpAddress'])
+                sha256 = get_unicode_string(note['policyAction']['sha256Hash'])
+                action = get_unicode_string(note['policyAction']['action'])
+                app_name = get_unicode_string(note['policyAction']['applicationName'])
+                link = get_unicode_string(note['url'])
                 extension = ''
                 extension += 'rt="' + timestamp + '"'
                 if '\\' in device_name and splitDomain == True:

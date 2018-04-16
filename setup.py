@@ -134,7 +134,7 @@ def get_data_files(rootdir):
 
 data_files = get_data_files("root")
 data_files.append('cb-defense-syslog.spec')
-data_files.append('cb-defense-syslog.py')
+data_files.append('cb_defense_syslog.py')
 scripts = {
     'cb-defense-syslog': {
         'spec': 'cb-defense-syslog.spec',
