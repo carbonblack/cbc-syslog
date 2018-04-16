@@ -124,8 +124,8 @@ def store_notifications(data):
     hash = hashlib.sha256(data).hexdigest()
 
     try:
-        with open(store_forwarder_dir + hash, 'wb', encoding="utf-8") as f:
-            f.write(data)
+        with open(store_forwarder_dir + hash, 'wb') as f:
+            f.write(data.encode("utf-8"))
     except:
         logger.error(traceback.format_exc())
         return None
