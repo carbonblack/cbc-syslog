@@ -5,6 +5,7 @@ from test.test_data import test_data, expected_output
 import unittest
 from jinja2 import Template
 
+
 class TestCbDefenseSyslogConnector(unittest.TestCase):
     def test_cef(self):
         responses = parse_cb_defense_response_cef(test_data, "test")

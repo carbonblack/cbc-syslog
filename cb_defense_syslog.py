@@ -103,6 +103,7 @@ def send_store_notifications():
     logger.info("Number of files in store forward: {0}".format(len(os.listdir(store_forwarder_dir))))
     for file_name in os.listdir(store_forwarder_dir):
         file_data = open(store_forwarder_dir + file_name, 'rb').read()
+        file_data = file_data.decode("utf-8")
         #
         # Store notifications just in case sending fails
         #
