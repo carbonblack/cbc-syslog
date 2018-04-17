@@ -121,11 +121,12 @@ def store_notifications(data):
     #
     # We hash the data to generate a unique filename
     #
-    hash = hashlib.sha256(data).hexdigest()
+    byte_data = data.encode("utf-8")
+    hash = hashlib.sha256(byte_data).hexdigest()
 
     try:
         with open(store_forwarder_dir + hash, 'wb') as f:
-            f.write(data.encode("utf-8"))
+            f.write(byte_data)
     except:
         logger.error(traceback.format_exc())
         return None

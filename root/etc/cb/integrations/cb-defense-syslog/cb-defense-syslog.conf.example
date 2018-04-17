@@ -47,12 +47,12 @@ output_format=cef
 output_type=tcp
 
 #
-# tcpout=IP:port - ie 1.2.3.5:8080
+# tcpout=IP:port - ie 1.2.3.5:514
 #
 tcp_out=
 
 #
-# udpout=IP:port - ie 1.2.3.5:8080
+# udpout=IP:port - ie 1.2.3.5:514
 #
 udp_out=
 
@@ -82,9 +82,9 @@ api_key = WT9T3QDP4UGCK2NS96111111
 
 #
 # Cb Defense Server URL
-# NOTE: this is not the url to the web ui, but to the url of sensor checkins
+# NOTE: this is not the url to the web ui, but to the API URL (for example, https://api-prod05.conferdeploy.net)
 #
-server_url = https://server.yourcompany.com
+server_url = https://api-prod05.conferdeploy.net
 
 #
 # For more than one Cb Defense Server, add another server using the following template including the stanza
