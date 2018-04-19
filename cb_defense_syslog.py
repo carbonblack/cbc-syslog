@@ -32,12 +32,12 @@ else:
     get_unicode_string = str
 
 
-def get_audit_logs(url, api_key_query, connector_id_query, ssl_verify):
+def get_audit_logs(url, api_key_query, connector_id_query, ssl_verify,proxies=None):
     headers = {'X-Auth-Token': "{0}/{1}".format(api_key_query, connector_id_query)}
     try:
         response = requests.get("{0}/integrationServices/v3/auditlogs".format(url),
                                 headers=headers,
-                                timeout=15)
+                                timeout=15,proxies=proxies)
 
         if response.status_code != 200:
             logger.error("Could not retrieve audit logs: {0}".format(response.status_code))
@@ -148,13 +148,13 @@ def parse_cb_defense_response_leef(response, source,log=print):
     return log_messages
 
 
-def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
+def cb_defense_server_request(url, api_key, connector_id, ssl_verify,proxies=None):
     logger.info("Attempting to connect to url: " + url)
 
     headers = {'X-Auth-Token': "{0}/{1}".format(api_key, connector_id)}
     try:
         response = requests.get(url + '/integrationServices/v3/notification', headers=headers, timeout=15,
-                                verify=ssl_verify)
+                                verify=ssl_verify,proxies=proxies)
         logger.info(response)
     except Exception as e:
         logging.error(e, exc_info=True)
