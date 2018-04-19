@@ -60,6 +60,93 @@ def get_audit_logs(url, api_key_query, connector_id_query, ssl_verify):
 
     return notifications
 
+def parse_cb_defense_response_leef(response, source,log=print):
+    # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 |
+    version = 'LEEF:2.0'
+    vendor = 'CarbonBlack'
+    product = 'CbDefense'
+    dev_version = '0.1'
+    hex_sep = "x09"
+    splitDomain = True
+
+    leef_header = '|'.join([version, vendor, product, dev_version])
+    log_messages = []
+
+    success = False
+
+    if response:
+        log('Parsing cb defense response of ' + get_unicode_string(response.text),'debug')
+        response = response.json()
+        success = response.get("success", False)
+
+    if not success:
+        return log_messages
+
+    if success:
+
+        if len(response['notifications']) < 1:
+            log('successfully connected, no alerts at this time')
+            return None
+        for note in response['notifications']:
+            indicators = []
+            current_notification_leef_header = leef_header
+            eventId = get_unicode_string(note.get('eventId'))
+            kvpairs = {"eventId": eventId}
+            devTime = note.get("eventTime", 0)
+            devTime = time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(devTime / 1000))
+            devTimeFormat = "MMM dd yyyy HH:mm:ss z"
+            url = note.get("url", "noUrlProvided")
+            ruleName = note.get("ruleName", "noRuleName")
+            kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url, "ruleName": ruleName})
+            if note.get('type','noType') == 'THREAT' or note.get('threatInfo',False):
+                current_notification_leef_header += "|{0}|{1}|".format("THREAT", hex_sep)
+                cat = "THREAT"
+                indicators = note['threatInfo'].get('indicators', [])
+                kvpairs.update(note.get("deviceInfo", {}))
+                kvpairs.update({"incidentId": note['threatInfo'].get("incidentId", "noIncidentId")})
+                signature = 'Active_Threat'
+                summary = get_unicode_string(note['threatInfo'].get('summary', ""))
+                sev = get_unicode_string(note['threatInfo']['score'])
+                device_name = get_unicode_string(note['deviceInfo']['deviceName'])
+                email = get_unicode_string(note['deviceInfo']['email'])
+                src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
+                kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature, "sev": sev,
+                                "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
+                                "identHostName": device_name, "summary": summary})
+
+            elif note.get('type',"noType") == 'POLICY_ACTION' or note.get("policyAction",False):
+                severity = 1
+                summary = get_unicode_string(note['policyAction'].get('summary', ''))
+                device_name = get_unicode_string(note['deviceInfo']['deviceName'])
+                email = get_unicode_string(note['deviceInfo']['email'])
+                src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
+                sha256 = get_unicode_string(note['policyAction']['sha256Hash'])
+                action = note.get('policyAction',{}).get('action',None)
+                current_notification_leef_header += "|" + (get_unicode_string(action) if action else "POLICY_ACTION") + "|" + hex_sep + "|"
+                app_name = get_unicode_string(note['policyAction']['applicationName'])
+                reputation = get_unicode_string(note['policyAction'].get('reputation', ""))
+                url = get_unicode_string(note['url'])
+                kvpairs.update({"cat": "POLICY_ACTION", "sev": severity, "type": "POLICY_ACTION", "action": action,
+                                "reputation": reputation, "resource": device_name, "email": email, "src": src,
+                                "dst": src, "identSrc": src, "identHostName": device_name, "summary": summary,
+                                "sha256Hash": sha256, "applicationName": app_name, "url": url})
+
+            else:
+                continue
+
+            log_messages.append(
+                current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]))
+
+            for indicator in indicators:
+                indicator_name = indicator['indicatorName']
+                indicator_header = leef_header + "|{0}|{1}|".format(indicator_name, hex_sep)
+                indicator_dict = indicator_header + "\t".join(
+                    ["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]) + "\t" + "\t".join(
+                    ["{0}={1}".format(k, indicator[k]) for k in indicator])
+                log_messages.append(indicator_dict)
+
+    return log_messages
+
 
 def cb_defense_server_request(url, api_key, connector_id, ssl_verify):
     logger.info("Attempting to connect to url: " + url)
