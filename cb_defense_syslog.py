@@ -581,6 +581,8 @@ def main():
             log_messages = parse_cb_defense_response_json(json_response, server.get('source', ''))
         elif config.get('general', 'output_format').lower() == 'cef':
             log_messages = parse_cb_defense_response_cef(json_response, server.get('source', ''))
+        elif config.get('general', 'output_format').lower() == 'leef':
+            log_messages = parse_cb_defense_response_cef(json_response, server.get('source', ''))
         else:
             log_messages = None
 
