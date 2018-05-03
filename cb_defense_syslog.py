@@ -84,6 +84,7 @@ def parse_cb_defense_response_leef(response, source):
     if success:
 
         if len(response['notifications']) < 1:
+            logger.info('successfully connected, no alerts at this time')
             return None
         for note in response['notifications']:
             indicators = []
