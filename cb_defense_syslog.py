@@ -60,7 +60,7 @@ def get_audit_logs(url, api_key_query, connector_id_query, ssl_verify,proxies=No
 
     return notifications
 
-def parse_cb_defense_response_leef(response, source,log=print):
+def parse_cb_defense_response_leef(response, source):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 |
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
@@ -75,7 +75,6 @@ def parse_cb_defense_response_leef(response, source,log=print):
     success = False
 
     if response:
-        log('Parsing cb defense response of ' + get_unicode_string(response.text),'debug')
         response = response.json()
         success = response.get("success", False)
 
@@ -85,7 +84,6 @@ def parse_cb_defense_response_leef(response, source,log=print):
     if success:
 
         if len(response['notifications']) < 1:
-            log('successfully connected, no alerts at this time')
             return None
         for note in response['notifications']:
             indicators = []
@@ -408,15 +406,17 @@ def verify_config_parse_servers():
     #
     # Verify output_format
     #
+
     if not config.has_option('general', 'output_format'):
         logger.error('output_format of json or cef was not specified')
         logger.warn('Setting output format to CEF')
         config.set('general', 'output_format', 'cef')
 
     elif not config.get('general', 'output_format').lower() == 'cef' and \
-            not config.get('general', 'output_format').lower() == 'json':
+            not config.get('general', 'output_format').lower() == 'json' \
+            and not config.get('general', 'output_format').lower() == 'leef':
         logger.error('invalid output_format type was specified')
-        logger.error('Must specify JSON or CEF output format')
+        logger.error('Must specify JSON, CEF , or LEEF output format')
         logger.warn('Setting output format to CEF')
         config.set('general', 'output_format', 'cef')
 
@@ -582,7 +582,7 @@ def main():
         elif config.get('general', 'output_format').lower() == 'cef':
             log_messages = parse_cb_defense_response_cef(json_response, server.get('source', ''))
         elif config.get('general', 'output_format').lower() == 'leef':
-            log_messages = parse_cb_defense_response_cef(json_response, server.get('source', ''))
+            log_messages = parse_cb_defense_response_leef(json_response, server.get('source', ''))
         else:
             log_messages = None
 
@@ -598,12 +598,18 @@ def main():
             #
             for log in log_messages:
 
-                if config.get('general', 'output_format').lower() == 'json':
+                output_format = config.get('general','output_format').lower()
+
+                if output_format == 'json':
                     final_data = json.dumps(log) + '\n'
 
-                if config.get('general', 'output_format').lower() == 'cef':
+                elif output_format == 'cef':
                     template = Template(config.get('general', 'template'))
                     final_data = template.render(log) + '\n'
+                elif output_format == 'leef':
+                    final_data = log + "\n"
+
+
 
                 #
                 # Store notifications just in case sending fails
