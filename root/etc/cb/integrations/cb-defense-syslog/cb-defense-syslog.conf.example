@@ -61,7 +61,24 @@ udp_out=
 #
 # Specify a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog
 #
-#ca_cert = /etc/cb/integrations/cb-defense/cert.pem
+#ca_cert = /etc/cb/integrations/cb-defense/ca.pem
+
+#
+# Optionally specify a file containing PEM-encoded client certificate for verifying this client when using TLS+TCP syslog
+# If cert is specified, key is a required parameter
+#
+#cert = /etc/cb/integrations/cb-defense/cert.pem
+
+#
+# Optionally specify a file containing PEM-encoded private key for verifying this client when using TLS+TCP syslog
+# If key is specified, cert is a required parameter
+#
+#key = /etc/cb/integrations/cb-defense/cert.key
+
+#
+# Optionally specify the password to decrypt the given private key when using TLS+TCP syslog
+#
+#key_password = p@ssw0rd1
 
 #
 # Uncomment tls_verify and set to "false" in order to disable verification of the peer server certificate
@@ -93,4 +110,3 @@ server_url = https://api-prod05.conferdeploy.net
 #connector_id = F8KF111111
 #api_key = WT9T3QDP4UGCK2NS96111111
 #server_url = https://server2.yourcompany.com
-

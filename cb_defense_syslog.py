@@ -226,15 +226,17 @@ def send_syslog_tls(server_url, port, data, output_type):
     if output_type == 'tcp+tls':
         unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            if config.getboolean('tls', 'tls_verify'):
-                cert_reqs = ssl.CERT_REQUIRED
-            else:
-                cert_reqs = ssl.CERT_NONE
+            context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=config.get('tls', 'ca_cert'))
+            if config.has_option('tls', 'cert'):
+                passwd = None
+                if config.has_option('tls', 'key_password'):
+                    passwd = config.get('tls', 'key_password')
+                context.load_cert_chain(config.get('tls', 'cert'), keyfile=config.get('tls', 'key'), password=passwd)
 
-            client_socket = ssl.wrap_socket(unsecured_client_socket,
-                                            ca_certs=config.get('tls', 'ca_cert'),
-                                            cert_reqs=cert_reqs,
-                                            ssl_version=ssl.PROTOCOL_TLSv1)
+            if not config.getboolean('tls', 'tls_verify'):
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+            client_socket = context.wrap_socket(unsecured_client_socket, server_hostname=server_url)
 
             client_socket.connect((server_url, port))
             client_socket.send(data.encode("utf-8"))
@@ -478,6 +480,9 @@ def verify_config_parse_servers():
             sys.exit(-1)
         if not config.has_option('tls', 'ca_cert'):
             logger.error("Must specify ca_cert file path in the general stanza")
+            sys.exit(-1)
+        if config.has_option('tls', 'cert') != config.has_option('tls', 'key'):
+            logger.error("You cannot specify a TLS cert without specifying a TLS key")
             sys.exit(-1)
         try:
             config.getboolean('tls', 'tls_verify')
