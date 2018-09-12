@@ -525,14 +525,15 @@ def verify_config_parse_servers():
 def main():
     global output_params
 
-    cacert_pem_path = "/usr/share/cb/integrations/cb-defense-syslog/cacert.pem"
-    if os.path.isfile(cacert_pem_path):
-        os.environ["REQUESTS_CA_BUNDLE"] = cacert_pem_path
-
     config = parse_config()
     if not config:
         logger.error("Error parsing config file")
         sys.exit(-1)
+
+    rca_path = config.get("general","requests_ca_path")
+    cacert_pem_path = "/usr/share/cb/integrations/cb-defense-syslog/cacert.pem" if not rca_path else rca_path
+    if os.path.isfile(cacert_pem_path):
+        os.environ["REQUESTS_CA_BUNDLE"] = cacert_pem_path
 
     #
     # verify the config file and get the Cb Defense Server list
