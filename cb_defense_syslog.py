@@ -286,6 +286,7 @@ def parse_cb_defense_response_json(response, source):
         for notification in response[u'notifications']:
             if 'type' not in notification:
                 notification['type'] = 'THREAT'
+            notification['source'] = source
 
     return response['notifications']
 
