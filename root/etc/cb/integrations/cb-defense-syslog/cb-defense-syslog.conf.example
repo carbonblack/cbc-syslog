@@ -56,6 +56,11 @@ tcp_out=
 #
 udp_out=
 
+#
+# Override ca file for self signed certificates
+#
+#request_ca_path=
+
 [tls]
 
 #

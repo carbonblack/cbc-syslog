@@ -14,15 +14,14 @@ import traceback
 import hashlib
 import fcntl
 
-
 logger = logging.getLogger(__name__)
+
 logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 store_forwarder_dir = '/usr/share/cb/integrations/cb-defense-syslog/store/'
 policy_action_severity = 4
-
 
 from six import PY2
 
@@ -32,12 +31,12 @@ else:
     get_unicode_string = str
 
 
-def get_audit_logs(url, api_key_query, connector_id_query, ssl_verify,proxies=None):
+def get_audit_logs(url, api_key_query, connector_id_query, ssl_verify, proxies=None):
     headers = {'X-Auth-Token': "{0}/{1}".format(api_key_query, connector_id_query)}
     try:
         response = requests.get("{0}/integrationServices/v3/auditlogs".format(url),
                                 headers=headers,
-                                timeout=15,proxies=proxies)
+                                timeout=15, proxies=proxies)
 
         if response.status_code != 200:
             logger.error("Could not retrieve audit logs: {0}".format(response.status_code))
@@ -59,6 +58,7 @@ def get_audit_logs(url, api_key_query, connector_id_query, ssl_verify,proxies=No
         return False
 
     return notifications
+
 
 def parse_cb_defense_response_leef(response, source):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 |
@@ -97,7 +97,7 @@ def parse_cb_defense_response_leef(response, source):
             url = note.get("url", "noUrlProvided")
             ruleName = note.get("ruleName", "noRuleName")
             kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url, "ruleName": ruleName})
-            if note.get('type','noType') == 'THREAT' or note.get('threatInfo',False):
+            if note.get('type', 'noType') == 'THREAT' or note.get('threatInfo', False):
                 current_notification_leef_header += "|{0}|{1}|".format("THREAT", hex_sep)
                 cat = "THREAT"
                 indicators = note['threatInfo'].get('indicators', [])
@@ -113,15 +113,16 @@ def parse_cb_defense_response_leef(response, source):
                                 "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
                                 "identHostName": device_name, "summary": summary})
 
-            elif note.get('type',"noType") == 'POLICY_ACTION' or note.get("policyAction",False):
+            elif note.get('type', "noType") == 'POLICY_ACTION' or note.get("policyAction", False):
                 severity = 1
                 summary = get_unicode_string(note['policyAction'].get('summary', ''))
                 device_name = get_unicode_string(note['deviceInfo']['deviceName'])
                 email = get_unicode_string(note['deviceInfo']['email'])
                 src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
                 sha256 = get_unicode_string(note['policyAction']['sha256Hash'])
-                action = note.get('policyAction',{}).get('action',None)
-                current_notification_leef_header += "|" + (get_unicode_string(action) if action else "POLICY_ACTION") + "|" + hex_sep + "|"
+                action = note.get('policyAction', {}).get('action', None)
+                current_notification_leef_header += "|" + (
+                    get_unicode_string(action) if action else "POLICY_ACTION") + "|" + hex_sep + "|"
                 app_name = get_unicode_string(note['policyAction']['applicationName'])
                 reputation = get_unicode_string(note['policyAction'].get('reputation', ""))
                 url = get_unicode_string(note['url'])
@@ -147,19 +148,38 @@ def parse_cb_defense_response_leef(response, source):
     return log_messages
 
 
-def cb_defense_server_request(url, api_key, connector_id, ssl_verify,proxies=None):
+def cb_defense_server_request(url, api_key, connector_id, ssl_verify, proxies=None):
     logger.info("Attempting to connect to url: " + url)
 
     headers = {'X-Auth-Token': "{0}/{1}".format(api_key, connector_id)}
     try:
         response = requests.get(url + '/integrationServices/v3/notification', headers=headers, timeout=15,
-                                verify=ssl_verify,proxies=proxies)
+                                verify=ssl_verify, proxies=proxies)
         logger.info(response)
     except Exception as e:
         logging.error(e, exc_info=True)
         return None
     else:
         return response
+
+
+def gather_notification_context(url, notification_id, api_key_query, connector_id_query, ssl_verify, proxies=None):
+    try:
+        response = requests.get("{0}/integrationServices/v3/alert/{1}".format(url,
+                                                                              notification_id),
+                                headers={"X-Auth-Token": "{0}/{1}".format(api_key_query,
+                                                                          connector_id_query)})
+        if response.status_code != 200:
+            logger.error("Could not retrieve context for id {0}: {1}".format(notification_id,
+                                                                             response.status_code))
+            return None
+
+        return response.json()
+    except Exception as e:
+        logger.exception("Could not retrieve notification context for org id {1}: {2}".format(
+            notification_id,
+            str(e)))
+        return None
 
 
 def parse_config():
@@ -424,7 +444,6 @@ def verify_config_parse_servers():
         logger.warn('Setting output format to CEF')
         config.set('general', 'output_format', 'cef')
 
-
     if not config.has_option('general', 'template'):
         logger.error('A template is required in the general stanza')
         sys.exit(-1)
@@ -536,8 +555,9 @@ def main():
         logger.error("Error parsing config file")
         sys.exit(-1)
 
-    rca_path = config.get("general","requests_ca_path")
-    cacert_pem_path = "/usr/share/cb/integrations/cb-defense-syslog/cacert.pem" if not rca_path else rca_path
+    cacert_pem_path = "/usr/share/cb/integrations/cb-defense-syslog/cacert.pem"
+    if config.has_option("general", "requests_ca_path"):
+        cacert_pem_path = config.get("general", "requests_ca_path")
     if os.path.isfile(cacert_pem_path):
         os.environ["REQUESTS_CA_BUNDLE"] = cacert_pem_path
 
@@ -606,7 +626,7 @@ def main():
             #
             for log in log_messages:
 
-                output_format = config.get('general','output_format').lower()
+                output_format = config.get('general', 'output_format').lower()
 
                 if output_format == 'json':
                     final_data = json.dumps(log) + '\n'
@@ -616,8 +636,6 @@ def main():
                     final_data = template.render(log) + '\n'
                 elif output_format == 'leef':
                     final_data = log + "\n"
-
-
 
                 #
                 # Store notifications just in case sending fails
@@ -642,8 +660,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config-file', '-c', help="Absolute path to configuration file")
     parser.add_argument('--log-file', '-l', help="Log file location")
-
-    global args
 
     args = parser.parse_args()
     if not args.config_file:
