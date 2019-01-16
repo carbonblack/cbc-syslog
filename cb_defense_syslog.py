@@ -216,7 +216,8 @@ def send_store_notifications():
         if send_syslog_tls(output_params['output_host'],
                            output_params['output_port'],
                            file_data,
-                           output_params['output_type']):
+                           output_params['output_type'],
+                           output_params['output_format']):
             #
             # If the sending was successful, delete the stored data
             #
@@ -240,7 +241,7 @@ def store_notifications(data):
     return hash
 
 
-def send_syslog_tls(server_url, port, data, output_type):
+def send_syslog_tls(server_url, port, data, output_type, output_format):
     retval = True
     client_socket = None
     if output_type == 'tcp+tls':
@@ -290,6 +291,17 @@ def send_syslog_tls(server_url, port, data, output_type):
         finally:
             if unsecured_client_socket:
                 unsecured_client_socket.close()
+
+    elif output_type == 'http':
+        try:
+            if output_format == 'json':
+                headers = {'content-type': 'application/json'}
+                requests.post(headers=headers, url=server_url, data=data.encode("utf-8"))
+            else:
+                requests.post(url=server_url, data=data.encode("utf-8"))
+        except Exception as e:
+            logger.error(traceback.format_exc())
+            retval = False
 
     return retval
 
@@ -456,8 +468,8 @@ def verify_config_parse_servers():
         sys.exit(-1)
 
     output_type = config.get('general', 'output_type')
-    if output_type not in ['tcp', 'udp', 'tcp+tls']:
-        logger.error('output_type is invalid.  Must be tcp, udp, or tcp+tls')
+    if output_type not in ['tcp', 'udp', 'tcp+tls', 'http']:
+        logger.error('output_type is invalid.  Must be tcp, udp, http or tcp+tls')
         sys.exit(-1)
 
     if output_type == 'tcp':
@@ -513,6 +525,17 @@ def verify_config_parse_servers():
         output_params['output_host'] = config.get('general', 'tcp_out').strip().split(":")[0]
         output_params['output_port'] = int(config.get('general', 'tcp_out').strip().split(':')[1])
 
+    elif output_type == 'http':
+        #
+        # User has specified http.
+        #
+        if not config.has_option('general', 'http_out'):
+            logger.error('http_out parameter is required for http output_type')
+            logger.error('Example: https://server.company.com/endpoint')
+            sys.exit(-1)
+
+        output_params['output_host'] = config.get('general', 'http_out')
+        output_params['output_port'] = 0
     #
     # Parse out multiple servers
     #
@@ -543,6 +566,7 @@ def verify_config_parse_servers():
             sys.exit(-1)
 
     output_params['output_type'] = config.get('general', 'output_type')
+    output_params['output_format'] = config.get('general', 'output_format')
 
     return output_params, server_list
 
@@ -647,7 +671,8 @@ def main():
                 if send_syslog_tls(output_params['output_host'],
                                    output_params['output_port'],
                                    final_data,
-                                   output_params['output_type']):
+                                   output_params['output_type'],
+                                   output_params['output_format']):
                     #
                     # If successful send, then we just delete the stored version
                     #

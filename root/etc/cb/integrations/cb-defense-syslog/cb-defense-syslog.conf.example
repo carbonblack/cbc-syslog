@@ -38,11 +38,12 @@ output_format=cef
 
 #
 # Configure the specific output.
-# Valid options are: 'udp', 'tcp', 'tcp+tls'
+# Valid options are: 'udp', 'tcp', 'tcp+tls', 'http'
 #
 #  udp     - Have the events sent over a UDP socket
 #  tcp     - Have the events sent over a TCP socket
 #  tcp+tls - Have the events sent over a TLS+TCP socket
+#  http    - Have the events sent over a HTTP connection
 #
 output_type=tcp
 
@@ -55,6 +56,11 @@ tcp_out=
 # udpout=IP:port - ie 1.2.3.5:514
 #
 udp_out=
+
+#
+# httpout=Http endpoint - ie https://server.company.com/endpoint
+#
+http_out=
 
 #
 # Override ca file for self signed certificates
