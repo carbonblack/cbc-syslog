@@ -81,16 +81,6 @@ Debug Logs are stored in `/var/log/cb/integrations/cb-defense-syslog/`
     template = {{source}}|{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
 
     #
-    # Configure the specific output.
-    # Valid options are: 'udp', 'tcp', 'tcp+tls'
-    #
-    #  udp     - Have the events sent over a UDP socket
-    #  tcp     - Have the events sent over a TCP socket
-    #  tcp+tls - Have the events sent over a TLS+TCP socket
-    #
-    output_type=tcp
-
-    #
   	# Output format of the data sent. Currently support json or cef formats
   	#
   	# Warning: if using json output_format, we recommend NOT using UDP output_type
