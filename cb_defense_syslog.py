@@ -407,7 +407,6 @@ def parse_cb_defense_response_cef(response, source):
                 else:
                     extension += ' duser=' + user_name
 
-                extension += 'rt="' + timestamp + '"'
                 extension += ' dvc=' + device_ip
                 extension += ' cs3Label="Link"'
                 extension += ' cs3="' + link + '"'
