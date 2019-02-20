@@ -295,7 +295,7 @@ def send_syslog_tls(server_url, port, data, output_type, output_format):
     elif output_type == 'http':
         try:
             if output_format == 'json':
-                headers = {'content-type': 'application/json'}
+                headers = output_params[http_headers]
                 requests.post(headers=headers, url=server_url, data=data.encode("utf-8"))
             else:
                 requests.post(url=server_url, data=data.encode("utf-8"))
@@ -534,6 +534,7 @@ def verify_config_parse_servers():
             sys.exit(-1)
 
         output_params['output_host'] = config.get('general', 'http_out')
+        output_params['http_headers'] = config.get('general', 'http_headers')
         output_params['output_port'] = 0
     #
     # Parse out multiple servers
