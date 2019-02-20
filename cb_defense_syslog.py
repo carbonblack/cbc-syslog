@@ -241,7 +241,7 @@ def store_notifications(data):
     return hash
 
 
-def send_syslog_tls(server_url, port, data, output_type, output_format):
+def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_verify=True):
     retval = True
     client_socket = None
     if output_type == 'tcp+tls':
@@ -295,10 +295,10 @@ def send_syslog_tls(server_url, port, data, output_type, output_format):
     elif output_type == 'http':
         try:
             if output_format == 'json':
-                headers = output_params[http_headers]
-                requests.post(headers=headers, url=server_url, data=data.encode("utf-8"))
-            else:
-                requests.post(url=server_url, data=data.encode("utf-8"))
+                requests.post(headers=output_params['http_headers'],
+                              url=server_url,
+                              data=data.encode("utf-8"),
+                              verify=ssl_verify)
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
@@ -525,6 +525,13 @@ def verify_config_parse_servers():
         output_params['output_port'] = int(config.get('general', 'tcp_out').strip().split(':')[1])
 
     elif output_type == 'http':
+        try:
+            output_params['output_host'] = config.get('general', 'http_out')
+            output_params['output_port'] = None
+        except Exception as e:
+            logger.error(traceback.format_exc())
+            logger.error("http_out must be of format http(s)://<ip>:<port>")
+            sys.exit(-1)
         #
         # User has specified http.
         #
@@ -534,8 +541,15 @@ def verify_config_parse_servers():
             sys.exit(-1)
 
         output_params['output_host'] = config.get('general', 'http_out')
-        output_params['http_headers'] = config.get('general', 'http_headers')
-        output_params['output_port'] = 0
+
+        output_params['http_headers'] = {'content-type': 'application/json'}
+        if config.has_option('general', 'http_headers'):
+            output_params['http_headers'] = config.get('general', 'http_headers')
+
+        output_params['https_ssl_verify'] = True
+        if config.has_option('general', 'https_ssl_verify'):
+            output_params['https_ssl_verify'] = config.get('general', 'https_ssl_verify')
+
     #
     # Parse out multiple servers
     #
@@ -672,7 +686,8 @@ def main():
                                    output_params['output_port'],
                                    final_data,
                                    output_params['output_type'],
-                                   output_params['output_format']):
+                                   output_params['output_format'],
+                                   output_params['http_ssl_verify']):
                     #
                     # If successful send, then we just delete the stored version
                     #
