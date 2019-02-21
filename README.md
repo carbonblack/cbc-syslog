@@ -171,9 +171,11 @@ Debug Logs are stored in `/var/log/cb/integrations/cb-defense-syslog/`
     udp_out=
 
     #
-    # httpout=Http endpoint - ie https://server.company.com/endpoint
+    # httpout=http/https endpoint - ie https://server.company.com/endpoint
+    # http_headers= {'key1': 'value1', 'key2': 'value2'} - ie {'content-type': 'application/json'}
     #
     http_out=
+    http_headers=
 
     [tls]
 
