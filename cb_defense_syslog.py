@@ -589,7 +589,7 @@ def verify_config_parse_servers():
 
             server['siem_connector_id'] = config.get(section, 'siem_connector_id')
             server['siem_api_key'] = config.get(section, 'siem_api_key')
-            if config.has_option(section,'connector_id') and \ 
+            if config.has_option(section,'connector_id') and \
                 config.has_option(section,'api_key'):
                 server['connector_id'] = config.get(section, 'connector_id')
                 server['api_key'] = config.get(section, 'api_key')
