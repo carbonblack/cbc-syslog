@@ -8,7 +8,7 @@ import json
 import pprint
 import logging
 
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
