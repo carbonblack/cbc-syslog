@@ -13,6 +13,7 @@ import logging.handlers
 import traceback
 import hashlib
 import fcntl
+from functools import partial
 
 logger = logging.getLogger(__name__)
 
@@ -59,18 +60,8 @@ def get_audit_logs(url, siem_api_key_query, siem_connector_id_query, ssl_verify,
 
     return notifications
 
-def parse_cb_defense_notifications_get_incidentids(response):
-    incidentids = [] 
-    for notification in response['notifications']:
-        threatinfo = notification.get('threatInfo',None)
-        if threatinfo is not None:
-            incidentid = threatinfo.get('incidentId',None)
-            if incidentid is not None:
-                incidentids.append(incidentid)
-    return incidentids
 
-
-def parse_cb_defense_response_leef(response, source):
+def parse_cb_defense_response_leef(response, source,eventContextFunc = lambda e: None):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 |
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
@@ -82,78 +73,72 @@ def parse_cb_defense_response_leef(response, source):
     leef_header = '|'.join([version, vendor, product, dev_version])
     log_messages = []
 
-    success = False
+    if len(response['notifications']) < 1:
+        logger.info('successfully connected, no alerts at this time')
+        return None
+    for note in response['notifications']:
+        indicators = []
+        current_notification_leef_header = leef_header
+        eventId = get_unicode_string(note.get('eventId'))
+        kvpairs = {"eventId": eventId}
+        devTime = note.get("eventTime", 0)
+        devTime = time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(devTime / 1000))
+        devTimeFormat = "MMM dd yyyy HH:mm:ss z"
+        url = note.get("url", "noUrlProvided")
+        ruleName = note.get("ruleName", "noRuleName")
+        kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url, "ruleName": ruleName})
+        if note.get('type', 'noType') == 'THREAT' or note.get('threatInfo', False):
+            current_notification_leef_header += "|{0}|{1}|".format("THREAT", hex_sep)
+            cat = "THREAT"
+            indicators = note['threatInfo'].get('indicators', [])
+            kvpairs.update(note.get("deviceInfo", {}))
+            incidentId = note.get('threatInfo',{}).get('incidentId',None)
+            if incidentId is not None:
+                context = eventContextFunc(incidentId)
+                if context is not None:
+                    kvparis.update({'event':context})
+            kvpairs.update({"incidentId": note['threatInfo'].get("incidentId", "noIncidentId")})
+            signature = 'Active_Threat'
+            summary = get_unicode_string(note['threatInfo'].get('summary', ""))
+            sev = get_unicode_string(note['threatInfo']['score'])
+            device_name = get_unicode_string(note['deviceInfo']['deviceName'])
+            email = get_unicode_string(note['deviceInfo']['email'])
+            src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
+            kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature, "sev": sev,
+                            "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
+                            "identHostName": device_name, "summary": summary})
 
-    if response:
-        response = response.json()
-        success = response.get("success", False)
+        elif note.get('type', "noType") == 'POLICY_ACTION' or note.get("policyAction", False):
+            severity = 1
+            summary = get_unicode_string(note['policyAction'].get('summary', ''))
+            device_name = get_unicode_string(note['deviceInfo']['deviceName'])
+            email = get_unicode_string(note['deviceInfo']['email'])
+            src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
+            sha256 = get_unicode_string(note['policyAction']['sha256Hash'])
+            action = note.get('policyAction', {}).get('action', None)
+            current_notification_leef_header += "|" + (
+                get_unicode_string(action) if action else "POLICY_ACTION") + "|" + hex_sep + "|"
+            app_name = get_unicode_string(note['policyAction']['applicationName'])
+            reputation = get_unicode_string(note['policyAction'].get('reputation', ""))
+            url = get_unicode_string(note['url'])
+            kvpairs.update({"cat": "POLICY_ACTION", "sev": severity, "type": "POLICY_ACTION", "action": action,
+                            "reputation": reputation, "resource": device_name, "email": email, "src": src,
+                            "dst": src, "identSrc": src, "identHostName": device_name, "summary": summary,
+                            "sha256Hash": sha256, "applicationName": app_name, "url": url})
 
-    if not success:
-        return log_messages
+        else:
+            continue
 
-    if success:
+        log_messages.append(
+            current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]))
 
-        if len(response['notifications']) < 1:
-            logger.info('successfully connected, no alerts at this time')
-            return None
-        for note in response['notifications']:
-            indicators = []
-            current_notification_leef_header = leef_header
-            eventId = get_unicode_string(note.get('eventId'))
-            kvpairs = {"eventId": eventId}
-            devTime = note.get("eventTime", 0)
-            devTime = time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(devTime / 1000))
-            devTimeFormat = "MMM dd yyyy HH:mm:ss z"
-            url = note.get("url", "noUrlProvided")
-            ruleName = note.get("ruleName", "noRuleName")
-            kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url, "ruleName": ruleName})
-            if note.get('type', 'noType') == 'THREAT' or note.get('threatInfo', False):
-                current_notification_leef_header += "|{0}|{1}|".format("THREAT", hex_sep)
-                cat = "THREAT"
-                indicators = note['threatInfo'].get('indicators', [])
-                kvpairs.update(note.get("deviceInfo", {}))
-                kvpairs.update({"incidentId": note['threatInfo'].get("incidentId", "noIncidentId")})
-                signature = 'Active_Threat'
-                summary = get_unicode_string(note['threatInfo'].get('summary', ""))
-                sev = get_unicode_string(note['threatInfo']['score'])
-                device_name = get_unicode_string(note['deviceInfo']['deviceName'])
-                email = get_unicode_string(note['deviceInfo']['email'])
-                src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
-                kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature, "sev": sev,
-                                "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
-                                "identHostName": device_name, "summary": summary})
-
-            elif note.get('type', "noType") == 'POLICY_ACTION' or note.get("policyAction", False):
-                severity = 1
-                summary = get_unicode_string(note['policyAction'].get('summary', ''))
-                device_name = get_unicode_string(note['deviceInfo']['deviceName'])
-                email = get_unicode_string(note['deviceInfo']['email'])
-                src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
-                sha256 = get_unicode_string(note['policyAction']['sha256Hash'])
-                action = note.get('policyAction', {}).get('action', None)
-                current_notification_leef_header += "|" + (
-                    get_unicode_string(action) if action else "POLICY_ACTION") + "|" + hex_sep + "|"
-                app_name = get_unicode_string(note['policyAction']['applicationName'])
-                reputation = get_unicode_string(note['policyAction'].get('reputation', ""))
-                url = get_unicode_string(note['url'])
-                kvpairs.update({"cat": "POLICY_ACTION", "sev": severity, "type": "POLICY_ACTION", "action": action,
-                                "reputation": reputation, "resource": device_name, "email": email, "src": src,
-                                "dst": src, "identSrc": src, "identHostName": device_name, "summary": summary,
-                                "sha256Hash": sha256, "applicationName": app_name, "url": url})
-
-            else:
-                continue
-
-            log_messages.append(
-                current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]))
-
-            for indicator in indicators:
-                indicator_name = indicator['indicatorName']
-                indicator_header = leef_header + "|{0}|{1}|".format(indicator_name, hex_sep)
-                indicator_dict = indicator_header + "\t".join(
-                    ["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]) + "\t" + "\t".join(
-                    ["{0}={1}".format(k, indicator[k]) for k in indicator])
-                log_messages.append(indicator_dict)
+        for indicator in indicators:
+            indicator_name = indicator['indicatorName']
+            indicator_header = leef_header + "|{0}|{1}|".format(indicator_name, hex_sep)
+            indicator_dict = indicator_header + "\t".join(
+                ["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]) + "\t" + "\t".join(
+                ["{0}={1}".format(k, indicator[k]) for k in indicator])
+            log_messages.append(indicator_dict)
 
     return log_messages
 
@@ -173,7 +158,7 @@ def cb_defense_server_request(url, siem_api_key, siem_connector_id, ssl_verify, 
         return response
 
 
-def gather_notification_context(url, notification_id, api_key_query, connector_id_query, ssl_verify, proxies=None):
+def gather_notification_context(url,  api_key_query, connector_id_query, ssl_verify,notification_id, proxies=None):
     try:
         response = requests.get("{0}/integrationServices/v3/alert/{1}".format(url,
                                                                               notification_id),
@@ -316,7 +301,7 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
     return retval
 
 
-def parse_cb_defense_response_json(response, source):
+def parse_cb_defense_response_json(response, source,eventContextFunc=lambda e: None):
     if u'success' not in response:
         return None
 
@@ -326,6 +311,11 @@ def parse_cb_defense_response_json(response, source):
             return None
 
         for notification in response[u'notifications']:
+            if notification.get('type',None) == 'THREAT':
+                incidentId = notification.get('threatInfo',{}).get('incidentId',None)
+                if incidentId is not None:
+                    context = eventContextFunc(incidentId)
+                    notification['events'] = context
             if 'type' not in notification:
                 notification['type'] = 'THREAT'
             notification['source'] = source
@@ -333,7 +323,7 @@ def parse_cb_defense_response_json(response, source):
     return response['notifications']
 
 
-def parse_cb_defense_response_cef(response, source):
+def parse_cb_defense_response_cef(response, source, eventContextFunc= lambda e: None):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'
@@ -365,9 +355,15 @@ def parse_cb_defense_response_cef(response, source):
                 device_ip = get_unicode_string(note['deviceInfo']['internalIpAddress'])
                 link = get_unicode_string(note['url'])
                 tid = get_unicode_string(note['threatInfo']['incidentId'])
+                incidentId = note.get('threatInfo',{}).get('incidentId',None)
                 timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
                 extension = ''
                 extension += 'rt="' + timestamp + '"'
+                if incidentId is not None:
+                    context = eventContextFunc(incidentId)
+                    if context is not None:
+                        eventsIds = [e['eventId'] for e in context.get('events',[])]
+                        extension += ' event=' + ",".join(eventIds)
 
                 if '\\' in device_name and splitDomain:
                     (domain_name, device) = device_name.split('\\')
@@ -589,10 +585,13 @@ def verify_config_parse_servers():
 
             server['siem_connector_id'] = config.get(section, 'siem_connector_id')
             server['siem_api_key'] = config.get(section, 'siem_api_key')
-            if config.has_option(section,'connector_id') and \ 
-                config.has_option(section,'api_key'):
+            if config.has_option(section,'connector_id') and \
+                    config.has_option(section,'api_key'):
                 server['connector_id'] = config.get(section, 'connector_id')
                 server['api_key'] = config.get(section, 'api_key')
+                output_params['eventContext']  = True
+            else:
+                output_params['eventContext'] = False
             server['source'] = section
             server_list.append(server)
         else:
@@ -663,13 +662,17 @@ def main():
         #
         # parse the Cb Defense Response and get a list of log messages to send to tcp_tls_host:tcp_tls_port
         #
+        eventContextFunc = lambda e: None
+        if output_params['eventContext']:
+            eventContextFunc = partial(gather_notification_context,server.get('server_url'),server.get('api_key'),server.get('connector_id'),True) 
 
+            
         if config.get('general', 'output_format').lower() == 'json':
-            log_messages = parse_cb_defense_response_json(json_response, server.get('source', ''))
+            log_messages = parse_cb_defense_response_json(json_response, server.get('source', ''),eventContextFunc)
         elif config.get('general', 'output_format').lower() == 'cef':
-            log_messages = parse_cb_defense_response_cef(json_response, server.get('source', ''))
+            log_messages = parse_cb_defense_response_cef(json_response, server.get('source', ''),eventContextFunc)
         elif config.get('general', 'output_format').lower() == 'leef':
-            log_messages = parse_cb_defense_response_leef(json_response, server.get('source', ''))
+            log_messages = parse_cb_defense_response_leef(json_response, server.get('source', ''),eventContextFunc)
         else:
             log_messages = None
 

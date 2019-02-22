@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from cb_defense_syslog import parse_cb_defense_response_cef
-from test.test_data import test_data, expected_output
+from cb_defense_syslog import parse_cb_defense_response_cef, parse_cb_defense_response_leef,parse_cb_defense_response_json
+from test.test_data import test_data, expected_output_cef
 import unittest
 from jinja2 import Template
 
@@ -15,8 +15,13 @@ class TestCbDefenseSyslogConnector(unittest.TestCase):
 
         generated_output = "\n".join([template.render(log).encode('utf8') for log in responses])
 
-        self.assertEqual(generated_output, expected_output)
+        self.assertEqual(generated_output, expected_output_cef)
+
+    #def test_json(self):
+    #    generated_json_output = parse_cb_defense_response_json(test_data,"test")
+    #    self.assertEqual(generated_json_output,test_data)
 
 
 if __name__ == '__main__':
-    unittest.main()
+    print(parse_cb_defense_response_leef(test_data,"test"))
+    #unittest.main()
