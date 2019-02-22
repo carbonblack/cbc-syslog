@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, request, jsonify
 from test_data import test_data
 import threading
 import socket
@@ -6,7 +6,11 @@ import ssl
 import traceback
 import json
 import pprint
+import logging
 
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -17,6 +21,16 @@ tcp_server_port = 8887
 udp_server_port = 8886
 
 
+@app.route('/http_out', methods=['POST'])
+def http_out():
+    try:
+        content = request.json
+        logger.info(content)
+    except:
+        logger.info(traceback.format_exc())
+    return jsonify({})
+
+
 @app.route('/integrationServices/v2/session', methods=['GET', 'POST'])
 def session():
     return '{"sessionId":"348-5UH2SZ4S7GKA","success":true,"message":"Success"}'
@@ -24,14 +38,13 @@ def session():
 
 @app.route('/integrationServices/v3/notification', methods=['GET', 'POST'])
 def notificationv3():
-
     try:
         #
         # Yes str vs json since this emulates what the Cb Defense returns
         #
-        #list_data = test_data["notifications"]
+        # list_data = test_data["notifications"]
 
-        #for i in range(1):
+        # for i in range(1):
         #    test_data["notifications"].extend(list_data)
 
         print len(test_data["notifications"])
@@ -52,7 +65,8 @@ def notificationv2():
         test_data["notifications"].extend(list_data)
     return jsonify(test_data)
 
-    #return jsonify({})
+    # return jsonify({})
+
 
 class FuncThread(threading.Thread):
     def __init__(self, target, *args):
@@ -62,6 +76,7 @@ class FuncThread(threading.Thread):
 
     def run(self):
         self._target(*self._args)
+
 
 def udp_server():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -98,8 +113,8 @@ def tcp_server():
             pass
         secured_client_socket.close()
 
-def tcp_tls_server():
 
+def tcp_tls_server():
     # Create a TCP/IP socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('0.0.0.0', tcp_tls_server_port))
@@ -136,6 +151,7 @@ def main():
     # Default port is 5000
     #
     app.run(host='0.0.0.0', port=5001)
+
 
 if __name__ == "__main__":
     main()
