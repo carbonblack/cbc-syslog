@@ -294,11 +294,11 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
 
     elif output_type == 'http':
         try:
-            if output_format == 'json':
-                requests.post(headers=output_params['http_headers'],
-                              url=server_url,
-                              data=data.encode("utf-8"),
-                              verify=ssl_verify)
+            resp = requests.post(headers=output_params['http_headers'],
+                                 url=server_url,
+                                 data=data.encode("utf-8"),
+                                 verify=ssl_verify)
+            logger.info(resp)
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
@@ -544,7 +544,13 @@ def verify_config_parse_servers():
 
         output_params['http_headers'] = {'content-type': 'application/json'}
         if config.has_option('general', 'http_headers'):
-            output_params['http_headers'] = config.get('general', 'http_headers')
+            try:
+                logger.info(config.get('general', 'http_headers').strip())
+                output_params['http_headers'] = json.loads(config.get('general', 'http_headers').strip())
+            except Exception as e:
+                logger.error(str(e))
+                logger.error("Invalid http_headers: unable to parse JSON")
+                sys.exit(-1)
 
         output_params['https_ssl_verify'] = True
         if config.has_option('general', 'https_ssl_verify'):
@@ -654,10 +660,13 @@ def main():
 
         if not log_messages:
             logger.info("There are no messages to forward to host")
-        else:
+        elif output_params['output_port']:
             logger.info("Sending {0} messages to {1}:{2}".format(len(log_messages),
                                                                  output_params['output_host'],
                                                                  output_params['output_port']))
+        else:
+            logger.info("Sending {0} messages to {1}".format(len(log_messages),
+                                                             output_params['output_host']))
 
             #
             # finally send the messages
@@ -687,7 +696,7 @@ def main():
                                    final_data,
                                    output_params['output_type'],
                                    output_params['output_format'],
-                                   output_params['http_ssl_verify']):
+                                   output_params['https_ssl_verify']):
                     #
                     # If successful send, then we just delete the stored version
                     #
