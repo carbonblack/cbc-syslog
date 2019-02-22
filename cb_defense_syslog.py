@@ -31,8 +31,8 @@ else:
     get_unicode_string = str
 
 
-def get_audit_logs(url, api_key_query, connector_id_query, ssl_verify, proxies=None):
-    headers = {'X-Auth-Token': "{0}/{1}".format(api_key_query, connector_id_query)}
+def get_audit_logs(url, siem_api_key_query, siem_connector_id_query, ssl_verify, proxies=None):
+    headers = {'X-Auth-Token': "{0}/{1}".format(siem_api_key_query, siem_connector_id_query)}
     try:
         response = requests.get("{0}/integrationServices/v3/auditlogs".format(url),
                                 headers=headers,
@@ -58,6 +58,16 @@ def get_audit_logs(url, api_key_query, connector_id_query, ssl_verify, proxies=N
         return False
 
     return notifications
+
+def parse_cb_defense_notifications_get_incidentids(response):
+    incidentids = [] 
+    for notification in response['notifications']:
+        threatinfo = notification.get('threatInfo',None)
+        if threatinfo is not None:
+            incidentid = threatinfo.get('incidentId',None)
+            if incidentid is not None:
+                incidentids.append(incidentid)
+    return incidentids
 
 
 def parse_cb_defense_response_leef(response, source):
@@ -148,10 +158,10 @@ def parse_cb_defense_response_leef(response, source):
     return log_messages
 
 
-def cb_defense_server_request(url, api_key, connector_id, ssl_verify, proxies=None):
+def cb_defense_server_request(url, siem_api_key, siem_connector_id, ssl_verify, proxies=None):
     logger.info("Attempting to connect to url: " + url)
 
-    headers = {'X-Auth-Token': "{0}/{1}".format(api_key, connector_id)}
+    headers = {'X-Auth-Token': "{0}/{1}".format(siem_api_key, siem_connector_id)}
     try:
         response = requests.get(url + '/integrationServices/v3/notification', headers=headers, timeout=15,
                                 verify=ssl_verify, proxies=proxies)
@@ -561,8 +571,8 @@ def verify_config_parse_servers():
             #
             continue
         if config.has_option(section, 'server_url') and \
-                config.has_option(section, 'connector_id') and \
-                config.has_option(section, 'api_key'):
+                config.has_option(section, 'siem_connector_id') and \
+                config.has_option(section, 'siem_api_key'):
 
             if not config.get(section, 'server_url').startswith('http'):
                 logger.error('Stanza {0} server_url entry does not start with http or https'.format(section))
@@ -571,8 +581,12 @@ def verify_config_parse_servers():
 
             server['server_url'] = config.get(section, 'server_url')
 
-            server['connector_id'] = config.get(section, 'connector_id')
-            server['api_key'] = config.get(section, 'api_key')
+            server['siem_connector_id'] = config.get(section, 'siem_connector_id')
+            server['siem_api_key'] = config.get(section, 'siem_api_key')
+            if config.has_option(section,'connector_id') and \ 
+                config.has_option(section,'api_key'):
+                server['connector_id'] = config.get(section, 'connector_id')
+                server['api_key'] = config.get(section, 'api_key')
             server['source'] = section
             server_list.append(server)
         else:
@@ -624,8 +638,8 @@ def main():
         logger.info("Handling notifications for {0}".format(server.get('server_url')))
 
         response = cb_defense_server_request(server.get('server_url'),
-                                             server.get('api_key'),
-                                             server.get('connector_id'),
+                                             server.get('siem_api_key'),
+                                             server.get('siem_connector_id'),
                                              True)
 
         if not response:
@@ -643,6 +657,7 @@ def main():
         #
         # parse the Cb Defense Response and get a list of log messages to send to tcp_tls_host:tcp_tls_port
         #
+
         if config.get('general', 'output_format').lower() == 'json':
             log_messages = parse_cb_defense_response_json(json_response, server.get('source', ''))
         elif config.get('general', 'output_format').lower() == 'cef':
