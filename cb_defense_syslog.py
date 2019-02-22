@@ -76,29 +76,32 @@ def parse_cb_defense_response_leef(response, source,eventContextFunc = lambda e:
     if len(response['notifications']) < 1:
         logger.info('successfully connected, no alerts at this time')
         return None
+    count = 0
     for note in response['notifications']:
+        print("ON NOTIFICATION " + str(count))
+        count +=1 
         indicators = []
-        current_notification_leef_header = leef_header
+        current_notification_leef_header = get_unicode_string(leef_header)
         eventId = get_unicode_string(note.get('eventId'))
         kvpairs = {"eventId": eventId}
         devTime = note.get("eventTime", 0)
-        devTime = time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(devTime / 1000))
-        devTimeFormat = "MMM dd yyyy HH:mm:ss z"
-        url = note.get("url", "noUrlProvided")
-        ruleName = note.get("ruleName", "noRuleName")
+        devTime = get_unicode_string(time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(devTime / 1000)))
+        devTimeFormat = get_unicode_string("MMM dd yyyy HH:mm:ss z")
+        url = get_unicode_string(note.get("url", "noUrlProvided"))
+        ruleName = get_unicode_string(note.get("ruleName", "noRuleName"))
         kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url, "ruleName": ruleName})
         if note.get('type', 'noType') == 'THREAT' or note.get('threatInfo', False):
-            current_notification_leef_header += "|{0}|{1}|".format("THREAT", hex_sep)
-            cat = "THREAT"
+            current_notification_leef_header += get_unicode_string("|{0}|{1}|".format("THREAT", hex_sep))
+            cat = get_unicode_string("THREAT")
             indicators = note['threatInfo'].get('indicators', [])
             kvpairs.update(note.get("deviceInfo", {}))
             incidentId = note.get('threatInfo',{}).get('incidentId',None)
             if incidentId is not None:
                 context = eventContextFunc(incidentId)
                 if context is not None:
-                    kvparis.update({'event':context})
-            kvpairs.update({"incidentId": note['threatInfo'].get("incidentId", "noIncidentId")})
-            signature = 'Active_Threat'
+                    kvpairs.update({'event':context})
+            kvpairs.update({"incidentId": get_unicode_string(incidentId)})
+            signature = get_unicode_string('Active_Threat')
             summary = get_unicode_string(note['threatInfo'].get('summary', ""))
             sev = get_unicode_string(note['threatInfo']['score'])
             device_name = get_unicode_string(note['deviceInfo']['deviceName'])
@@ -129,16 +132,32 @@ def parse_cb_defense_response_leef(response, source,eventContextFunc = lambda e:
         else:
             continue
 
+        for k in kvpairs:
+            print(u"{0} key value is {1}".format(k,kvpairs[k]))
+            get_unicode_string(k)
+            get_unicode_string(kvpairs[k])
+
         log_messages.append(
-            current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]))
+            current_notification_leef_header + u"\t".join([u"{0}={1}".format(k, kvpairs[k]) for k in kvpairs]))
 
         for indicator in indicators:
+
+            print(indicator)
+
+            for k in indicator:
+                print(k)
+                try:
+                    print(indicator[k].decode('ascii'))
+                except: 
+                    print(indicator[k].decode('UTF-8'))
+
             indicator_name = indicator['indicatorName']
-            indicator_header = leef_header + "|{0}|{1}|".format(indicator_name, hex_sep)
-            indicator_dict = indicator_header + "\t".join(
-                ["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]) + "\t" + "\t".join(
-                ["{0}={1}".format(k, indicator[k]) for k in indicator])
-            log_messages.append(indicator_dict)
+            indicator_header = leef_header + u"|{0}|{1}|".format(indicator_name, hex_sep)
+            indicator_str = get_unicode_string(indicator_header) + u"\t".join(
+                [u"{0}={1}".format(k, kvpairs[k]) for k in kvpairs]) + u"\t" 
+            indicator_str += u"\t".join([u"{0}={1}".format(k,indicator[k]) for k in indicator])
+            log_messages.append(indicator_str)
+        print ("ENCODED OK")
 
     return log_messages
 
@@ -362,7 +381,7 @@ def parse_cb_defense_response_cef(response, source, eventContextFunc= lambda e: 
                 if incidentId is not None:
                     context = eventContextFunc(incidentId)
                     if context is not None:
-                        eventsIds = [e['eventId'] for e in context.get('events',[])]
+                        eventIds = [e['eventId'] for e in context.get('events',[])]
                         extension += ' event=' + ",".join(eventIds)
 
                 if '\\' in device_name and splitDomain:
