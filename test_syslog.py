@@ -21,17 +21,6 @@ class TestCbDefenseSyslogConnector(unittest.TestCase):
 
         self.assertEqual(generated_output, expected_output_cef)
 
-    def test_cef_with_context(self):
-        responses = parse_cb_defense_response_cef(test_data, "test",eventContextFunc=fake_event_context)
-
-        template = Template(
-            "{{source}}|{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}|{{events}}|")
-
-        generated_output = "\n".join([template.render(log).encode('utf8') for log in responses])
-        print(generated_output)
-        self.assertEqual(generated_output, expected_output_cef)
-
-
     def test_json(self):
         generated_json_output = parse_cb_defense_response_json(test_data,"test")
         self.assertEqual(generated_json_output,expected_output_json)
