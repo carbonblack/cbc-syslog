@@ -120,8 +120,8 @@ def parse_cb_defense_response_leef(response, source,eventContextFunc = lambda e:
                 if incidentId is not None:
                     context = eventContextFunc(incidentId)
                     if context is not None:
-                        eventIds = [e['eventId'] for e in context.get('events',[])]
-                        kvpairs.update({'events':','.join(eventIds)})
+                        goteventIds = [e['eventId'] for e in context.get('events',[])]
+                        kvpairs.update({'events':','.join(goteventIds)})
                 device_name = get_unicode_string(note['deviceInfo']['deviceName'])
                 email = get_unicode_string(note['deviceInfo']['email'])
                 src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
@@ -220,21 +220,20 @@ def parse_cb_defense_alert_response_leef(incident_id, response):
     leef_header = '|'.join([version, vendor, product, dev_version])
     #threatInfo -> events
     out_events = []
-    if response.status_code == 200:
-        events = response.json()['events']
-        for event in events:
-            devTime = event.get("eventTime", 0)
-            if devTime:
-                devTime = convert_cb_defense_time(devTime)
-                devTimeFormat = "MMM-dd-yyyy HH:mm:ss z"
-                del(event["eventTime"])
-                event["devTime"] = devTime
-                event["devTimeFormat"] = devTimeFormat
+    events = response['events']
+    for event in events:
+        devTime = event.get("eventTime", 0)
+        if devTime:
+            devTime = convert_cb_defense_time(devTime)
+            devTimeFormat = "MMM-dd-yyyy HH:mm:ss z"
+            del(event["eventTime"])
+            event["devTime"] = devTime
+            event["devTimeFormat"] = devTimeFormat
 
-            eventHeader = leef_header + "|EVENT|" + hex_sep + "|"
-            eventHeader += "\t".join(["{0}={1}".format(k,event[k]) for k in event])
-            eventHeader += "\tincidentId={0}".format(incident_id)
-            out_events.append(eventHeader)
+        eventHeader = leef_header + "|EVENT|" + hex_sep + "|"
+        eventHeader += "\t".join(["{0}={1}".format(k,event[k]) for k in event])
+        eventHeader += "\tincidentId={0}".format(incident_id)
+        out_events.append(eventHeader)
 
     return out_events
 
@@ -377,7 +376,7 @@ def parse_cb_defense_response_json(response, source,eventContextFunc=lambda e: N
                 incidentId = notification.get('threatInfo',{}).get('incidentId',None)
                 if incidentId is not None:
                     context = eventContextFunc(incidentId)
-                    notification['events'] = context
+                    notification['events'] = context['events']
             if 'type' not in notification:
                 notification['type'] = 'THREAT'
             notification['source'] = source
@@ -421,11 +420,7 @@ def parse_cb_defense_response_cef(response, source, eventContextFunc= lambda e: 
                 timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
                 extension = ''
                 extension += 'rt="' + timestamp + '"'
-                if incidentId is not None:
-                    context = eventContextFunc(incidentId)
-                    if context is not None:
-                        eventIds = [e['eventId'] for e in context.get('events',[])]
-                        extension += ' event=' + ",".join(eventIds)
+
 
                 if '\\' in device_name and splitDomain:
                     (domain_name, device) = device_name.split('\\')
@@ -485,7 +480,14 @@ def parse_cb_defense_response_cef(response, source, eventContextFunc= lambda e: 
             else:
                 continue
 
-            log_messages.append({'version': version,
+
+            context = None
+            if incidentId is not None:
+                econtext = eventContextFunc(incidentId)
+                if econtext is not None:
+                    context = econtext.get('events')
+
+            base = {'version': version,
                                  'vendor': vendor,
                                  'product': product,
                                  'dev_version': dev_version,
@@ -493,7 +495,12 @@ def parse_cb_defense_response_cef(response, source, eventContextFunc= lambda e: 
                                  'name': name,
                                  'severity': severity,
                                  'extension': extension,
-                                 'source': source})
+                                 'source': source}
+
+            if context is not None:
+                base.update({'events' : context})
+
+            log_messages.append(base)
     return log_messages
 
 
