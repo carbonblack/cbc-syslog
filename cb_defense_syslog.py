@@ -121,7 +121,8 @@ def parse_cb_defense_response_leef(response, source,eventContextFunc = lambda e:
                     context = eventContextFunc(incidentId)
                     if context is not None:
                         goteventIds = [e['eventId'] for e in context.get('events',[])]
-                        kvpairs.update({'events':','.join(goteventIds)})
+                        #kvpairs.update({'events':','.join(goteventIds)})
+                        incidentIds.add(incidentId)
                 device_name = get_unicode_string(note['deviceInfo']['deviceName'])
                 email = get_unicode_string(note['deviceInfo']['email'])
                 src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
@@ -480,7 +481,7 @@ def parse_cb_defense_response_cef(response, source, eventContextFunc= lambda e: 
             else:
                 continue
 
-
+            #TODO FIXUP THE WAY CEF ADDS EVENT CONTEXT TO OUTPUT
             context = None
             if incidentId is not None:
                 econtext = eventContextFunc(incidentId)
@@ -739,7 +740,7 @@ def main():
         if config.get('general', 'output_format').lower() == 'json':
             log_messages = parse_cb_defense_response_json(json_response, server.get('source', ''),eventContextFunc)
         elif config.get('general', 'output_format').lower() == 'cef':
-            log_messages = parse_cb_defense_response_cef(json_response, server.get('source', ''),eventContextFunc)
+            log_messages = parse_cb_defense_response_cef(json_response, server.get('source', ''))
         elif config.get('general', 'output_format').lower() == 'leef':
             log_messages = parse_cb_defense_response_leef(json_response, server.get('source', ''),eventContextFunc)
         else:
