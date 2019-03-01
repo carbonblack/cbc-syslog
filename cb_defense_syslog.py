@@ -457,13 +457,13 @@ def verify_config_parse_servers():
         logger.warn('Setting output format to CEF')
         config.set('general', 'output_format', 'cef')
 
-    elif not config.get('general', 'output_format').lower() == 'cef' and \
-            not config.get('general', 'output_format').lower() == 'json' \
-            and not config.get('general', 'output_format').lower() == 'leef':
+    output_format = config.get('general', 'output_format').lower()
+
+    if not output_format == 'cef' and not output_format == 'json' and output_format == 'leef':
         logger.error('invalid output_format type was specified')
         logger.error('Must specify JSON, CEF , or LEEF output format')
         logger.warn('Setting output format to CEF')
-        config.set('general', 'output_format', 'cef')
+        output_format = 'cef'
 
     if not config.has_option('general', 'template'):
         logger.error('A template is required in the general stanza')
@@ -481,7 +481,11 @@ def verify_config_parse_servers():
         logger.error('output_type is invalid.  Must be tcp, udp, http or tcp+tls')
         sys.exit(-1)
 
+    output_params['output_type'] = output_type
+    output_params['output_format'] = output_format
+
     if output_type == 'tcp':
+
         #
         # User has specified tcp.  So no TLS.
         #
@@ -564,7 +568,7 @@ def verify_config_parse_servers():
 
         output_params['https_ssl_verify'] = True
         if config.has_option('general', 'https_ssl_verify'):
-            output_params['https_ssl_verify'] = config.get('general', 'https_ssl_verify')
+            output_params['https_ssl_verify'] = bool(config.get('general', 'https_ssl_verify'))
 
     #
     # Parse out multiple servers
@@ -576,10 +580,7 @@ def verify_config_parse_servers():
             # ignore the general section
             #
             continue
-        if config.has_option(section, 'server_url') and \
-                config.has_option(section, 'siem_connector_id') and \
-                config.has_option(section, 'siem_api_key'):
-
+        if config.has_option(section, 'server_url'):
             if not config.get(section, 'server_url').startswith('http'):
                 logger.error('Stanza {0} server_url entry does not start with http or https'.format(section))
                 logger.error('Example: https://server.yourcompany.com')
@@ -587,20 +588,20 @@ def verify_config_parse_servers():
 
             server['server_url'] = config.get(section, 'server_url')
 
+        if config.has_option(section, 'siem_connector_id') and config.has_option(section, 'siem_api_key'):
             server['siem_connector_id'] = config.get(section, 'siem_connector_id')
             server['siem_api_key'] = config.get(section, 'siem_api_key')
-            if config.has_option(section,'connector_id') and \
-                config.has_option(section,'api_key'):
-                server['connector_id'] = config.get(section, 'connector_id')
-                server['api_key'] = config.get(section, 'api_key')
-            server['source'] = section
-            server_list.append(server)
-        else:
-            logger.error("The {0} section does not contain the necessary arguments".format(section))
+
+        if config.has_option(section,'connector_id') and config.has_option(section,'api_key'):
+            server['connector_id'] = config.get(section, 'connector_id')
+            server['api_key'] = config.get(section, 'api_key')
+
+        if not 'server_url' in server or not 'connector_id' in server or not 'api_key' in server:
+            logger.error("The {0} section does not contain the necessary CB Defense parameters".format(section))
             sys.exit(-1)
 
-    output_params['output_type'] = config.get('general', 'output_type')
-    output_params['output_format'] = config.get('general', 'output_format')
+        server['source'] = section
+        server_list.append(server)
 
     return output_params, server_list
 
@@ -687,6 +688,7 @@ def main():
             # finally send the messages
             #
             for log in log_messages:
+                final_data = ''
 
                 output_format = config.get('general', 'output_format').lower()
 
