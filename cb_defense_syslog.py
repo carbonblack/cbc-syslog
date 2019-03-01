@@ -308,12 +308,12 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
 
 def parse_cb_defense_response_json(response, source):
     if u'success' not in response:
-        return None
+        return []
 
     if response[u'success']:
         if len(response[u'notifications']) < 1:
             logger.info('successfully connected, no alerts at this time')
-            return None
+            return []
 
         for notification in response[u'notifications']:
             if 'type' not in notification:
