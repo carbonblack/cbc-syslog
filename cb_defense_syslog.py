@@ -436,6 +436,7 @@ def verify_config_parse_servers():
     global policy_action_severity
 
     output_params = {}
+    output_params['https_ssl_verify'] = True
     server_list = []
 
     #
@@ -552,7 +553,7 @@ def verify_config_parse_servers():
                 logger.error("Invalid http_headers: unable to parse JSON")
                 sys.exit(-1)
 
-        output_params['https_ssl_verify'] = True
+
         if config.has_option('general', 'https_ssl_verify'):
             output_params['https_ssl_verify'] = config.get('general', 'https_ssl_verify')
 
@@ -668,40 +669,42 @@ def main():
             logger.info("Sending {0} messages to {1}".format(len(log_messages),
                                                              output_params['output_host']))
 
+        #
+        # finally send the messages
+        #
+        for log in log_messages:
+
+            final_data = ''
+
+            output_format = config.get('general', 'output_format').lower()
+
+            if output_format == 'json':
+                final_data = json.dumps(log) + '\n'
+
+            elif output_format == 'cef':
+                template = Template(config.get('general', 'template'))
+                final_data = template.render(log) + '\n'
+            elif output_format == 'leef':
+                final_data = log + "\n"
+
             #
-            # finally send the messages
+            # Store notifications just in case sending fails
             #
-            for log in log_messages:
+            hash = store_notifications(final_data)
+            if not hash:
+                logger.error("We were unable to store notifications.")
 
-                output_format = config.get('general', 'output_format').lower()
-
-                if output_format == 'json':
-                    final_data = json.dumps(log) + '\n'
-
-                elif output_format == 'cef':
-                    template = Template(config.get('general', 'template'))
-                    final_data = template.render(log) + '\n'
-                elif output_format == 'leef':
-                    final_data = log + "\n"
-
+            if send_syslog_tls(output_params['output_host'],
+                               output_params['output_port'],
+                               final_data,
+                               output_params['output_type'],
+                               output_params['output_format'],
+                               output_params['https_ssl_verify']):
                 #
-                # Store notifications just in case sending fails
+                # If successful send, then we just delete the stored version
                 #
-                hash = store_notifications(final_data)
-                if not hash:
-                    logger.error("We were unable to store notifications.")
-
-                if send_syslog_tls(output_params['output_host'],
-                                   output_params['output_port'],
-                                   final_data,
-                                   output_params['output_type'],
-                                   output_params['output_format'],
-                                   output_params['https_ssl_verify']):
-                    #
-                    # If successful send, then we just delete the stored version
-                    #
-                    if hash:
-                        delete_store_notification(hash)
+                if hash:
+                    delete_store_notification(hash)
     logger.info("Done Sending Notifications")
 
 
