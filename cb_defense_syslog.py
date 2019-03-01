@@ -59,12 +59,13 @@ def get_audit_logs(url, siem_api_key_query, siem_connector_id_query, ssl_verify,
 
     return notifications
 
+
 def parse_cb_defense_notifications_get_incidentids(response):
-    incidentids = [] 
+    incidentids = []
     for notification in response['notifications']:
-        threatinfo = notification.get('threatInfo',None)
+        threatinfo = notification.get('threatInfo', None)
         if threatinfo is not None:
-            incidentid = threatinfo.get('incidentId',None)
+            incidentid = threatinfo.get('incidentId', None)
             if incidentid is not None:
                 incidentids.append(incidentid)
     return incidentids
@@ -483,6 +484,7 @@ def verify_config_parse_servers():
 
     output_params['output_type'] = output_type
     output_params['output_format'] = output_format
+    output_params['https_ssl_verify'] = True
 
     if output_type == 'tcp':
 
@@ -566,7 +568,6 @@ def verify_config_parse_servers():
                 logger.error("Invalid http_headers: unable to parse JSON")
                 sys.exit(-1)
 
-        output_params['https_ssl_verify'] = True
         if config.has_option('general', 'https_ssl_verify'):
             output_params['https_ssl_verify'] = bool(config.get('general', 'https_ssl_verify'))
 
@@ -592,7 +593,7 @@ def verify_config_parse_servers():
             server['siem_connector_id'] = config.get(section, 'siem_connector_id')
             server['siem_api_key'] = config.get(section, 'siem_api_key')
 
-        if config.has_option(section,'connector_id') and config.has_option(section,'api_key'):
+        if config.has_option(section, 'connector_id') and config.has_option(section, 'api_key'):
             server['connector_id'] = config.get(section, 'connector_id')
             server['api_key'] = config.get(section, 'api_key')
 
@@ -684,41 +685,40 @@ def main():
             logger.info("Sending {0} messages to {1}".format(len(log_messages),
                                                              output_params['output_host']))
 
+        #
+        # finally send the messages
+        #
+        for log in log_messages:
+            final_data = ''
+
+            output_format = config.get('general', 'output_format').lower()
+
+            if output_format == 'json':
+                final_data = json.dumps(log) + '\n'
+            elif output_format == 'cef':
+                template = Template(config.get('general', 'template'))
+                final_data = template.render(log) + '\n'
+            elif output_format == 'leef':
+                final_data = log + "\n"
+
             #
-            # finally send the messages
+            # Store notifications just in case sending fails
             #
-            for log in log_messages:
-                final_data = ''
+            hash = store_notifications(final_data)
+            if not hash:
+                logger.error("We were unable to store notifications.")
 
-                output_format = config.get('general', 'output_format').lower()
-
-                if output_format == 'json':
-                    final_data = json.dumps(log) + '\n'
-
-                elif output_format == 'cef':
-                    template = Template(config.get('general', 'template'))
-                    final_data = template.render(log) + '\n'
-                elif output_format == 'leef':
-                    final_data = log + "\n"
-
+            if send_syslog_tls(output_params['output_host'],
+                               output_params['output_port'],
+                               final_data,
+                               output_params['output_type'],
+                               output_params['output_format'],
+                               output_params['https_ssl_verify']):
                 #
-                # Store notifications just in case sending fails
+                # If successful send, then we just delete the stored version
                 #
-                hash = store_notifications(final_data)
-                if not hash:
-                    logger.error("We were unable to store notifications.")
-
-                if send_syslog_tls(output_params['output_host'],
-                                   output_params['output_port'],
-                                   final_data,
-                                   output_params['output_type'],
-                                   output_params['output_format'],
-                                   output_params['https_ssl_verify']):
-                    #
-                    # If successful send, then we just delete the stored version
-                    #
-                    if hash:
-                        delete_store_notification(hash)
+                if hash:
+                    delete_store_notification(hash)
     logger.info("Done Sending Notifications")
 
 
