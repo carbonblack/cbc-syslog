@@ -723,7 +723,6 @@ def main():
 
 
 if __name__ == "__main__":
-    logger.info("CB Defense Syslog 1.2.12")
     parser = argparse.ArgumentParser()
     parser.add_argument('--config-file', '-c', help="Absolute path to configuration file")
     parser.add_argument('--log-file', '-l', help="Log file location")
@@ -742,6 +741,8 @@ if __name__ == "__main__":
         syslog_handler.setFormatter(formatter)
 
         logger.addHandler(syslog_handler)
+
+    logger.info("CB Defense Syslog 1.2.12")
 
     try:
         pid_file = '/usr/share/cb/integrations/cb-defense-syslog.pid'
