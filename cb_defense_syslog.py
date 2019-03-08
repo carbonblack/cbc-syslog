@@ -556,6 +556,10 @@ def verify_config_parse_servers():
         if config.has_option('general', 'https_ssl_verify'):
             output_params['https_ssl_verify'] = bool(config.get('general', 'https_ssl_verify'))
 
+    output_params['ca_cert_path'] = "/usr/share/cb/integrations/cb-defense-syslog/cacert.pem"
+    if config.has_option('general', 'ca_cert_path'):
+        output_params['ca_cert_path'] = config.get('general', 'ca_cert_path')
+
     #
     # Parse out multiple servers
     #
@@ -599,11 +603,8 @@ def main():
         logger.error("Error parsing config file")
         sys.exit(-1)
 
-    cacert_pem_path = "/usr/share/cb/integrations/cb-defense-syslog/cacert.pem"
-    if config.has_option("general", "requests_ca_path"):
-        cacert_pem_path = config.get("general", "requests_ca_path")
-    if os.path.isfile(cacert_pem_path):
-        os.environ["REQUESTS_CA_BUNDLE"] = cacert_pem_path
+    if os.path.isfile(output_params['ca_cert_path']):
+        os.environ["REQUESTS_CA_BUNDLE"] = output_params['ca_cert_path']
 
     #
     # verify the config file and get the Cb Defense Server list
