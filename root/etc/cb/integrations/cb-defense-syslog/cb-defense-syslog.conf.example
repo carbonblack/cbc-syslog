@@ -68,8 +68,9 @@ https_ssl_verify=True
 
 #
 # Override ca file for self signed certificates when using https
+# This is typically a .pem file
 #
-#requests_ca_cert=/Users/dragon/Projects/cb-defense-syslog-tls/cert.pem
+#requests_ca_cert=/usr/share/cb/integrations/cb-defense-syslog/cert.pem
 
 [tls]
 
