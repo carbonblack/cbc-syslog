@@ -67,9 +67,10 @@ http_headers= {'content-type': 'application/json'}
 https_ssl_verify=True
 
 #
-# Override ca file for self signed certificates
+# Override ca file for self signed certificates when using https
+# This is typically a .pem file
 #
-#request_ca_path=
+#requests_ca_cert=/usr/share/cb/integrations/cb-defense-syslog/cert.pem
 
 [tls]
 

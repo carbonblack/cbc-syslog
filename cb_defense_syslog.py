@@ -319,12 +319,12 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
 
 def parse_cb_defense_response_json(response, source):
     if u'success' not in response:
-        return None
+        return []
 
     if response[u'success']:
         if len(response[u'notifications']) < 1:
             logger.info('successfully connected, no alerts at this time')
-            return None
+            return []
 
         for notification in response[u'notifications']:
             if 'type' not in notification:
@@ -447,6 +447,7 @@ def verify_config_parse_servers():
     global policy_action_severity
 
     output_params = {}
+    output_params['https_ssl_verify'] = True
     server_list = []
 
     #
@@ -561,7 +562,6 @@ def verify_config_parse_servers():
         output_params['http_headers'] = {'content-type': 'application/json'}
         if config.has_option('general', 'http_headers'):
             try:
-                logger.info(config.get('general', 'http_headers').strip())
                 output_params['http_headers'] = json.loads(config.get('general', 'http_headers').strip())
             except Exception as e:
                 logger.error(str(e))
@@ -570,6 +570,10 @@ def verify_config_parse_servers():
 
         if config.has_option('general', 'https_ssl_verify'):
             output_params['https_ssl_verify'] = bool(config.get('general', 'https_ssl_verify'))
+
+    output_params['requests_ca_cert'] = "/usr/share/cb/integrations/cb-defense-syslog/cacert.pem"
+    if config.has_option('general', 'requests_ca_cert'):
+        output_params['requests_ca_cert'] = config.get('general', 'requests_ca_cert')
 
     #
     # Parse out multiple servers
@@ -615,16 +619,13 @@ def main():
         logger.error("Error parsing config file")
         sys.exit(-1)
 
-    cacert_pem_path = "/usr/share/cb/integrations/cb-defense-syslog/cacert.pem"
-    if config.has_option("general", "requests_ca_path"):
-        cacert_pem_path = config.get("general", "requests_ca_path")
-    if os.path.isfile(cacert_pem_path):
-        os.environ["REQUESTS_CA_BUNDLE"] = cacert_pem_path
-
     #
     # verify the config file and get the Cb Defense Server list
     #
     output_params, server_list = verify_config_parse_servers()
+
+    if os.path.isfile(output_params['requests_ca_cert']):
+        os.environ["REQUESTS_CA_BUNDLE"] = output_params['requests_ca_cert']
 
     #
     # Store Forward.  Attempt to send messages that have been saved but we were unable to reach the destination
@@ -685,40 +686,42 @@ def main():
             logger.info("Sending {0} messages to {1}".format(len(log_messages),
                                                              output_params['output_host']))
 
-        #
-        # finally send the messages
-        #
-        for log in log_messages:
-            final_data = ''
-
-            output_format = config.get('general', 'output_format').lower()
-
-            if output_format == 'json':
-                final_data = json.dumps(log) + '\n'
-            elif output_format == 'cef':
-                template = Template(config.get('general', 'template'))
-                final_data = template.render(log) + '\n'
-            elif output_format == 'leef':
-                final_data = log + "\n"
-
+        if log_messages:
             #
-            # Store notifications just in case sending fails
+            # finally send the messages
             #
-            hash = store_notifications(final_data)
-            if not hash:
-                logger.error("We were unable to store notifications.")
+            for log in log_messages:
 
-            if send_syslog_tls(output_params['output_host'],
-                               output_params['output_port'],
-                               final_data,
-                               output_params['output_type'],
-                               output_params['output_format'],
-                               output_params['https_ssl_verify']):
+                final_data = ''
+
+                output_format = config.get('general', 'output_format').lower()
+
+                if output_format == 'json':
+                    final_data = json.dumps(log) + '\n'
+                elif output_format == 'cef':
+                    template = Template(config.get('general', 'template'))
+                    final_data = template.render(log) + '\n'
+                elif output_format == 'leef':
+                    final_data = log + "\n"
+
                 #
-                # If successful send, then we just delete the stored version
+                # Store notifications just in case sending fails
                 #
-                if hash:
-                    delete_store_notification(hash)
+                hash = store_notifications(final_data)
+                if not hash:
+                    logger.error("We were unable to store notifications.")
+
+                if send_syslog_tls(output_params['output_host'],
+                                   output_params['output_port'],
+                                   final_data,
+                                   output_params['output_type'],
+                                   output_params['output_format'],
+                                   output_params['https_ssl_verify']):
+                    #
+                    # If successful send, then we just delete the stored version
+                    #
+                    if hash:
+                        delete_store_notification(hash)
     logger.info("Done Sending Notifications")
 
 
