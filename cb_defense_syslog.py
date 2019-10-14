@@ -430,15 +430,15 @@ def parse_cb_defense_response_cef(response, source):
             else:
                 continue
 
-            log_messages.append({'version': version, #version
-                                 'vendor': vendor, #device vendor
-                                 'product': product, #device product
-                                 'dev_version': dev_version, #device version
-                                 'signature': signature, #device event class id  #is this the class id
-                                 'name': name, #name
-                                 'severity': severity, #severity
-                                 'extension': extension, #extension
-                                 'source': source}) #what is the source??
+            log_messages.append({'version': version,
+                                 'vendor': vendor,
+                                 'product': product,
+                                 'dev_version': dev_version,
+                                 'signature': signature,
+                                 'name': name,
+                                 'severity': severity,
+                                 'extension': extension,
+                                 'source': source})
     return log_messages
 
 
