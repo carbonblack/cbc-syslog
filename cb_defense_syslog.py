@@ -31,8 +31,8 @@ else:
     get_unicode_string = str
 
 
-def get_audit_logs(url, siem_api_key_query, siem_connector_id_query, ssl_verify, proxies=None):
-    headers = {'X-Auth-Token': "{0}/{1}".format(siem_api_key_query, siem_connector_id_query)}
+def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, proxies=None):
+    headers = {'X-Auth-Token': "{0}/{1}".format(api_key_query, api_connector_id_query)}
     try:
         response = requests.get("{0}/integrationServices/v3/auditlogs".format(url),
                                 headers=headers,
@@ -167,9 +167,11 @@ def cb_defense_server_request(url, siem_api_key, siem_connector_id, ssl_verify, 
         response = requests.get(url + '/integrationServices/v3/notification', headers=headers, timeout=15,
                                 verify=ssl_verify, proxies=proxies)
         logger.info(response)
+
     except Exception as e:
         logging.error(e, exc_info=True)
         return None
+
     else:
         return response
 
@@ -428,15 +430,15 @@ def parse_cb_defense_response_cef(response, source):
             else:
                 continue
 
-            log_messages.append({'version': version,
-                                 'vendor': vendor,
-                                 'product': product,
-                                 'dev_version': dev_version,
-                                 'signature': signature,
-                                 'name': name,
-                                 'severity': severity,
-                                 'extension': extension,
-                                 'source': source})
+            log_messages.append({'version': version, #version
+                                 'vendor': vendor, #device vendor
+                                 'product': product, #device product
+                                 'dev_version': dev_version, #device version
+                                 'signature': signature, #device event class id  #is this the class id
+                                 'name': name, #name
+                                 'severity': severity, #severity
+                                 'extension': extension, #extension
+                                 'source': source}) #what is the source??
     return log_messages
 
 
@@ -597,11 +599,11 @@ def verify_config_parse_servers():
             server['siem_connector_id'] = config.get(section, 'siem_connector_id')
             server['siem_api_key'] = config.get(section, 'siem_api_key')
 
-        if config.has_option(section, 'connector_id') and config.has_option(section, 'api_key'):
-            server['connector_id'] = config.get(section, 'connector_id')
+        if config.has_option(section, 'api_connector_id') and config.has_option(section, 'api_key'):
+            server['api_connector_id'] = config.get(section, 'api_connector_id')
             server['api_key'] = config.get(section, 'api_key')
 
-        if not 'server_url' in server or not 'connector_id' in server or not 'api_key' in server:
+        if not 'server_url' in server or not 'api_connector_id' in server or not 'api_key' in server:
             logger.error("The {0} section does not contain the necessary CB Defense parameters".format(section))
             sys.exit(-1)
 
@@ -623,6 +625,15 @@ def main():
     # verify the config file and get the Cb Defense Server list
     #
     output_params, server_list = verify_config_parse_servers()
+
+    https_ssl_verify = output_params['https_ssl_verify']
+    api_key = server_list[0]['api_key']
+    api_connector_id = server_list[0]['api_connector_id']
+    # siem_api_key= server_list[0]['siem_api_key']
+    # siem_connector_id= server_list[0]['siem_connector_id']
+    server_url = server_list[0]['server_url']
+
+    audit_logs=get_audit_logs(server_url, api_key, api_connector_id, https_ssl_verify)
 
     if os.path.isfile(output_params['requests_ca_cert']):
         os.environ["REQUESTS_CA_BUNDLE"] = output_params['requests_ca_cert']

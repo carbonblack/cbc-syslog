@@ -11,7 +11,7 @@ class TestCbDefenseSyslogConnector(unittest.TestCase):
         responses = parse_cb_defense_response_cef(test_data, "test")
 
         template = Template(
-            "{{source}}|{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}")
+            "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}")
 
         generated_output = "\n".join([template.render(log).encode('utf8') for log in responses])
 

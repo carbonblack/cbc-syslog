@@ -5,7 +5,7 @@
 # This is a jinja 2 template
 # NOTE: The source variable corresponds to the Cb Defense Server used to retrieve results
 #
-template = {{source}}|{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
+template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
 
 #
 # This sets the default severity level for POLICY_ACTION notifications.  By default it is 4.
@@ -104,14 +104,24 @@ https_ssl_verify=True
 [cbdefense1]
 
 #
-# Cb Defense Connector ID
+# Cb Defense API Connector ID
 #
-connector_id = F8KF111111
+api_connector_id = KJARWBZT9E
 
 #
 # Cb Defense API Key
 #
-api_key = WT9T3QDP4UGCK2NS96111111
+api_key = CQF35EIH2WDF69PTWKGC4YYZ
+
+#
+# Cb Defense SIEM Connector ID
+#
+siem_connector_id = KM7W792Q68
+
+#
+# Cb Defense SIEM Key
+#
+siem_api_key = VEUG2GY6Y2BZVGWPB5WIT7ZD
 
 #
 # Cb Defense Server URL
@@ -123,6 +133,6 @@ server_url = https://api-prod05.conferdeploy.net
 # For more than one Cb Defense Server, add another server using the following template including the stanza
 #
 #[cbdefenseserver2]
-#connector_id = F8KF111111
-#api_key = WT9T3QDP4UGCK2NS96111111
+#api_connector_id = KJARWBZT9E
+#api_key = CQF35EIH2WDF69PTWKGC4YYZ
 #server_url = https://server2.yourcompany.com
