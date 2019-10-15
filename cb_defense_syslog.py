@@ -20,7 +20,7 @@ logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-store_forwarder_dir = '/usr/share/cb/integrations/cb-defense-syslog/store/'
+store_forwarder_dir = 'root/usr/share/cb/integrations/cb-defense-syslog/store/'
 policy_action_severity = 4
 
 from six import PY2
@@ -635,6 +635,10 @@ def main():
 
     audit_logs=get_audit_logs(server_url, api_key, api_connector_id, https_ssl_verify)
 
+    if audit_logs != False:
+        logger.info("Retrieval of Audit Logs Successful")
+
+
     if os.path.isfile(output_params['requests_ca_cert']):
         os.environ["REQUESTS_CA_BUNDLE"] = output_params['requests_ca_cert']
 
@@ -759,7 +763,7 @@ if __name__ == "__main__":
     logger.info("CB Defense Syslog 1.2.12")
 
     try:
-        pid_file = '/usr/share/cb/integrations/cb-defense-syslog.pid'
+        pid_file = 'root/usr/share/cb/integrations/cb-defense-syslog.pid'
         fp = open(pid_file, 'w')
         try:
             fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -771,3 +775,4 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(e, exc_info=True)
         sys.exit(-1)
+
