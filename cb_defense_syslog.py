@@ -13,6 +13,8 @@ import logging.handlers
 import traceback
 import hashlib
 import fcntl
+import audit_log as al
+import notifications as n
 
 logger = logging.getLogger(__name__)
 
@@ -30,171 +32,6 @@ if PY2:
 else:
     get_unicode_string = str
 
-
-def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, proxies=None):
-    headers = {'X-Auth-Token': "{0}/{1}".format(api_key_query, api_connector_id_query)}
-    try:
-        response = requests.get("{0}/integrationServices/v3/auditlogs".format(url),
-                                headers=headers,
-                                timeout=15, proxies=proxies)
-
-        if response.status_code != 200:
-            logger.error("Could not retrieve audit logs: {0}".format(response.status_code))
-            return False
-
-        notifications = response.json()
-    except Exception as e:
-        logger.error("Exception {0} when retrieving audit logs".format(get_unicode_string(e)), exc_info=True)
-        return None
-
-    if notifications.get("success", False) != True:
-        logger.error("Unsuccessful HTTP response retrieving audit logs: {0}"
-                     .format(notifications.get("message")))
-        return False
-
-    notifications = notifications.get("notifications", [])
-    if not notifications:
-        logger.info("No audit logs available")
-        return False
-
-    return notifications
-
-
-def parse_cb_defense_notifications_get_incidentids(response):
-    incidentids = []
-    for notification in response['notifications']:
-        threatinfo = notification.get('threatInfo', None)
-        if threatinfo is not None:
-            incidentid = threatinfo.get('incidentId', None)
-            if incidentid is not None:
-                incidentids.append(incidentid)
-    return incidentids
-
-
-def parse_cb_defense_response_leef(response, source):
-    # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 |
-    version = 'LEEF:2.0'
-    vendor = 'CarbonBlack'
-    product = 'CbDefense'
-    dev_version = '0.1'
-    hex_sep = "x09"
-    splitDomain = True
-
-    leef_header = '|'.join([version, vendor, product, dev_version])
-    log_messages = []
-
-    success = False
-
-    if response:
-        response = response.json()
-        success = response.get("success", False)
-
-    if not success:
-        return log_messages
-
-    if success:
-
-        if len(response['notifications']) < 1:
-            logger.info('successfully connected, no alerts at this time')
-            return None
-        for note in response['notifications']:
-            indicators = []
-            current_notification_leef_header = leef_header
-            eventId = get_unicode_string(note.get('eventId'))
-            kvpairs = {"eventId": eventId}
-            devTime = note.get("eventTime", 0)
-            devTime = time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(devTime / 1000))
-            devTimeFormat = "MMM dd yyyy HH:mm:ss z"
-            url = note.get("url", "noUrlProvided")
-            ruleName = note.get("ruleName", "noRuleName")
-            kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url, "ruleName": ruleName})
-            if note.get('type', 'noType') == 'THREAT' or note.get('threatInfo', False):
-                current_notification_leef_header += "|{0}|{1}|".format("THREAT", hex_sep)
-                cat = "THREAT"
-                indicators = note['threatInfo'].get('indicators', [])
-                kvpairs.update(note.get("deviceInfo", {}))
-                kvpairs.update({"incidentId": note['threatInfo'].get("incidentId", "noIncidentId")})
-                signature = 'Active_Threat'
-                summary = get_unicode_string(note['threatInfo'].get('summary', ""))
-                sev = get_unicode_string(note['threatInfo']['score'])
-                device_name = get_unicode_string(note['deviceInfo']['deviceName'])
-                email = get_unicode_string(note['deviceInfo']['email'])
-                src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
-                kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature, "sev": sev,
-                                "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
-                                "identHostName": device_name, "summary": summary})
-
-            elif note.get('type', "noType") == 'POLICY_ACTION' or note.get("policyAction", False):
-                severity = 1
-                summary = get_unicode_string(note['policyAction'].get('summary', ''))
-                device_name = get_unicode_string(note['deviceInfo']['deviceName'])
-                email = get_unicode_string(note['deviceInfo']['email'])
-                src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
-                sha256 = get_unicode_string(note['policyAction']['sha256Hash'])
-                action = note.get('policyAction', {}).get('action', None)
-                current_notification_leef_header += "|" + (
-                    get_unicode_string(action) if action else "POLICY_ACTION") + "|" + hex_sep + "|"
-                app_name = get_unicode_string(note['policyAction']['applicationName'])
-                reputation = get_unicode_string(note['policyAction'].get('reputation', ""))
-                url = get_unicode_string(note['url'])
-                kvpairs.update({"cat": "POLICY_ACTION", "sev": severity, "type": "POLICY_ACTION", "action": action,
-                                "reputation": reputation, "resource": device_name, "email": email, "src": src,
-                                "dst": src, "identSrc": src, "identHostName": device_name, "summary": summary,
-                                "sha256Hash": sha256, "applicationName": app_name, "url": url})
-
-            else:
-                continue
-
-            log_messages.append(
-                current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]))
-
-            for indicator in indicators:
-                indicator_name = indicator['indicatorName']
-                indicator_header = leef_header + "|{0}|{1}|".format(indicator_name, hex_sep)
-                indicator_dict = indicator_header + "\t".join(
-                    ["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]) + "\t" + "\t".join(
-                    ["{0}={1}".format(k, indicator[k]) for k in indicator])
-                log_messages.append(indicator_dict)
-
-    return log_messages
-
-
-def cb_defense_server_request(url, siem_api_key, siem_connector_id, ssl_verify, proxies=None):
-    logger.info("Attempting to connect to url: " + url)
-
-    headers = {'X-Auth-Token': "{0}/{1}".format(siem_api_key, siem_connector_id)}
-    try:
-        response = requests.get(url + '/integrationServices/v3/notification', headers=headers, timeout=15,
-                                verify=ssl_verify, proxies=proxies)
-        logger.info(response)
-
-    except Exception as e:
-        logging.error(e, exc_info=True)
-        return None
-
-    else:
-        return response
-
-
-def gather_notification_context(url, notification_id, api_key_query, connector_id_query, ssl_verify, proxies=None):
-    try:
-        response = requests.get("{0}/integrationServices/v3/alert/{1}".format(url,
-                                                                              notification_id),
-                                headers={"X-Auth-Token": "{0}/{1}".format(api_key_query,
-                                                                          connector_id_query)})
-        if response.status_code != 200:
-            logger.error("Could not retrieve context for id {0}: {1}".format(notification_id,
-                                                                             response.status_code))
-            return None
-
-        return response.json()
-    except Exception as e:
-        logger.exception("Could not retrieve notification context for org id {1}: {2}".format(
-            notification_id,
-            str(e)))
-        return None
-
-
 def parse_config():
     """
     parse the config file into globals
@@ -211,14 +48,15 @@ def parse_config():
         return config
 
 
-def delete_store_notification(hash):
+def delete_stored_data(hash):
     try:
         os.remove(store_forwarder_dir + hash)
     except:
         logger.error(traceback.format_exc())
 
 
-def send_store_notifications():
+
+def send_stored_data():
     logger.info("Number of files in store forward: {0}".format(len(os.listdir(store_forwarder_dir))))
     for file_name in os.listdir(store_forwarder_dir):
         file_data = open(store_forwarder_dir + file_name, 'rb').read()
@@ -234,24 +72,33 @@ def send_store_notifications():
             #
             # If the sending was successful, delete the stored data
             #
-            delete_store_notification(file_name)
+            delete_stored_data(file_name)
 
 
-def store_notifications(data):
-    #
-    # We hash the data to generate a unique filename
-    #
-    byte_data = data.encode("utf-8")
-    hash = hashlib.sha256(byte_data).hexdigest()
+def send_data(data):
+        byte_data = data.encode("utf-8")
+        hash = hashlib.sha256(byte_data).hexdigest()
 
-    try:
-        with open(store_forwarder_dir + hash, 'wb') as f:
-            f.write(byte_data)
-    except:
-        logger.error(traceback.format_exc())
-        return None
+        try:
+            with open(store_forwarder_dir + hash, 'wb') as f:
+                f.write(byte_data)
+        except:
+            logger.error(traceback.format_exc())
+            return None
 
-    return hash
+        if not hash:
+            logger.error("We were unable to store notifications.")
+
+        if n.send_syslog_tls(output_params['output_host'],
+                           output_params['output_port'],
+                           data,
+                           output_params['output_type'],
+                           output_params['output_format'],
+                           output_params['https_ssl_verify']):
+            #
+            # If successful send, then we just delete the stored version
+            #
+            delete_stored_data(hash)
 
 
 def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_verify=True):
@@ -274,6 +121,9 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
 
             client_socket.connect((server_url, port))
             client_socket.send(data.encode("utf-8"))
+            #
+            # if audit_data is not None:
+            #     client_socket.send(audit_data.encode("utf-8"))
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
@@ -287,6 +137,8 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
         try:
             client_socket.connect((server_url, port))
             client_socket.send(data.encode("utf-8"))
+            # if audit_data is not None:
+            #     client_socket.send(audit_data.encode("utf-8"))
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
@@ -298,6 +150,8 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
         unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             unsecured_client_socket.sendto(data.encode("utf-8"), (server_url, port))
+            # if audit_data is not None:
+            #     unsecured_client_socket.sendto(audit_data.encode("utf-8"), (server_url, port))
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
@@ -312,135 +166,18 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
                                  data=data.encode("utf-8"),
                                  verify=ssl_verify)
             logger.info(resp)
+            # if audit_data is not None:
+            #     audit_resp = requests.post(headers=output_params['http_headers'],
+            #                          url=server_url,
+            #                          data=audit_data.encode("utf-8"),
+            #                          verify=ssl_verify)
+            #     logger.info(audit_resp)
+
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
 
     return retval
-
-
-def parse_cb_defense_response_json(response, source):
-    if u'success' not in response:
-        return []
-
-    if response[u'success']:
-        if len(response[u'notifications']) < 1:
-            logger.info('successfully connected, no alerts at this time')
-            return []
-
-        for notification in response[u'notifications']:
-            if 'type' not in notification:
-                notification['type'] = 'THREAT'
-            notification['source'] = source
-
-    return response['notifications']
-
-
-def parse_cb_defense_response_cef(response, source):
-    version = 'CEF:0'
-    vendor = 'CarbonBlack'
-    product = 'CbDefense_Syslog_Connector'
-    dev_version = '2.0'
-    splitDomain = True
-
-    log_messages = []
-
-    if u'success' not in response:
-        return log_messages
-
-    if response[u'success']:
-
-        if len(response[u'notifications']) < 1:
-            logger.info('successfully connected, no alerts at this time')
-            return None
-
-        for note in response[u'notifications']:
-            if 'type' not in note:
-                note['type'] = 'THREAT'
-
-            if note['type'] == 'THREAT':
-                signature = 'Active_Threat'
-                seconds = get_unicode_string(note['eventTime'])[:-3]
-                name = get_unicode_string(note['threatInfo']['summary'])
-                severity = get_unicode_string(note['threatInfo']['score'])
-                device_name = get_unicode_string(note['deviceInfo']['deviceName'])
-                user_name = get_unicode_string(note['deviceInfo']['email'])
-                device_ip = get_unicode_string(note['deviceInfo']['internalIpAddress'])
-                link = get_unicode_string(note['url'])
-                tid = get_unicode_string(note['threatInfo']['incidentId'])
-                timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
-                extension = ''
-                extension += 'rt="' + timestamp + '"'
-
-                if '\\' in device_name and splitDomain:
-                    (domain_name, device) = device_name.split('\\')
-                    extension += ' sntdom=' + domain_name
-                    extension += ' dvchost=' + device
-                else:
-                    extension += ' dvchost=' + device_name
-
-                if '\\' in user_name and splitDomain:
-                    (domain_name, user) = user_name.split('\\')
-                    extension += ' duser=' + user
-                else:
-                    extension += ' duser=' + user_name
-
-                extension += ' dvc=' + device_ip
-                extension += ' cs3Label="Link"'
-                extension += ' cs3="' + link + '"'
-                extension += ' cs4Label="Threat_ID"'
-                extension += ' cs4="' + tid + '"'
-                extension += ' act=Alert'
-
-            elif note['type'] == 'POLICY_ACTION':
-                signature = 'Policy_Action'
-                name = 'Confer Sensor Policy Action'
-                severity = policy_action_severity
-                seconds = get_unicode_string(note['eventTime'])[:-3]
-                timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
-                device_name = get_unicode_string(note['deviceInfo']['deviceName'])
-                user_name = get_unicode_string(note['deviceInfo']['email'])
-                device_ip = get_unicode_string(note['deviceInfo']['internalIpAddress'])
-                sha256 = get_unicode_string(note['policyAction']['sha256Hash'])
-                action = get_unicode_string(note['policyAction']['action'])
-                app_name = get_unicode_string(note['policyAction']['applicationName'])
-                link = get_unicode_string(note['url'])
-                extension = ''
-                extension += 'rt="' + timestamp + '"'
-                if '\\' in device_name and splitDomain == True:
-                    (domain_name, device) = device_name.split('\\')
-                    extension += ' sntdom=' + domain_name
-                    extension += ' dvchost=' + device
-                else:
-                    extension += ' dvchost=' + device_name
-
-                if '\\' in user_name and splitDomain == True:
-                    (domain_name, user) = user_name.split('\\')
-                    extension += ' duser=' + user
-                else:
-                    extension += ' duser=' + user_name
-
-                extension += ' dvc=' + device_ip
-                extension += ' cs3Label="Link"'
-                extension += ' cs3="' + link + '"'
-                extension += ' act=' + action
-                extension += ' hash=' + sha256
-                extension += ' deviceprocessname=' + app_name
-
-            else:
-                continue
-
-            log_messages.append({'version': version,
-                                 'vendor': vendor,
-                                 'product': product,
-                                 'dev_version': dev_version,
-                                 'signature': signature,
-                                 'name': name,
-                                 'severity': severity,
-                                 'extension': extension,
-                                 'source': source})
-    return log_messages
-
 
 def verify_config_parse_servers():
     """
@@ -612,6 +349,46 @@ def verify_config_parse_servers():
 
     return output_params, server_list
 
+def parse_and_send_data(json_response, server):
+
+    if config.get('general', 'output_format').lower() == 'json':
+        log_messages = n.parse_notification_response_json(json_response, server.get('source', ''), logger)
+    elif config.get('general', 'output_format').lower() == 'cef':
+        log_messages = n.parse_notification_response_cef(json_response, server.get('source', ''), logger)
+    elif config.get('general', 'output_format').lower() == 'leef':
+        log_messages = n.parse_notification_response_leef(json_response, server.get('source', ''), logger)
+    else:
+        log_messages = None
+
+    if not log_messages:
+        logger.info("There are no messages to forward to host")
+    elif output_params['output_port']:
+        logger.info("Sending {0} messages to {1}:{2}".format(len(log_messages),
+                                                             output_params['output_host'],
+                                                             output_params['output_port']))
+    else:
+        logger.info("Sending {0} messages to {1}".format(len(log_messages),
+                                                         output_params['output_host']))
+
+    if log_messages:
+        #
+        # finally send the messages
+        #
+        for log in log_messages:
+
+            final_data = ''
+
+            output_format = config.get('general', 'output_format').lower()
+
+            if output_format == 'json':
+                final_data = json.dumps(log) + '\n'
+            elif output_format == 'cef':
+                template = Template(config.get('general', 'template'))
+                final_data = template.render(log) + '\n'
+            elif output_format == 'leef':
+                final_data = log + "\n"
+
+            send_data(final_data)
 
 def main():
     global output_params
@@ -626,26 +403,13 @@ def main():
     #
     output_params, server_list = verify_config_parse_servers()
 
-    https_ssl_verify = output_params['https_ssl_verify']
-    api_key = server_list[0]['api_key']
-    api_connector_id = server_list[0]['api_connector_id']
-    # siem_api_key= server_list[0]['siem_api_key']
-    # siem_connector_id= server_list[0]['siem_connector_id']
-    server_url = server_list[0]['server_url']
-
-    audit_logs=get_audit_logs(server_url, api_key, api_connector_id, https_ssl_verify)
-
-    if audit_logs != False:
-        logger.info("Retrieval of Audit Logs Successful")
-
-
     if os.path.isfile(output_params['requests_ca_cert']):
         os.environ["REQUESTS_CA_BUNDLE"] = output_params['requests_ca_cert']
 
-    #
-    # Store Forward.  Attempt to send messages that have been saved but we were unable to reach the destination
-    #
-    send_store_notifications()
+    # #
+    # # Store Forward.  Attempt to send messages that have been saved but we were unable to reach the destination
+    # #
+    send_stored_data()
 
     #
     # Error or not, there is nothing to do
@@ -661,84 +425,37 @@ def main():
     for server in server_list:
         logger.info("Handling notifications for {0}".format(server.get('server_url')))
 
-        response = cb_defense_server_request(server.get('server_url'),
+        notification_response = n.notification_server_request(server.get('server_url'),
                                              server.get('siem_api_key'),
                                              server.get('siem_connector_id'),
-                                             True)
+                                             True, logger)
 
-        if not response:
+        audit_response = al.get_audit_logs(server.get('server_url'), server.get('api_key'), server.get('api_connector_id'),server.get('https_ssl_verify'), logger)
+
+
+        if not notification_response:
             logger.warn(
                 "Received unexpected (or no) response from Cb Defense Server {0}. Proceeding to next connector.".format(
                     server.get('server_url')))
-            continue
-
-        #
-        # perform fixups
-        #
-        # logger.debug(response.content)
-        json_response = json.loads(response.content)
-
-        #
-        # parse the Cb Defense Response and get a list of log messages to send to tcp_tls_host:tcp_tls_port
-        #
-
-        if config.get('general', 'output_format').lower() == 'json':
-            log_messages = parse_cb_defense_response_json(json_response, server.get('source', ''))
-        elif config.get('general', 'output_format').lower() == 'cef':
-            log_messages = parse_cb_defense_response_cef(json_response, server.get('source', ''))
-        elif config.get('general', 'output_format').lower() == 'leef':
-            log_messages = parse_cb_defense_response_leef(json_response, server.get('source', ''))
         else:
-            log_messages = None
-
-        if not log_messages:
-            logger.info("There are no messages to forward to host")
-        elif output_params['output_port']:
-            logger.info("Sending {0} messages to {1}:{2}".format(len(log_messages),
-                                                                 output_params['output_host'],
-                                                                 output_params['output_port']))
-        else:
-            logger.info("Sending {0} messages to {1}".format(len(log_messages),
-                                                             output_params['output_host']))
-
-        if log_messages:
+            # perform fixups
             #
-            # finally send the messages
+            # logger.debug(response.content)
+            json_response = json.loads(notification_response.content)
+
             #
-            for log in log_messages:
+            # parse the Cb Defense Response and get a list of log messages to send to tcp_tls_host:tcp_tls_port
+            #
+            parse_and_send_data(json_response, server)
 
-                final_data = ''
+        # if not audit_response:
+        #     logger.info("Retrieval of Audit Logs Failed")
+        # else:
+        #     json_response = json.loads(audit_response.content)
+        #
+        #     parse_data(json_response, server)
 
-                output_format = config.get('general', 'output_format').lower()
-
-                if output_format == 'json':
-                    final_data = json.dumps(log) + '\n'
-                elif output_format == 'cef':
-                    template = Template(config.get('general', 'template'))
-                    final_data = template.render(log) + '\n'
-                elif output_format == 'leef':
-                    final_data = log + "\n"
-
-                #
-                # Store notifications just in case sending fails
-                #
-                hash = store_notifications(final_data)
-                if not hash:
-                    logger.error("We were unable to store notifications.")
-
-                if send_syslog_tls(output_params['output_host'],
-                                   output_params['output_port'],
-                                   final_data,
-                                   output_params['output_type'],
-                                   output_params['output_format'],
-                                   output_params['https_ssl_verify']):
-                    #
-                    # If successful send, then we just delete the stored version
-                    #
-                    if hash:
-                        delete_store_notification(hash)
     logger.info("Done Sending Notifications")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
