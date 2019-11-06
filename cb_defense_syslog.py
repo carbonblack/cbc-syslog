@@ -352,11 +352,11 @@ def verify_config_parse_servers():
 def parse_and_send_data(json_response, server, sys_type):
 
     if config.get('general', 'output_format').lower() == 'json':
-        log_messages = sys_type.parse_response_json(json_response, server.get('source', ''), logger)
+        log_messages = sys_type.parse_response_json(json_response, server.get('source', ''), logger, get_unicode_string)
     elif config.get('general', 'output_format').lower() == 'cef':
-        log_messages = sys_type.parse_response_cef(json_response, server.get('source', ''), logger)
+        log_messages = sys_type.parse_response_cef(json_response, server.get('source', ''), logger, get_unicode_string)
     elif config.get('general', 'output_format').lower() == 'leef':
-        log_messages = sys_type.parse_response_leef(json_response, server.get('source', ''), logger)
+        log_messages = sys_type.parse_response_leef(json_response, server.get('source', ''), logger, get_unicode_string)
     else:
         log_messages = None
 

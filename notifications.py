@@ -15,6 +15,13 @@ import traceback
 import hashlib
 import fcntl
 
+# from six import PY2
+#
+# if PY2:
+#     get_unicode_string = unicode
+# else:
+#     get_unicode_string = str
+
 
 def notification_server_request(url, siem_api_key, siem_connector_id, ssl_verify, logger, proxies=None):
     logger.info("Attempting to connect to url: " + url)
@@ -63,7 +70,7 @@ def parse_cb_defense_notifications_get_incidentids(response):
     return incidentids
 
 
-def parse_response_leef(response, source, logger):
+def parse_response_leef(response, source, logger, get_unicode_string):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 |
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
@@ -150,7 +157,7 @@ def parse_response_leef(response, source, logger):
 
     return log_messages
 
-def parse_response_json(response, source, logger):
+def parse_response_json(response, source, logger, get_unicode_string):
     if u'success' not in response:
         return []
 
@@ -167,7 +174,7 @@ def parse_response_json(response, source, logger):
     return response['notifications']
 
 
-def parse_response_cef(response, source, logger):
+def parse_response_cef(response, source, logger, get_unicode_string):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'

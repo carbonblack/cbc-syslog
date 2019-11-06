@@ -15,6 +15,7 @@ import traceback
 import hashlib
 import fcntl
 
+
 #Get Audit Logs will return response
 def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, logger, proxies=None):
     headers = {'X-Auth-Token': "{0}/{1}".format(api_key_query, api_connector_id_query)}
@@ -48,7 +49,7 @@ def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, logge
 
 #Parse responses. There are three options: cef, leef, json
 
-def parse_response_cef(response, source, logger):
+def parse_response_cef(response, source, logger, get_unicode_string):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'
@@ -107,7 +108,7 @@ def parse_response_cef(response, source, logger):
     return log_messages
 
 
-def parse_response_leef(response, source, logger):
+def parse_response_leef(response, source, logger, get_unicode_string):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 |
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
@@ -160,7 +161,7 @@ def parse_response_leef(response, source, logger):
 
     return log_messages
 
-def parse_response_json(response, source, logger):
+def parse_response_json(response, source, logger, get_unicode_string):
 
     for notification in response[u'notifications']:
         notification['type'] = 'AUDIT'
