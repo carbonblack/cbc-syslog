@@ -48,13 +48,14 @@ def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, logge
 
 #Parse responses. There are three options: cef, leef, json
 
-def parse_audit_response_cef(response, source, logger):
+def parse_response_cef(response, source, logger):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'
     dev_version = '2.0'
     application = 'PSC'
     splitDomain = True
+    severity = '1'
 
     log_messages = []
 
@@ -63,7 +64,6 @@ def parse_audit_response_cef(response, source, logger):
         signature = 'Audit Logs'
         seconds = get_unicode_string(audits['eventTime'])[:-3]
         name = get_unicode_string(audits['description'])
-        severity = get_unicode_string(audits['score'])
         device_name = get_unicode_string(audits['orgName'])
         user_name = get_unicode_string(audits['loginName'])
         device_ip = get_unicode_string(audits['clientIp'])
@@ -107,7 +107,7 @@ def parse_audit_response_cef(response, source, logger):
     return log_messages
 
 
-def parse_audit_response_leef(response, source, logger):
+def parse_response_leef(response, source, logger):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 |
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
@@ -132,22 +132,18 @@ def parse_audit_response_leef(response, source, logger):
         devTime = time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(devTime / 1000))
         devTimeFormat = "MMM dd yyyy HH:mm:ss z"
         url = audits.get("requestUrl", "noUrlProvided")
-        #ruleName = audits.get("ruleName", "noRuleName") #fix this
         app_name = get_unicode_string('Syslog') #fix this
-        kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url, "ruleName": ruleName})
+        kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url})
 
         current_notification_leef_header += "|{0}|{1}|".format("PSC", hex_sep)
         cat = "PSC"
-        #indicators = audits.get('indicators', [])  #fix this
-        #kvpairs.update(audits.get("deviceInfo", {}))  #fix this
-        kvpairs.update({"incidentId": audits.get("incidentId", "noIncidentId")})
+        indicators = audits.get('indicators', [])
         signature = 'Active_Threat'
         summary = get_unicode_string(audits.get('summary', ""))
-        sev = get_unicode_string(audits['score'])
         device_name = get_unicode_string(audits['orgName'])
         email = get_unicode_string(audits['email'])
         src = get_unicode_string(audits.get('internalIpAddress', "0.0.0.0"))
-        kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature, "sev": sev,
+        kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature,
                         "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
                         "identHostName": device_name, "summary": summary})
 
@@ -164,7 +160,7 @@ def parse_audit_response_leef(response, source, logger):
 
     return log_messages
 
-def parse_audit_response_json(response, source, logger):
+def parse_response_json(response, source, logger):
 
     for notification in response[u'notifications']:
         notification['type'] = 'AUDIT'

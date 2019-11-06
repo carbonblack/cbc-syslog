@@ -89,7 +89,7 @@ def send_data(data):
         if not hash:
             logger.error("We were unable to store notifications.")
 
-        if n.send_syslog_tls(output_params['output_host'],
+        if send_syslog_tls(output_params['output_host'],
                            output_params['output_port'],
                            data,
                            output_params['output_type'],
@@ -349,14 +349,14 @@ def verify_config_parse_servers():
 
     return output_params, server_list
 
-def parse_and_send_data(json_response, server):
+def parse_and_send_data(json_response, server, sys_type):
 
     if config.get('general', 'output_format').lower() == 'json':
-        log_messages = n.parse_notification_response_json(json_response, server.get('source', ''), logger)
+        log_messages = sys_type.parse_response_json(json_response, server.get('source', ''), logger)
     elif config.get('general', 'output_format').lower() == 'cef':
-        log_messages = n.parse_notification_response_cef(json_response, server.get('source', ''), logger)
+        log_messages = sys_type.parse_response_cef(json_response, server.get('source', ''), logger)
     elif config.get('general', 'output_format').lower() == 'leef':
-        log_messages = n.parse_notification_response_leef(json_response, server.get('source', ''), logger)
+        log_messages = sys_type.parse_response_leef(json_response, server.get('source', ''), logger)
     else:
         log_messages = None
 
@@ -446,14 +446,14 @@ def main():
             #
             # parse the Cb Defense Response and get a list of log messages to send to tcp_tls_host:tcp_tls_port
             #
-            parse_and_send_data(json_response, server)
+            parse_and_send_data(json_response, server, n)
 
-        # if not audit_response:
-        #     logger.info("Retrieval of Audit Logs Failed")
-        # else:
-        #     json_response = json.loads(audit_response.content)
-        #
-        #     parse_data(json_response, server)
+        if not audit_response:
+            logger.info("Retrieval of Audit Logs Failed")
+        else:
+            json_response = json.loads(audit_response.content)
+
+            parse_and_send_data(json_response, server, al)
 
     logger.info("Done Sending Notifications")
 

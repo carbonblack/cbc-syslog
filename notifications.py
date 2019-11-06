@@ -63,7 +63,7 @@ def parse_cb_defense_notifications_get_incidentids(response):
     return incidentids
 
 
-def parse_notification_response_leef(response, source, logger):
+def parse_response_leef(response, source, logger):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 |
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
@@ -150,7 +150,7 @@ def parse_notification_response_leef(response, source, logger):
 
     return log_messages
 
-def parse_notification_response_json(response, source, logger):
+def parse_response_json(response, source, logger):
     if u'success' not in response:
         return []
 
@@ -167,7 +167,7 @@ def parse_notification_response_json(response, source, logger):
     return response['notifications']
 
 
-def parse_notification_response_cef(response, source, logger):
+def parse_response_cef(response, source, logger):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'
