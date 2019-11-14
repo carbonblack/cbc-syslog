@@ -74,33 +74,6 @@ def send_stored_data():
             #
             delete_stored_data(file_name)
 
-
-def send_data(data):
-        byte_data = data.encode("utf-8")
-        hash = hashlib.sha256(byte_data).hexdigest()
-
-        try:
-            with open(store_forwarder_dir + hash, 'wb') as f:
-                f.write(byte_data)
-        except:
-            logger.error(traceback.format_exc())
-            return None
-
-        if not hash:
-            logger.error("We were unable to store notifications.")
-
-        if send_syslog_tls(output_params['output_host'],
-                           output_params['output_port'],
-                           data,
-                           output_params['output_type'],
-                           output_params['output_format'],
-                           output_params['https_ssl_verify']):
-            #
-            # If successful send, then we just delete the stored version
-            #
-            delete_stored_data(hash)
-
-
 def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_verify=True):
     retval = True
     client_socket = None
@@ -349,18 +322,122 @@ def verify_config_parse_servers():
 
     return output_params, server_list
 
-def parse_and_send_data(json_response, server, sys_type):
+def get_response(server):
+    notification_response = n.notification_server_request(server.get('server_url'),
+                                                          server.get('siem_api_key'),
+                                                          server.get('siem_connector_id'),
+                                                          True, logger)
 
-    if config.get('general', 'output_format').lower() == 'json':
-        log_messages = sys_type.parse_response_json(json_response, server.get('source', ''), logger, get_unicode_string)
-    elif config.get('general', 'output_format').lower() == 'cef':
-        log_messages = sys_type.parse_response_cef(json_response, server.get('source', ''), logger, get_unicode_string)
-    elif config.get('general', 'output_format').lower() == 'leef':
-        log_messages = sys_type.parse_response_leef(json_response, server.get('source', ''), logger, get_unicode_string)
+    audit_response = al.get_audit_logs(server.get('server_url'), server.get('api_key'), server.get('api_connector_id'),
+                                       server.get('https_ssl_verify'), logger)
+    if not notification_response:
+        logger.warn(
+            "Received unexpected (or no) response from Cb Defense Server {0}. Proceeding to next connector.".format(
+                server.get('server_url')))
+        notifications_response = None
     else:
-        log_messages = None
+        notifications_response = json.loads(notification_response.content)
 
-    if not log_messages:
+    if not audit_response:
+        logger.info("Retrieval of Audit Logs Failed")
+        audit_response=None
+    else:
+        audit_response = json.loads(audit_response.content)
+
+    return notifications_response, audit_response
+
+def parse_notifications(server, notifications_response, audit_response):
+    source = server.get('source', '')
+    accepted_formats=['json', 'leef', 'cef']
+    notifications_log = None
+    audit_log = None
+
+    threat_hunter = n.psc_threathunter_check(notifications_response)
+
+    if config.get('general', 'output_format') not in accepted_formats:
+        return None
+
+    if notifications_response != None and audit_response != None:
+
+        if config.get('general', 'output_format').lower() == 'json':
+            audit_log = al.parse_response_json(audit_response, source, logger, get_unicode_string)
+            if threat_hunter:
+                notifications_log=n.parse_response_json_threathunter(notifications_response, source, logger, get_unicode_string)
+            else:
+                notifications_log=n.parse_response_json_psc(notifications_response, source, logger, get_unicode_string)
+        elif config.get('general', 'output_format').lower() == 'cef':
+            audit_log = al.parse_response_cef(audit_response, source, logger, get_unicode_string)
+            if threat_hunter:
+                notifications_log=n.parse_response_cef_threathunter(notifications_response, source, logger, get_unicode_string)
+            else:
+                notifications_log=n.parse_response_cef_psc(notifications_response, source, logger, get_unicode_string)
+        else:
+            audit_log = al.parse_response_leef(audit_response, source, logger, get_unicode_string)
+            if threat_hunter:
+                notifications_log=n.parse_response_leef_threathunter(notifications_response, source, logger, get_unicode_string)
+            else:
+                notifications_log=n.parse_response_leef_psc(notifications_response, source, logger, get_unicode_string)
+
+    elif notifications_response == None and audit_response!=None:
+        if config.get('general', 'output_format').lower() == 'json':
+            audit_log = al.parse_response_json(audit_response, source, logger, get_unicode_string)
+        elif config.get('general', 'output_format').lower() == 'cef':
+            audit_log = al.parse_response_cef(audit_response, source, logger, get_unicode_string)
+        else:
+            audit_log = al.parse_response_leef(audit_response, source, logger, get_unicode_string)
+
+    elif notifications_response !=None and audit_response == None:
+
+        if config.get('general', 'output_format').lower() == 'json':
+            if threat_hunter:
+                notifications_log=n.parse_response_json_threathunter(notifications_response, source, logger, get_unicode_string)
+            else:
+                notifications_log=n.parse_response_json_psc(notifications_response, source, logger, get_unicode_string)
+        elif config.get('general', 'output_format').lower() == 'cef':
+            if threat_hunter:
+                notifications_log=n.parse_response_cef_threathunter(notifications_response, source, logger, get_unicode_string)
+            else:
+                notifications_log=n.parse_response_cef_psc(notifications_response, source, logger, get_unicode_string)
+        else:
+            if threat_hunter:
+                notifications_log=n.parse_response_leef_threathunter(notifications_response, source, logger, get_unicode_string)
+            else:
+                notifications_log= n.parse_response_leef_psc(notifications_response, source, logger, get_unicode_string)
+    else:
+        notifications_log = None
+        audit_log = None
+
+    return notifications_log, audit_log
+
+def send_data_syslog(log_messages):
+
+    def send_data(data):
+
+        byte_data = data.encode("utf-8")
+        hash = hashlib.sha256(byte_data).hexdigest()
+
+        try:
+            with open(store_forwarder_dir + hash, 'wb') as f:
+                f.write(byte_data)
+        except:
+            logger.error(traceback.format_exc())
+            return None
+
+        if not hash:
+            logger.error("We were unable to store notifications.")
+
+        if send_syslog_tls(output_params['output_host'],
+                           output_params['output_port'],
+                           data,
+                           output_params['output_type'],
+                           output_params['output_format'],
+                           output_params['https_ssl_verify']):
+            #
+            # If successful send, then we just delete the stored version
+            #
+            delete_stored_data(hash)
+
+    if log_messages is None:
         logger.info("There are no messages to forward to host")
     elif output_params['output_port']:
         logger.info("Sending {0} messages to {1}:{2}".format(len(log_messages),
@@ -370,7 +447,7 @@ def parse_and_send_data(json_response, server, sys_type):
         logger.info("Sending {0} messages to {1}".format(len(log_messages),
                                                          output_params['output_host']))
 
-    if log_messages:
+    if log_messages is not None:
         #
         # finally send the messages
         #
@@ -391,6 +468,7 @@ def parse_and_send_data(json_response, server, sys_type):
             send_data(final_data)
 
 def main():
+
     global output_params
 
     config = parse_config()
@@ -398,62 +476,30 @@ def main():
         logger.error("Error parsing config file")
         sys.exit(-1)
 
-    #
     # verify the config file and get the Cb Defense Server list
-    #
     output_params, server_list = verify_config_parse_servers()
 
     if os.path.isfile(output_params['requests_ca_cert']):
         os.environ["REQUESTS_CA_BUNDLE"] = output_params['requests_ca_cert']
 
-    # #
     # # Store Forward.  Attempt to send messages that have been saved but we were unable to reach the destination
-    # #
     send_stored_data()
 
-    #
     # Error or not, there is nothing to do
-    #
     if len(server_list) == 0:
         logger.info("no configured Cb Defense Servers")
         sys.exit(-1)
 
     logger.info("Found {0} Cb Defense Servers in config file".format(len(server_list)))
-    #
+
     # Iterate through our Cb Defense Server list
-    #
     for server in server_list:
         logger.info("Handling notifications for {0}".format(server.get('server_url')))
 
-        notification_response = n.notification_server_request(server.get('server_url'),
-                                             server.get('siem_api_key'),
-                                             server.get('siem_connector_id'),
-                                             True, logger)
-
-        audit_response = al.get_audit_logs(server.get('server_url'), server.get('api_key'), server.get('api_connector_id'),server.get('https_ssl_verify'), logger)
-
-
-        if not notification_response:
-            logger.warn(
-                "Received unexpected (or no) response from Cb Defense Server {0}. Proceeding to next connector.".format(
-                    server.get('server_url')))
-        else:
-            # perform fixups
-            #
-            # logger.debug(response.content)
-            json_response = json.loads(notification_response.content)
-
-            #
-            # parse the Cb Defense Response and get a list of log messages to send to tcp_tls_host:tcp_tls_port
-            #
-            parse_and_send_data(json_response, server, n)
-
-        if not audit_response:
-            logger.info("Retrieval of Audit Logs Failed")
-        else:
-            json_response = json.loads(audit_response.content)
-
-            parse_and_send_data(json_response, server, al)
+        notifications_response, audit_response = get_response(server)
+        notification_log, audit_log = parse_notifications(server, notifications_response, audit_response)
+        send_data_syslog(notification_log)
+        send_data_syslog(audit_log)
 
     logger.info("Done Sending Notifications")
 

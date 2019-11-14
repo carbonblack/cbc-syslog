@@ -127,23 +127,23 @@ def parse_response_leef(response, source, logger, get_unicode_string):
 
         indicators = []
         current_notification_leef_header = leef_header
-        eventId = get_unicode_string(audits.get('eventId'))
+        eventId = get_unicode_string(audits.get('eventId')).encode("utf-8").strip()
         kvpairs = {"eventId": eventId}
         devTime = audits.get("eventTime", 0)
         devTime = time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(devTime / 1000))
         devTimeFormat = "MMM dd yyyy HH:mm:ss z"
         url = audits.get("requestUrl", "noUrlProvided")
-        app_name = get_unicode_string('Syslog') #fix this
+        app_name = get_unicode_string('Syslog').encode("utf-8").strip()
         kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url})
 
         current_notification_leef_header += "|{0}|{1}|".format("PSC", hex_sep)
         cat = "PSC"
         indicators = audits.get('indicators', [])
         signature = 'Active_Threat'
-        summary = get_unicode_string(audits.get('summary', ""))
-        device_name = get_unicode_string(audits['orgName'])
-        email = get_unicode_string(audits['email'])
-        src = get_unicode_string(audits.get('internalIpAddress', "0.0.0.0"))
+        summary = get_unicode_string(audits.get('summary', "")).encode("utf-8").strip()
+        device_name = get_unicode_string(audits['orgName']).encode("utf-8").strip()
+        email = get_unicode_string(audits['loginName']).encode("utf-8").strip()
+        src = get_unicode_string(audits.get('internalIpAddress', "0.0.0.0")).encode("utf-8").strip()
         kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature,
                         "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
                         "identHostName": device_name, "summary": summary})
