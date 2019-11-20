@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from test.test_data import *
+from test.test_data_threathunter import *
+from test.test_data_audit import *
 import audit_log as al
 import notifications as n
 import unittest
@@ -8,6 +10,7 @@ from jinja2 import Template
 import logging
 import logging.handlers
 import json
+import difflib
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +37,8 @@ class TestCbDefenseSyslogConnector(unittest.TestCase):
         self.addTypeEqualityFunc(frozenset, self.assertSetEqual)
         self.maxDiff = None
 
-    def test_cef_notifications(self):
-        response_notification = n.parse_response_cef(test_data_notification, "test", logger, get_unicode_string)
+    def test_cef_notifications_psc(self):
+        response_notification = n.parse_response_cef_psc(test_data_notification, "test", logger, get_unicode_string)
 
         template = Template(
             "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}")
@@ -44,23 +47,52 @@ class TestCbDefenseSyslogConnector(unittest.TestCase):
 
         self.assertEqual(output_notifications, cef_output_notification)
 
-    def test_leef_notifications(self):
+    def test_leef_notifications_psc(self):
         template = Template("{{source}}:{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{eventid}}|{{hex_sep}}|{{extension}}")
-        response_notification = n.parse_response_leef(test_data_notification, "test", logger, get_unicode_string)
+        response_notification = n.parse_response_leef_psc(test_data_notification, "test", logger, get_unicode_string)
 
         final_data = ''
         for log in response_notification:
             final_data = final_data + log + "\n"
 
-        #self.assertEqual(final_data, cef_output_notification)
+        #self.assertEqual(final_data, leef_output_notification)
 
-    def test_json_notifications(self):
-        response_notification = n.parse_response_json(test_data_notification, "test", logger, get_unicode_string)
-        final_data = json.dumps(response_notification) + '\n'
+    def test_json_notifications_psc(self):
 
-        self.assertEqual(final_data, json_output_notification)
+        response_notification = n.parse_response_json_psc(test_data_notification, "test", logger, get_unicode_string)
+        final_data = json.dumps(response_notification, sort_keys=True) + '\n'
+        final_data_test = json.dumps(json_output_notification, sort_keys=True) + '\n'
 
-    def test_cef_audit(self):
+        self.assertEqual(final_data, final_data_test)
+
+    def test_cef_notifications_threat_hunter(self):
+        response_notification = n.parse_response_cef_threathunter(test_data_threat_hunter, "test", logger, get_unicode_string)
+
+        template = Template(
+            "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}")
+
+        output_notifications = "\n".join([template.render(log).encode('utf8') for log in response_notification])
+
+        self.assertEqual(output_notifications, cef_output_notification_th)
+
+    def test_leef_notifications_threat_hunter(self):
+        template = Template("{{source}}:{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{eventid}}|{{hex_sep}}|{{extension}}")
+        response_notification = n.parse_response_leef_threathunter(test_data_threat_hunter, "test", logger, get_unicode_string)
+
+        final_data = ''
+        for log in response_notification:
+            final_data = final_data + log + "\n"
+
+        self.assertEqual(final_data, leef_output_notification_th)
+
+    def test_json_notifications_threat_hunter(self):
+        response_notification = n.parse_response_json_threathunter(test_data_threat_hunter, "test", logger, get_unicode_string)
+        final_data = json.dumps(response_notification, sort_keys=True) + '\n'
+        final_data_test = json.dumps(json_output_notification_th, sort_keys=True) + '\n'
+
+        self.assertEqual(final_data, final_data_test)
+
+    def test_cef_audit_psc(self):
         response_notification = al.parse_response_cef(test_data_audit, "test", logger, get_unicode_string)
         # responses_audit = al.parse_response_cef(test_data_audit, "test")
 
@@ -71,7 +103,7 @@ class TestCbDefenseSyslogConnector(unittest.TestCase):
 
         self.assertEqual(output_audit, cef_output_audit)
 
-    def test_leef_audit(self):
+    def test_leef_audit_psc(self):
         template = Template(
             "{{source}}:{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{eventid}}|{{hex_sep}}|{{extension}}")
         response_notification = al.parse_response_leef(test_data_audit, "test", logger, get_unicode_string)
@@ -82,11 +114,12 @@ class TestCbDefenseSyslogConnector(unittest.TestCase):
 
         self.assertEqual(final_data, leef_output_audit)
 
-    def test_json_audit(self):
+    def test_json_audit_psc(self):
         response_notification = al.parse_response_json(test_data_notification, "test", logger, get_unicode_string)
-        final_data = json.dumps(response_notification) + '\n'
+        final_data = json.dumps(response_notification, sort_keys=True) + '\n'
+        final_data_test = json.dumps(json_output_audit, sort_keys=True) + '\n'
 
-        # self.assertEqual(str(final_data), json_output_notification)
+        self.assertEqual(str(final_data), final_data_test)
 
 
 if __name__ == '__main__':
