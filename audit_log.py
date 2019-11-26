@@ -1,23 +1,8 @@
-import socket
-import ssl
-import sys
-import argparse
-import ConfigParser
-import requests
-from jinja2 import Template
-import os
-import json
-import time
 import logging
-import logging.handlers
 from cb_defense_syslog import *
-import traceback
-import hashlib
-import fcntl
-
 
 #Get Audit Logs will return response
-def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, logger, proxies=None):
+def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, proxies=None):
     headers = {'X-Auth-Token': "{0}/{1}".format(api_key_query, api_connector_id_query)}
     try:
         response = requests.get("{0}/integrationServices/v3/auditlogs".format(url),
@@ -25,31 +10,31 @@ def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, logge
                                 timeout=15, proxies=proxies)
 
         if response.status_code != 200:
-            logger.error("Could not retrieve audit logs: {0}".format(response.status_code))
-            return False
+            logging.error("Could not retrieve audit logs: {0}".format(response.status_code))
+            return None
 
         notifications = response.json()
 
     except Exception as e:
-        logger.error("Exception {0} when retrieving audit logs".format(get_unicode_string(e)), exc_info=True)
+        logging.error("Exception {0} when retrieving audit logs".format(get_unicode_string(e)), exc_info=True)
         return None
 
     if notifications.get("success", False) != True:
-        logger.error("Unsuccessful HTTP response retrieving audit logs: {0}"
+        logging.error("Unsuccessful HTTP response retrieving audit logs: {0}"
                      .format(notifications.get("message")))
-        return False
+        return None
 
     notifications = notifications.get("notifications", [])
     if not notifications:
-        logger.info("No audit logs available")
-        return False
+        logging.info("No audit logs available")
+        return None
 
     return response
 
 
 #Parse responses. There are three options: cef, leef, json
 
-def parse_response_cef(response, source, logger, get_unicode_string):
+def parse_response_cef(response, source, get_unicode_string):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'
@@ -108,7 +93,7 @@ def parse_response_cef(response, source, logger, get_unicode_string):
     return log_messages
 
 
-def parse_response_leef(response, source, logger, get_unicode_string):
+def parse_response_leef(response, source, get_unicode_string):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 |
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
@@ -120,7 +105,6 @@ def parse_response_leef(response, source, logger, get_unicode_string):
     leef_header = '|'.join([version, vendor, product, dev_version])
     log_messages = []
 
-    # success = False
 
     for audits in response['notifications']:
         severity = 1
@@ -161,7 +145,7 @@ def parse_response_leef(response, source, logger, get_unicode_string):
 
     return log_messages
 
-def parse_response_json(response, source, logger, get_unicode_string):
+def parse_response_json(response, source, get_unicode_string):
 
     for notification in response[u'notifications']:
         notification['type'] = 'AUDIT'

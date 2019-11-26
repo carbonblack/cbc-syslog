@@ -1,36 +1,14 @@
-import socket
-import ssl
-import sys
-import argparse
-import ConfigParser
-import requests
-from jinja2 import Template
-import os
-import json
-import time
-import logging
-import logging.handlers
 from cb_defense_syslog import *
-import traceback
-import hashlib
-import fcntl
+import logging
 
-# from six import PY2
-#
-# if PY2:
-#     get_unicode_string = unicode
-# else:
-#     get_unicode_string = str
-
-
-def notification_server_request(url, siem_api_key, siem_connector_id, ssl_verify, logger, proxies=None):
-    logger.info("Attempting to connect to url: " + url)
+def notification_server_request(url, siem_api_key, siem_connector_id, ssl_verify, proxies=None):
+    logging.info("Attempting to connect to url: " + url)
 
     headers = {'X-Auth-Token': "{0}/{1}".format(siem_api_key, siem_connector_id)}
     try:
         response = requests.get(url + '/integrationServices/v3/notification', headers=headers, timeout=15,
                                 verify=ssl_verify, proxies=proxies)
-        logger.info(response)
+        logging.info(response)
 
     except Exception as e:
         logging.error(e, exc_info=True)
@@ -40,20 +18,20 @@ def notification_server_request(url, siem_api_key, siem_connector_id, ssl_verify
         return response
 
 
-def gather_notification_context(url, notification_id, api_key_query, connector_id_query, ssl_verify, logger,  proxies=None):
+def gather_notification_context(url, notification_id, api_key_query, connector_id_query, ssl_verify, proxies=None):
     try:
         response = requests.get("{0}/integrationServices/v3/alert/{1}".format(url,
                                                                               notification_id),
                                 headers={"X-Auth-Token": "{0}/{1}".format(api_key_query,
                                                                           connector_id_query)})
         if response.status_code != 200:
-            logger.error("Could not retrieve context for id {0}: {1}".format(notification_id,
+            logging.error("Could not retrieve context for id {0}: {1}".format(notification_id,
                                                                              response.status_code))
             return None
 
         return response.json()
     except Exception as e:
-        logger.exception("Could not retrieve notification context for org id {1}: {2}".format(
+        logging.exception("Could not retrieve notification context for org id {1}: {2}".format(
             notification_id,
             str(e)))
         return None
@@ -69,14 +47,13 @@ def parse_cb_defense_notifications_get_incidentids(response):
                 incidentids.append(incidentid)
     return incidentids
 
-
 def psc_threathunter_check(response):
     if 'notifications' in response:
-        return False
+        return None
 
     return True
 
-def parse_response_leef_psc(response, source, logger, get_unicode_string):
+def parse_response_leef_psc(response, source, get_unicode_string):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 | Extension
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
@@ -90,17 +67,10 @@ def parse_response_leef_psc(response, source, logger, get_unicode_string):
 
     success = False
 
-    # if response:
-    #     response = response.json()
-    #     success = response.get("success", False)
-    #
-    # if not success:
-    #     return log_messages
-
     if response[u'success']:
 
         if len(response[u'notifications']) < 1:
-            logger.info('successfully connected, no alerts at this time')
+            logging.info('successfully connected, no alerts at this time')
             return None
         for note in response[u'notifications']:
             indicators = []
@@ -161,11 +131,10 @@ def parse_response_leef_psc(response, source, logger, get_unicode_string):
                     ["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]) + "\t" + "\t".join(
                     ["{0}={1}".format(k, indicator[k]) for k in indicator])
                 log_messages.append(indicator_dict)
-            #print(indicator_dict)
 
     return log_messages
 
-def parse_response_json_psc(response, source, logger, get_unicode_string):
+def parse_response_json_psc(response, source, get_unicode_string):
     def encode_decode():
         pass
 
@@ -174,7 +143,7 @@ def parse_response_json_psc(response, source, logger, get_unicode_string):
 
     if response[u'success']:
         if len(response[u'notifications']) < 1:
-            logger.info('successfully connected, no alerts at this time')
+            logging.info('successfully connected, no alerts at this time')
             return []
 
         for notification in response[u'notifications']:
@@ -185,7 +154,7 @@ def parse_response_json_psc(response, source, logger, get_unicode_string):
 
     return response['notifications']
 
-def parse_response_cef_psc(response, source, logger, get_unicode_string):
+def parse_response_cef_psc(response, source, get_unicode_string):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'
@@ -201,7 +170,7 @@ def parse_response_cef_psc(response, source, logger, get_unicode_string):
     if response[u'success']:
 
         if len(response[u'notifications']) < 1:
-            logger.info('successfully connected, no alerts at this time')
+            logging.info('successfully connected, no alerts at this time')
             return None
 
         for note in response[u'notifications']:
@@ -291,7 +260,7 @@ def parse_response_cef_psc(response, source, logger, get_unicode_string):
                                  'source': source})
     return log_messages
 
-def parse_response_cef_threathunter(response, source, logger, get_unicode_string):
+def parse_response_cef_threathunter(response, source, get_unicode_string):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'
@@ -300,13 +269,8 @@ def parse_response_cef_threathunter(response, source, logger, get_unicode_string
 
     log_messages = []
 
-    # if u'success' not in response:
-    #     return log_messages
-    #
-    # if response[u'success']:
-
     if len(response[u'notifications']) < 1:
-        logger.info('successfully connected, no alerts at this time')
+        logging.info('successfully connected, no alerts at this time')
         return None
 
     for note in response[u'notifications']:
@@ -361,17 +325,17 @@ def parse_response_cef_threathunter(response, source, logger, get_unicode_string
                              'source': source})
     return log_messages
 
-def parse_response_json_threathunter(response, source, logger, get_unicode_string):
+def parse_response_json_threathunter(response, source, get_unicode_string):
 
     if len(response[u'notifications']) < 1:
-        logger.info('successfully connected, no alerts at this time')
+        logging.info('successfully connected, no alerts at this time')
         return []
 
     return response['notifications']
 
 
 
-def parse_response_leef_threathunter(response, source, logger, get_unicode_string):
+def parse_response_leef_threathunter(response, source, get_unicode_string):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 | Extension
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
@@ -385,15 +349,8 @@ def parse_response_leef_threathunter(response, source, logger, get_unicode_strin
 
     success = False
 
-    # if response:
-    #     response = response.json()
-    #     success = response.get("success", False)
-    #
-    # if not success:
-    #     return log_messages
-
     if len(response) < 1:
-        logger.info('successfully connected, no alerts at this time')
+        logging.info('successfully connected, no alerts at this time')
         return None
     for note in response[u'notifications']:
         indicators = []
@@ -439,6 +396,5 @@ def parse_response_leef_threathunter(response, source, logger, get_unicode_strin
                 ["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]) + "\t" + "\t".join(
                 ["{0}={1}".format(k, indicator[k]) for k in indicator])
             log_messages.append(indicator_dict)
-        #print(indicator_dict)
 
     return log_messages

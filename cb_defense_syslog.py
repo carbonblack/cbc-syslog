@@ -94,9 +94,6 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
 
             client_socket.connect((server_url, port))
             client_socket.send(data.encode("utf-8"))
-            #
-            # if audit_data is not None:
-            #     client_socket.send(audit_data.encode("utf-8"))
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
@@ -110,8 +107,6 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
         try:
             client_socket.connect((server_url, port))
             client_socket.send(data.encode("utf-8"))
-            # if audit_data is not None:
-            #     client_socket.send(audit_data.encode("utf-8"))
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
@@ -123,8 +118,6 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
         unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             unsecured_client_socket.sendto(data.encode("utf-8"), (server_url, port))
-            # if audit_data is not None:
-            #     unsecured_client_socket.sendto(audit_data.encode("utf-8"), (server_url, port))
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
@@ -139,13 +132,6 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
                                  data=data.encode("utf-8"),
                                  verify=ssl_verify)
             logger.info(resp)
-            # if audit_data is not None:
-            #     audit_resp = requests.post(headers=output_params['http_headers'],
-            #                          url=server_url,
-            #                          data=audit_data.encode("utf-8"),
-            #                          verify=ssl_verify)
-            #     logger.info(audit_resp)
-
         except Exception as e:
             logger.error(traceback.format_exc())
             retval = False
@@ -326,11 +312,11 @@ def get_response(server):
     notification_response = n.notification_server_request(server.get('server_url'),
                                                           server.get('siem_api_key'),
                                                           server.get('siem_connector_id'),
-                                                          True, logger)
+                                                          True)
 
     audit_response = al.get_audit_logs(server.get('server_url'), server.get('api_key'), server.get('api_connector_id'),
-                                       server.get('https_ssl_verify'), logger)
-    if not notification_response:
+                                       server.get('https_ssl_verify'))
+    if notification_response is None:
         logger.warn(
             "Received unexpected (or no) response from Cb Defense Server {0}. Proceeding to next connector.".format(
                 server.get('server_url')))
@@ -338,7 +324,7 @@ def get_response(server):
     else:
         notifications_response = json.loads(notification_response.content)
 
-    if not audit_response:
+    if audit_response is None:
         logger.info("Retrieval of Audit Logs Failed")
         audit_response=None
     else:
@@ -360,49 +346,49 @@ def parse_notifications(server, notifications_response, audit_response):
     if notifications_response != None and audit_response != None:
 
         if config.get('general', 'output_format').lower() == 'json':
-            audit_log = al.parse_response_json(audit_response, source, logger, get_unicode_string)
-            if threat_hunter:
-                notifications_log=n.parse_response_json_threathunter(notifications_response, source, logger, get_unicode_string)
+            audit_log = al.parse_response_json(audit_response, source, get_unicode_string)
+            if threat_hunter is True:
+                notifications_log=n.parse_response_json_threathunter(notifications_response, source, get_unicode_string)
             else:
-                notifications_log=n.parse_response_json_psc(notifications_response, source, logger, get_unicode_string)
+                notifications_log=n.parse_response_json_psc(notifications_response, source, get_unicode_string)
         elif config.get('general', 'output_format').lower() == 'cef':
-            audit_log = al.parse_response_cef(audit_response, source, logger, get_unicode_string)
-            if threat_hunter:
-                notifications_log=n.parse_response_cef_threathunter(notifications_response, source, logger, get_unicode_string)
+            audit_log = al.parse_response_cef(audit_response, source, get_unicode_string)
+            if threat_hunter is True:
+                notifications_log=n.parse_response_cef_threathunter(notifications_response, source, get_unicode_string)
             else:
-                notifications_log=n.parse_response_cef_psc(notifications_response, source, logger, get_unicode_string)
+                notifications_log=n.parse_response_cef_psc(notifications_response, source,  get_unicode_string)
         else:
-            audit_log = al.parse_response_leef(audit_response, source, logger, get_unicode_string)
-            if threat_hunter:
-                notifications_log=n.parse_response_leef_threathunter(notifications_response, source, logger, get_unicode_string)
+            audit_log = al.parse_response_leef(audit_response, source, get_unicode_string)
+            if threat_hunter is True:
+                notifications_log=n.parse_response_leef_threathunter(notifications_response, source, get_unicode_string)
             else:
-                notifications_log=n.parse_response_leef_psc(notifications_response, source, logger, get_unicode_string)
+                notifications_log=n.parse_response_leef_psc(notifications_response, source, get_unicode_string)
 
     elif notifications_response == None and audit_response!=None:
         if config.get('general', 'output_format').lower() == 'json':
-            audit_log = al.parse_response_json(audit_response, source, logger, get_unicode_string)
+            audit_log = al.parse_response_json(audit_response, source, get_unicode_string)
         elif config.get('general', 'output_format').lower() == 'cef':
-            audit_log = al.parse_response_cef(audit_response, source, logger, get_unicode_string)
+            audit_log = al.parse_response_cef(audit_response, source, get_unicode_string)
         else:
-            audit_log = al.parse_response_leef(audit_response, source, logger, get_unicode_string)
+            audit_log = al.parse_response_leef(audit_response, source, get_unicode_string)
 
     elif notifications_response !=None and audit_response == None:
 
         if config.get('general', 'output_format').lower() == 'json':
-            if threat_hunter:
-                notifications_log=n.parse_response_json_threathunter(notifications_response, source, logger, get_unicode_string)
+            if threat_hunter is True:
+                notifications_log=n.parse_response_json_threathunter(notifications_response, source, get_unicode_string)
             else:
-                notifications_log=n.parse_response_json_psc(notifications_response, source, logger, get_unicode_string)
+                notifications_log=n.parse_response_json_psc(notifications_response, source, get_unicode_string)
         elif config.get('general', 'output_format').lower() == 'cef':
-            if threat_hunter:
-                notifications_log=n.parse_response_cef_threathunter(notifications_response, source, logger, get_unicode_string)
+            if threat_hunter is True:
+                notifications_log=n.parse_response_cef_threathunter(notifications_response, source, get_unicode_string)
             else:
-                notifications_log=n.parse_response_cef_psc(notifications_response, source, logger, get_unicode_string)
+                notifications_log=n.parse_response_cef_psc(notifications_response, source, get_unicode_string)
         else:
-            if threat_hunter:
-                notifications_log=n.parse_response_leef_threathunter(notifications_response, source, logger, get_unicode_string)
+            if threat_hunter is True:
+                notifications_log=n.parse_response_leef_threathunter(notifications_response, source, get_unicode_string)
             else:
-                notifications_log= n.parse_response_leef_psc(notifications_response, source, logger, get_unicode_string)
+                notifications_log= n.parse_response_leef_psc(notifications_response, source, get_unicode_string)
     else:
         notifications_log = None
         audit_log = None
