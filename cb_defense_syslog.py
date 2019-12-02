@@ -17,9 +17,7 @@ import audit_log as al
 import notifications as n
 
 logger = logging.getLogger(__name__)
-
 logger.setLevel(logging.INFO)
-
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 store_forwarder_dir = 'root/usr/share/cb/integrations/cb-defense-syslog/store/'
@@ -347,19 +345,19 @@ def parse_notifications(server, notifications_response, audit_response):
 
         if config.get('general', 'output_format').lower() == 'json':
             audit_log = al.parse_response_json(audit_response, source, get_unicode_string)
-            if threat_hunter is True:
+            if threat_hunter:
                 notifications_log=n.parse_response_json_threathunter(notifications_response, source, get_unicode_string)
             else:
                 notifications_log=n.parse_response_json_psc(notifications_response, source, get_unicode_string)
         elif config.get('general', 'output_format').lower() == 'cef':
             audit_log = al.parse_response_cef(audit_response, source, get_unicode_string)
-            if threat_hunter is True:
+            if threat_hunter:
                 notifications_log=n.parse_response_cef_threathunter(notifications_response, source, get_unicode_string)
             else:
                 notifications_log=n.parse_response_cef_psc(notifications_response, source,  get_unicode_string)
         else:
             audit_log = al.parse_response_leef(audit_response, source, get_unicode_string)
-            if threat_hunter is True:
+            if threat_hunter:
                 notifications_log=n.parse_response_leef_threathunter(notifications_response, source, get_unicode_string)
             else:
                 notifications_log=n.parse_response_leef_psc(notifications_response, source, get_unicode_string)
@@ -375,17 +373,17 @@ def parse_notifications(server, notifications_response, audit_response):
     elif notifications_response !=None and audit_response == None:
 
         if config.get('general', 'output_format').lower() == 'json':
-            if threat_hunter is True:
+            if threat_hunter:
                 notifications_log=n.parse_response_json_threathunter(notifications_response, source, get_unicode_string)
             else:
                 notifications_log=n.parse_response_json_psc(notifications_response, source, get_unicode_string)
         elif config.get('general', 'output_format').lower() == 'cef':
-            if threat_hunter is True:
+            if threat_hunter:
                 notifications_log=n.parse_response_cef_threathunter(notifications_response, source, get_unicode_string)
             else:
                 notifications_log=n.parse_response_cef_psc(notifications_response, source, get_unicode_string)
         else:
-            if threat_hunter is True:
+            if threat_hunter:
                 notifications_log=n.parse_response_leef_threathunter(notifications_response, source, get_unicode_string)
             else:
                 notifications_log= n.parse_response_leef_psc(notifications_response, source, get_unicode_string)
@@ -484,10 +482,14 @@ def main():
 
         notifications_response, audit_response = get_response(server)
         notification_log, audit_log = parse_notifications(server, notifications_response, audit_response)
+        logger.info("Sending Notifications")
         send_data_syslog(notification_log)
+        logger.info("Done Sending Notifications")
+        logger.info("Sending Audit Logs")
         send_data_syslog(audit_log)
+        logger.info("Done Sending Audit Logs")
 
-    logger.info("Done Sending Notifications")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

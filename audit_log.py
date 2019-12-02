@@ -1,7 +1,12 @@
+from cb_defense_syslog import requests
 import logging
-from cb_defense_syslog import *
 
-#Get Audit Logs will return response
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+
 def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, proxies=None):
     headers = {'X-Auth-Token': "{0}/{1}".format(api_key_query, api_connector_id_query)}
     try:
@@ -10,29 +15,27 @@ def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, proxi
                                 timeout=15, proxies=proxies)
 
         if response.status_code != 200:
-            logging.error("Could not retrieve audit logs: {0}".format(response.status_code))
+            logger.error("Could not retrieve audit logs: {0}".format(response.status_code))
             return None
 
         notifications = response.json()
 
     except Exception as e:
-        logging.error("Exception {0} when retrieving audit logs".format(get_unicode_string(e)), exc_info=True)
+        logger.error("Exception {0} when retrieving audit logs".format(get_unicode_string(e)), exc_info=True)
         return None
 
     if notifications.get("success", False) != True:
-        logging.error("Unsuccessful HTTP response retrieving audit logs: {0}"
+        logger.error("Unsuccessful HTTP response retrieving audit logs: {0}"
                      .format(notifications.get("message")))
         return None
 
     notifications = notifications.get("notifications", [])
     if not notifications:
-        logging.info("No audit logs available")
+        logger.info("No audit logs available")
         return None
 
     return response
 
-
-#Parse responses. There are three options: cef, leef, json
 
 def parse_response_cef(response, source, get_unicode_string):
     version = 'CEF:0'

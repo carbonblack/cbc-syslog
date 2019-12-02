@@ -1,17 +1,22 @@
-from cb_defense_syslog import *
+from cb_defense_syslog import requests
 import logging
 
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 def notification_server_request(url, siem_api_key, siem_connector_id, ssl_verify, proxies=None):
-    logging.info("Attempting to connect to url: " + url)
+    logger.info("Attempting to connect to url: " + url)
 
     headers = {'X-Auth-Token': "{0}/{1}".format(siem_api_key, siem_connector_id)}
     try:
         response = requests.get(url + '/integrationServices/v3/notification', headers=headers, timeout=15,
                                 verify=ssl_verify, proxies=proxies)
-        logging.info(response)
+        logger.info(response)
 
     except Exception as e:
-        logging.error(e, exc_info=True)
+        logger.error(e, exc_info=True)
         return None
 
     else:
@@ -25,13 +30,13 @@ def gather_notification_context(url, notification_id, api_key_query, connector_i
                                 headers={"X-Auth-Token": "{0}/{1}".format(api_key_query,
                                                                           connector_id_query)})
         if response.status_code != 200:
-            logging.error("Could not retrieve context for id {0}: {1}".format(notification_id,
+            logger.error("Could not retrieve context for id {0}: {1}".format(notification_id,
                                                                              response.status_code))
             return None
 
         return response.json()
     except Exception as e:
-        logging.exception("Could not retrieve notification context for org id {1}: {2}".format(
+        logger.exception("Could not retrieve notification context for org id {1}: {2}".format(
             notification_id,
             str(e)))
         return None
@@ -70,7 +75,7 @@ def parse_response_leef_psc(response, source, get_unicode_string):
     if response[u'success']:
 
         if len(response[u'notifications']) < 1:
-            logging.info('successfully connected, no alerts at this time')
+            logger.info('successfully connected, no alerts at this time')
             return None
         for note in response[u'notifications']:
             indicators = []
@@ -143,7 +148,7 @@ def parse_response_json_psc(response, source, get_unicode_string):
 
     if response[u'success']:
         if len(response[u'notifications']) < 1:
-            logging.info('successfully connected, no alerts at this time')
+            logger.info('successfully connected, no alerts at this time')
             return []
 
         for notification in response[u'notifications']:
@@ -170,7 +175,7 @@ def parse_response_cef_psc(response, source, get_unicode_string):
     if response[u'success']:
 
         if len(response[u'notifications']) < 1:
-            logging.info('successfully connected, no alerts at this time')
+            logger.info('successfully connected, no alerts at this time')
             return None
 
         for note in response[u'notifications']:
@@ -270,7 +275,7 @@ def parse_response_cef_threathunter(response, source, get_unicode_string):
     log_messages = []
 
     if len(response[u'notifications']) < 1:
-        logging.info('successfully connected, no alerts at this time')
+        logger.info('successfully connected, no alerts at this time')
         return None
 
     for note in response[u'notifications']:
@@ -328,7 +333,7 @@ def parse_response_cef_threathunter(response, source, get_unicode_string):
 def parse_response_json_threathunter(response, source, get_unicode_string):
 
     if len(response[u'notifications']) < 1:
-        logging.info('successfully connected, no alerts at this time')
+        logger.info('successfully connected, no alerts at this time')
         return []
 
     return response['notifications']
@@ -350,7 +355,7 @@ def parse_response_leef_threathunter(response, source, get_unicode_string):
     success = False
 
     if len(response) < 1:
-        logging.info('successfully connected, no alerts at this time')
+        logger.info('successfully connected, no alerts at this time')
         return None
     for note in response[u'notifications']:
         indicators = []
