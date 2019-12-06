@@ -240,5 +240,5 @@ Debug Logs are stored in `/var/log/cb/integrations/cb-defense-syslog/`
     #api_connector_id = KJARWBZ111
     #api_key = CQF35EIH2WDF69PTWKGC4111
     #siem_connector_id = 
-    siem_api_key = 
+    #siem_api_key = 
     #server_url = https://server2.yourcompany.com
