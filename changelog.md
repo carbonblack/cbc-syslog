@@ -15,7 +15,7 @@ Please see the following example:
     siem_connector_id = UEUWR4U111
     siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
 
-NOTE: These fields are not optional and must be present in the config file. If no SIEM Key is needed, please 
+> **Note**: These fields are not optional and must be present in the config file. If no SIEM Key is needed, please 
 leave the field blank as shown below:
 
     [cbdefense1]
@@ -46,7 +46,7 @@ ThreatHunter notifications you need to add the API Key as shown below into the c
 The file formats are compatible with ThreatHunter Notifications are: LEEF, CEF, JSON. Just like with Audit Logs, the 
 program will grab the only the notifications that have been generated since the last time the Connector was run. 
 
-NOTE: All events types will be pulled from the Syslog Connector. As of now, no additional filtering is 
+> **Note**: All events types will be pulled from the Syslog Connector. As of now, no additional filtering is 
 compatible for the ThreatHunter Notifications.
 
 
