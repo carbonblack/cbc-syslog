@@ -135,8 +135,7 @@ Debug Logs are stored in `/var/log/cb/integrations/cb-defense-syslog/`
     # This is a jinja 2 template
     # NOTE: The source variable corresponds to the Cb Defense Server used to retrieve results
     #
-    template = {{source}}|{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
-
+    template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
     #
     # Configure the specific output.
     # Valid options are: 'udp', 'tcp', 'tcp+tls'
@@ -207,27 +206,39 @@ Debug Logs are stored in `/var/log/cb/integrations/cb-defense-syslog/`
     #tls_verify = true
 
     [cbdefense1]
-
+    
     #
-    # Cb Defense Connector ID
+    # Cb Defense API Connector ID
     #
-    connector_id = F8KF111111
-
+    api_connector_id = GO5M953111
+    
     #
     # Cb Defense API Key
     #
-    api_key = WT9T3QDP4UGCK2NS96111111
-
+    api_key = BYCRM7BRNSH0CXZR5V1Y3111
+    
+    #
+    # Cb Defense SIEM Connector ID
+    #
+    siem_connector_id = UEUWR4U111
+    
+    #
+    # Cb Defense SIEM Key
+    #
+    siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
+    
     #
     # Cb Defense Server URL
-    # NOTE: this is not the url to the web ui, but to the API URL
+    # NOTE: this is not the url to the web ui, but to the API URL (for example, https://api-prod05.conferdeploy.net)
     #
-    server_url = https://server.yourcompany.com
-
+    server_url = https://server1.yourcompany.com
+    
     #
     # For more than one Cb Defense Server, add another server using the following template including the stanza
     #
     #[cbdefenseserver2]
-    #connector_id = F8KF111111
-    #api_key = WT9T3QDP4UGCK2NS96111111
+    #api_connector_id = KJARWBZ111
+    #api_key = CQF35EIH2WDF69PTWKGC4111
+    #siem_connector_id = 
+    #siem_api_key = 
     #server_url = https://server2.yourcompany.com
