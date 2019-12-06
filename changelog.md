@@ -2,9 +2,9 @@
 All notable changes to this project will be documented in this file.
 
 
-##2019-12-06
+## 2019-12-06
 
-###SIEM Key
+### SIEM Key
 
 In the configuration file, a SIEM Key is now available to be added. This will allow Audit Logs to be pulled from each 
 server in the configuration file. 
