@@ -26,25 +26,25 @@ leave the field blank as shown below:
 ### Audit Logs
 
 Audit Logs are now available to be pulled from the Syslog Connector. To set up the program to pull Audit Logs, please 
-see the SIEM Key section above. When the Syslog Connector is executing, the program will grab the Audit Logs all new 
-Audit Logs since the last time the Connector was run. The following file formats are compatible with Audit Logs: CEF,
-LEEF, JSON
+see the SIEM Key section above. When the Syslog Connector is executing, the program will grab the Audit Logs that have 
+been generated since the last time the Connector was run. The following file formats are compatible with Audit Logs: 
+CEF,LEEF, JSON
 
-NOTE: All events types will be pulled from the Syslog Connector. As of now, no additional filtering is 
-compatible for the Audit Logs.
+> **Note**: All events types will be pulled from the Syslog Connector. As of now, no additional filtering is 
+compatible for Audit Logs.
 
 
 ### ThreatHunter
 
 ThreatHunter notifications are now available to be pulled from the Syslog Connector. To set up the Connector to pull 
-ThreatHunter notifications you need to add the API Key as shown below into the configuration file: 
+ThreatHunter notifications you need to add the API Key as shown below in the configuration file: 
 
     [cbdefense1]
     api_connector_id = GO5M953111
     api_key = BYCRM7BRNSH0CXZR5V1Y3111
 
-The file formats are compatible with ThreatHunter Notifications are: LEEF, CEF, JSON. Just like with Audit Logs, the 
-program will grab the only the notifications that have been generated since the last time the Connector was run. 
+The file formats that are compatible with ThreatHunter Notifications are: LEEF, CEF, JSON. Just like with Audit Logs, the 
+program will grab only the notifications that have been generated since the last time the Connector was run. 
 
 > **Note**: All events types will be pulled from the Syslog Connector. As of now, no additional filtering is 
 compatible for the ThreatHunter Notifications.
