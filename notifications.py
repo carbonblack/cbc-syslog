@@ -1,4 +1,5 @@
 from cb_defense_syslog import requests
+import time
 import logging
 
 logging.basicConfig()
@@ -53,10 +54,15 @@ def parse_cb_defense_notifications_get_incidentids(response):
     return incidentids
 
 def psc_threathunter_check(response):
-    if 'notifications' in response:
+
+    if response['notifications'] == []:
+        logger.info("There are currently no notification responses to be pulled.")
         return None
 
-    return True
+    if 'threatHunterInfo' in response['notifications'][0]:
+        return True
+
+    return False
 
 def parse_response_leef_psc(response, source, get_unicode_string):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 | Extension
@@ -279,45 +285,113 @@ def parse_response_cef_threathunter(response, source, get_unicode_string):
         return None
 
     for note in response[u'notifications']:
-        note['type'] = 'THREAT_HUNTER'
+        if note['type'] == 'THREAT_HUNTER':
 
-        signature = 'Threat_Hunter'
-        seconds = get_unicode_string(note['eventTime'])[:-3]
-        name = get_unicode_string(note["threatHunterInfo"]['summary'])
-        severity = get_unicode_string(note["threatHunterInfo"]['score'])
-        device_name = get_unicode_string(note['deviceInfo']['deviceName'])
-        user_name = get_unicode_string(note['deviceInfo']['email'])
-        device_ip = get_unicode_string(note['deviceInfo']['internalIpAddress'])
-        link = get_unicode_string(note['url'])
-        tid = get_unicode_string(note["threatHunterInfo"]['incidentId'])
-        timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
-        extension = ''
-        extension += 'rt="' + timestamp + '"'
+            signature = 'Threat_Hunter'
+            seconds = get_unicode_string(note['eventTime'])[:-3]
+            name = get_unicode_string(note["threatHunterInfo"]['summary'])
+            severity = get_unicode_string(note["threatHunterInfo"]['score'])
+            device_name = get_unicode_string(note['deviceInfo']['deviceName'])
+            user_name = get_unicode_string(note['deviceInfo']['email'])
+            device_ip = get_unicode_string(note['deviceInfo']['internalIpAddress'])
+            link = get_unicode_string(note['url'])
+            tid = get_unicode_string(note["threatHunterInfo"]['incidentId'])
+            timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
+            sha256 = get_unicode_string(note["threatHunterInfo"]['sha256'])
 
-        sha256 = get_unicode_string(note["threatHunterInfo"]['sha256'])
+            extension = ''
+            extension += 'rt="' + timestamp + '"'
 
-        extension = ''
-        extension += 'rt="' + timestamp + '"'
+            if '\\' in device_name and splitDomain:
+                (domain_name, device) = device_name.split('\\')
+                extension += ' sntdom=' + domain_name
+                extension += ' dvchost=' + device
+            else:
+                extension += ' dvchost=' + device_name
 
-        if '\\' in device_name and splitDomain:
-            (domain_name, device) = device_name.split('\\')
-            extension += ' sntdom=' + domain_name
-            extension += ' dvchost=' + device
+            if '\\' in user_name and splitDomain:
+                (domain_name, user) = user_name.split('\\')
+                extension += ' duser=' + user
+            else:
+                extension += ' duser=' + user_name
+
+                extension += ' dvc=' + device_ip
+                extension += ' cs3Label="Link"'
+                extension += ' cs3="' + link + '"'
+                extension += ' cs4Label="Threat_ID"'
+                extension += ' cs4="' + tid + '"'
+                extension += ' hash=' + sha256
+
+        elif note['type'].upper() =='POLICY_ACTION':
+            signature = 'Policy_Action'
+            seconds = get_unicode_string(note['eventTime'])[:-3]
+            name = get_unicode_string(note["threatHunterInfo"]['summary'])
+            severity = get_unicode_string(note["threatHunterInfo"]['score'])
+            device_name = get_unicode_string(note['deviceInfo']['deviceName'])
+            user_name = get_unicode_string(note['deviceInfo']['email'])
+            device_ip = get_unicode_string(note['deviceInfo']['internalIpAddress'])
+            link = get_unicode_string(note['url'])
+            sha256 = get_unicode_string(note["threatHunterInfo"]['sha256'])
+            timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
+
+            extension = ''
+            extension += 'rt="' + timestamp + '"'
+
+            if '\\' in device_name and splitDomain:
+                (domain_name, device) = device_name.split('\\')
+                extension += ' sntdom=' + domain_name
+                extension += ' dvchost=' + device
+            else:
+                extension += ' dvchost=' + device_name
+
+            if '\\' in user_name and splitDomain:
+                (domain_name, user) = user_name.split('\\')
+                extension += ' duser=' + user
+            else:
+                extension += ' duser=' + user_name
+
+                extension += ' dvc=' + device_ip
+                extension += ' cs3Label="Link"'
+                extension += ' cs3="' + link + '"'
+                extension += ' cs4Label="Threat_ID"'
+                extension += ' hash=' + sha256
+
+
+        elif note['type'].upper() == 'THREAT':
+            signature = 'Active_Threat'
+            seconds = get_unicode_string(note['eventTime'])[:-3]
+            name = get_unicode_string(note["threatHunterInfo"]['summary'])
+            severity = get_unicode_string(note["threatHunterInfo"]['score'])
+            device_name = get_unicode_string(note['deviceInfo']['deviceName'])
+            user_name = get_unicode_string(note['deviceInfo']['email'])
+            device_ip = get_unicode_string(note['deviceInfo']['internalIpAddress'])
+            link = get_unicode_string(note['url'])
+            tid = get_unicode_string(note["threatHunterInfo"]['incidentId'])
+            timestamp = time.strftime("%b %d %Y %H:%M:%S", time.gmtime(int(seconds)))
+            extension = ''
+            extension += 'rt="' + timestamp + '"'
+
+            if '\\' in device_name and splitDomain:
+                (domain_name, device) = device_name.split('\\')
+                extension += ' sntdom=' + domain_name
+                extension += ' dvchost=' + device
+            else:
+                extension += ' dvchost=' + device_name
+
+            if '\\' in user_name and splitDomain:
+                (domain_name, user) = user_name.split('\\')
+                extension += ' duser=' + user
+            else:
+                extension += ' duser=' + user_name
+
+                extension += ' dvc=' + device_ip
+                extension += ' cs3Label="Link"'
+                extension += ' cs3="' + link + '"'
+                extension += ' cs4Label="Threat_ID"'
+                extension += ' cs4="' + tid + '"'
+                extension += ' act=Alert'
         else:
-            extension += ' dvchost=' + device_name
-
-        if '\\' in user_name and splitDomain:
-            (domain_name, user) = user_name.split('\\')
-            extension += ' duser=' + user
-        else:
-            extension += ' duser=' + user_name
-
-            extension += ' dvc=' + device_ip
-            extension += ' cs3Label="Link"'
-            extension += ' cs3="' + link + '"'
-            extension += ' cs4Label="Threat_ID"'
-            extension += ' cs4="' + tid + '"'
-            extension += ' hash=' + sha256
+            continue
 
         log_messages.append({'version': version,
                              'vendor': vendor,
@@ -370,26 +444,64 @@ def parse_response_leef_threathunter(response, source, get_unicode_string):
         ruleName = note.get("ruleName", "noRuleName")
         kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url, "ruleName": ruleName})
 
-        current_notification_leef_header += "|{0}|{1}|".format("THREAT", hex_sep)
-        cat = "THREAT_HUNTER"
+        if note['type'].upper() == 'THREAT_HUNTER':
 
-        indicators = note['threatHunterInfo'].get('indicators', [])
-        kvpairs.update(note.get("deviceInfo", {}))
-        kvpairs.update({"incidentId": note['threatHunterInfo'].get("incidentId", "noIncidentId")})
-        signature = 'Threat_Hunter'
-        summary = get_unicode_string(note['threatHunterInfo'].get('summary', "")).encode("utf-8").strip()
-        sev = get_unicode_string(note['threatHunterInfo']['score']).encode("utf-8").strip()
-        device_name = get_unicode_string(note['deviceInfo']['deviceName']).encode("utf-8").strip()
-        email = get_unicode_string(note['deviceInfo']['email']).encode("utf-8").strip()
-        src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0")).encode("utf-8").strip()
-        sha256 = get_unicode_string(note["threatHunterInfo"]['sha256']).encode("utf-8").strip()
-        reputation = get_unicode_string(note['threatHunterInfo'].get('reputation', "")).encode("utf-8").strip()
-        url = get_unicode_string(note['url']).encode("utf-8").strip()
+            current_notification_leef_header += "|{0}|{1}|".format("THREAT", hex_sep)
+            cat = "THREAT_HUNTER"
 
-        kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature, "sev": sev,
-                        "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
-                        "identHostName": device_name, "summary": summary, "sha256Hash": sha256,
-                        "reputation": reputation})
+            indicators = note['threatHunterInfo'].get('indicators', [])
+            kvpairs.update(note.get("deviceInfo", {}))
+            kvpairs.update({"incidentId": note['threatHunterInfo'].get("incidentId", "noIncidentId")})
+            signature = 'Threat_Hunter'
+            summary = get_unicode_string(note['threatHunterInfo'].get('summary', "")).encode("utf-8").strip()
+            sev = get_unicode_string(note['threatHunterInfo']['score']).encode("utf-8").strip()
+            device_name = get_unicode_string(note['deviceInfo']['deviceName']).encode("utf-8").strip()
+            email = get_unicode_string(note['deviceInfo']['email']).encode("utf-8").strip()
+            src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0")).encode("utf-8").strip()
+            sha256 = get_unicode_string(note["threatHunterInfo"]['sha256']).encode("utf-8").strip()
+            reputation = get_unicode_string(note['threatHunterInfo'].get('reputation', "")).encode("utf-8").strip()
+            url = get_unicode_string(note['url']).encode("utf-8").strip()
+
+            kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature, "sev": sev,
+                            "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
+                            "identHostName": device_name, "summary": summary, "sha256Hash": sha256,
+                            "reputation": reputation})
+
+        elif note['type'].upper() =='POLICY_ACTION':
+
+            current_notification_leef_header += "|{0}|{1}|".format("THREAT", hex_sep)
+            severity = 1
+            summary = get_unicode_string(note['threatHunterInfo'].get('summary', "")).encode("utf-8").strip()
+            device_name = get_unicode_string(note['deviceInfo']['deviceName']).encode("utf-8").strip()
+            email = get_unicode_string(note['deviceInfo']['email']).encode("utf-8").strip()
+            src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0")).encode("utf-8").strip()
+            sha256 = get_unicode_string(note["threatHunterInfo"]['sha256']).encode("utf-8").strip()
+            reputation = get_unicode_string(note['threatHunterInfo'].get('reputation', "")).encode("utf-8").strip()
+
+            kvpairs.update({"cat": "POLICY_ACTION", "sev": severity, "type": "POLICY_ACTION",
+                            "reputation": reputation, "resource": device_name, "email": email, "src": src,
+                            "dst": src, "identSrc": src, "identHostName": device_name, "summary": summary,
+                            "sha256Hash": sha256, "url": url})
+
+        elif note['type'].upper()=='THREAT':
+            current_notification_leef_header += "|{0}|{1}|".format("THREAT", hex_sep)
+            cat = "THREAT"
+            indicators = note['threatHunterInfo'].get('indicators', [])
+            kvpairs.update(note.get("deviceInfo", {}))
+            kvpairs.update({"incidentId": note['threatHunterInfo'].get("incidentId", "noIncidentId")})
+            signature = 'Active_Threat'
+            summary = get_unicode_string(note['threatHunterInfo'].get('summary', "")).encode("utf-8").strip()
+            sev = get_unicode_string(note['threatHunterInfo']['score']).encode("utf-8").strip()
+            device_name = get_unicode_string(note['deviceInfo']['deviceName']).encode("utf-8").strip()
+            email = get_unicode_string(note['deviceInfo']['email']).encode("utf-8").strip()
+            src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0")).encode("utf-8").strip()
+
+            kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature, "sev": sev,
+                            "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
+                            "identHostName": device_name, "summary": summary})
+        else:
+            continue
+
 
         log_messages.append(
             current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]))

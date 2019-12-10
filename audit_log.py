@@ -1,5 +1,6 @@
 from cb_defense_syslog import requests
 import logging
+import time
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
