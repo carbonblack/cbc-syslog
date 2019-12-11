@@ -54,8 +54,7 @@ class TestCbDefenseSyslogConnector(unittest.TestCase):
         for log in response_notification:
             final_data = final_data + log + "\n"
 
-        if response_notification == leef_output_notification:
-            self.assertEqual(response_notification, leef_output_notification)
+        self.assertEqual(response_notification, leef_output_notification)
 
     def test_json_notifications_psc(self):
 
@@ -66,7 +65,7 @@ class TestCbDefenseSyslogConnector(unittest.TestCase):
         self.assertEqual(final_data, final_data_test)
 
     def test_cef_notifications_threat_hunter(self):
-        response_notification = n.parse_response_cef_threathunter(test_data_threat_hunter, "test", get_unicode_string)
+        response_notification = n.parse_response_cef_psc(test_data_threat_hunter, "test", get_unicode_string)
 
         template = Template(
             "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}")
@@ -77,7 +76,7 @@ class TestCbDefenseSyslogConnector(unittest.TestCase):
 
     def test_leef_notifications_threat_hunter(self):
         template = Template("{{source}}:{{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{eventid}}|{{hex_sep}}|{{extension}}")
-        response_notification = n.parse_response_leef_threathunter(test_data_threat_hunter, "test", get_unicode_string)
+        response_notification = n.parse_response_leef_psc(test_data_threat_hunter, "test", get_unicode_string)
 
         final_data = ''
         for log in response_notification:
@@ -86,7 +85,7 @@ class TestCbDefenseSyslogConnector(unittest.TestCase):
         self.assertEqual(final_data, leef_output_notification_th)
 
     def test_json_notifications_threat_hunter(self):
-        response_notification = n.parse_response_json_threathunter(test_data_threat_hunter, "test", get_unicode_string)
+        response_notification = n.parse_response_json_psc(test_data_threat_hunter, "test", get_unicode_string)
         final_data = json.dumps(response_notification, sort_keys=True) + '\n'
         final_data_test = json.dumps(json_output_notification_th, sort_keys=True) + '\n'
 
