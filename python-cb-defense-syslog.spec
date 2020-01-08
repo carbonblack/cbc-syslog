@@ -1,7 +1,7 @@
 %define name python-cb-defense-syslog
-%define version 1.2
-%define unmangled_version 1.2
-%define release 12
+%define version 2.0
+%define unmangled_version 2.0
+%define release 20
 %global _enable_debug_package 0
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
@@ -16,7 +16,7 @@ Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Prefix: %{_prefix}
 BuildArch: x86_64
-Vendor: Carbon Black Developer Network<dev-support@carbonblack.com>
+Vendor: Carbon Black Developer Network<cb-developer-network@vmware.com>
 Url: https://developer.carbonblack.com
 
 %description
