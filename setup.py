@@ -144,12 +144,12 @@ scripts = {
 
 setup(
     name='python-cb-defense-syslog',
-    version='1.2',
+    version='2.0',
     packages=[],
     url='https://github.com/carbonblack/cb-defense-syslog-tls',
     license='MIT',
     author='Carbon Black Developer Network',
-    author_email='dev-support@carbonblack.com',
+    author_email='cb-developer-network@vmware.com',
     description=
         'Connector for Cb Defense to send notifications to a tcp+tls host',
     data_files=data_files,
