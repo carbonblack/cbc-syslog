@@ -11,8 +11,7 @@ install_requires=[
     'Jinja2>=2.8.1',
     'MarkupSafe==0.23',
     'requests>=2.20.0',
-    'Flask==1.1.1',
-    'six==1.14.0'
+    'Flask==1.1.1'
 ]
 
 def get_data_files(rootdir):
