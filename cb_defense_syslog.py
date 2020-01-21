@@ -475,7 +475,7 @@ if __name__ == "__main__":
 
         logger.addHandler(syslog_handler)
 
-    logger.info("CB Defense Syslog 1.2.12")
+    logger.info("CB Defense Syslog 2.0")
 
     try:
         pid_file = 'root/usr/share/cb/integrations/cb-defense-syslog.pid'

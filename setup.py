@@ -11,8 +11,8 @@ install_requires=[
     'Jinja2>=2.8.1',
     'MarkupSafe==0.23',
     'requests>=2.20.0',
-    'Flask==0.12.4',
-    'six==1.12.0'
+    'Flask==1.1.1',
+    'six==1.14.0'
 ]
 
 def get_data_files(rootdir):
@@ -51,7 +51,7 @@ scripts = {
 
 setup(
         name='python-cb-defense-syslog',
-        version='2.0',
+        version='2.1.2',
         packages=[],
         url='https://github.com/carbonblack/cb-defense-syslog-tls',
         license='MIT',
