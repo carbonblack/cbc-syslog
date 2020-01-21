@@ -11,7 +11,7 @@ install_requires=[
     'Jinja2>=2.8.1',
     'MarkupSafe==0.23',
     'requests>=2.20.0',
-    'flask==0.12.4',
+    'Flask==0.12.4',
     'six==1.12.0'
 ]
 
