@@ -2,7 +2,23 @@
 All notable changes to this project will be documented in this file.
 
 
-## 2019-12-06
+## Version 2.0
+
+### New Installation instructions 
+
+The Syslog Connector will now be moved to a pip install. Please see README.md for more information about the
+installation instructions.  The previous yum installation will be deprecated.
+
+### Back Up Directory Feature
+
+In the configuration file, a Backup Directory location can now be added. This allows backup files to be stored
+in the case that the Connector fails to send the data to Syslog. 
+
+Please see the following example: 
+
+    back_up_dir = /Users/jdoe/Documents/
+    
+> **Note**: These fields are not optional and must be present in the config file.
 
 ### API Key
 

@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-# store_forwarder_dir = 'root/usr/share/cb/integrations/cb-defense-syslog/store/'
 policy_action_severity = 4
 
 from six import PY2
