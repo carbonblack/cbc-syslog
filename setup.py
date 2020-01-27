@@ -38,7 +38,7 @@ scripts = {
 
 setup(
         name='python-cb-defense-syslog',
-        version='2.1.5',
+        version='2.0',
         packages=[],
         url='https://github.com/carbonblack/cb-defense-syslog-tls',
         license='MIT',
