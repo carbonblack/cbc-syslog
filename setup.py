@@ -9,8 +9,8 @@ import os
 
 install_requires=[
     'Jinja2>=2.8.1',
-    'MarkupSafe==0.23',
-    'requests>=2.20.0',
+    'MarkupSafe==1.1.1',
+    'requests==2.22.0',
     'Flask==1.1.1'
 ]
 
@@ -26,19 +26,7 @@ def get_data_files(rootdir):
 
     return results
 
-def create_store_directory():
-    store_forwarder_dir = 'root/usr/share/cb/integrations/cb-defense-syslog'
-
-    try:
-        os.mkdir(store_forwarder_dir)
-    except OSError:
-        print("Creation of the directory %s failed" % store_forwarder_dir)
-    else:
-        print("Successfully created the directory %s " % store_forwarder_dir)
-
-
 data_files = get_data_files("root")
-create_store_directory()
 data_files.append('cb-defense-syslog.spec')
 data_files.append('cb_defense_syslog.py')
 scripts = {
@@ -50,7 +38,7 @@ scripts = {
 
 setup(
         name='python-cb-defense-syslog',
-        version='2.1.2',
+        version='2.1.5',
         packages=[],
         url='https://github.com/carbonblack/cb-defense-syslog-tls',
         license='MIT',

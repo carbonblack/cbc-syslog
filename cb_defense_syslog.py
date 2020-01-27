@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-store_forwarder_dir = 'root/usr/share/cb/integrations/cb-defense-syslog/store/'
+# store_forwarder_dir = 'root/usr/share/cb/integrations/cb-defense-syslog/store/'
 policy_action_severity = 4
 
 from six import PY2
@@ -46,7 +46,7 @@ def parse_config():
         return config
 
 
-def delete_stored_data(hash):
+def delete_stored_data(hash, store_forwarder_dir):
     try:
         os.remove(store_forwarder_dir + hash)
     except:
@@ -54,7 +54,7 @@ def delete_stored_data(hash):
 
 
 
-def send_stored_data():
+def send_stored_data(store_forwarder_dir):
     logger.info("Number of files in store forward: {0}".format(len(os.listdir(store_forwarder_dir))))
     for file_name in os.listdir(store_forwarder_dir):
         file_data = open(store_forwarder_dir + file_name, 'rb').read()
@@ -70,7 +70,7 @@ def send_stored_data():
             #
             # If the sending was successful, delete the stored data
             #
-            delete_stored_data(file_name)
+            delete_stored_data(file_name, store_forwarder_dir)
 
 def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_verify=True):
     retval = True
@@ -179,6 +179,9 @@ def verify_config_parse_servers():
         logger.error('output_type is invalid.  Must be tcp, udp, http or tcp+tls')
         sys.exit(-1)
 
+    store_forward_dir = config.get('general', 'store_forwarder_dir')
+
+    output_params['store_forward_dir'] = store_forward_dir
     output_params['output_type'] = output_type
     output_params['output_format'] = output_format
     output_params['https_ssl_verify'] = True
@@ -357,7 +360,7 @@ def parse_notifications(server, notifications_response, audit_response):
 
     return notifications_log, audit_log
 
-def send_data_syslog(log_messages):
+def send_data_syslog(log_messages, store_forwarder_dir):
 
     def send_data(data):
 
@@ -383,7 +386,7 @@ def send_data_syslog(log_messages):
             #
             # If successful send, then we just delete the stored version
             #
-            delete_stored_data(hash)
+            delete_stored_data(hash, store_forwarder_dir)
 
     if log_messages is None:
         logger.info("There are no messages to forward to host")
@@ -431,7 +434,8 @@ def main():
         os.environ["REQUESTS_CA_BUNDLE"] = output_params['requests_ca_cert']
 
     # # Store Forward.  Attempt to send messages that have been saved but we were unable to reach the destination
-    send_stored_data()
+    store_forwarder_dir = output_params['store_forward_dir']
+    send_stored_data(store_forwarder_dir)
 
     # Error or not, there is nothing to do
     if len(server_list) == 0:
@@ -447,10 +451,10 @@ def main():
         notifications_response, audit_response = get_response(server)
         notification_log, audit_log = parse_notifications(server, notifications_response, audit_response)
         logger.info("Sending Notifications")
-        send_data_syslog(notification_log)
+        send_data_syslog(notification_log, store_forwarder_dir)
         logger.info("Done Sending Notifications")
         logger.info("Sending Audit Logs")
-        send_data_syslog(audit_log)
+        send_data_syslog(audit_log, store_forwarder_dir)
         logger.info("Done Sending Audit Logs")
 
 
