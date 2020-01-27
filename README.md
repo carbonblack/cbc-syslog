@@ -138,7 +138,7 @@ Debug Logs are stored in `/var/log/cb/integrations/cb-defense-syslog/`
     template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
     
     #
-    #Location of the backup Directory
+    #Location of the Backup Directory
     #This will be the location of back up files in the event that results fail to send to Syslog
     #
     
