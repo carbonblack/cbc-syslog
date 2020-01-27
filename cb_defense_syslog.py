@@ -46,18 +46,18 @@ def parse_config():
         return config
 
 
-def delete_stored_data(hash, store_forwarder_dir):
+def delete_stored_data(hash, back_up_dir):
     try:
-        os.remove(store_forwarder_dir + hash)
+        os.remove(back_up_dir + hash)
     except:
         logger.error(traceback.format_exc())
 
 
 
-def send_stored_data(store_forwarder_dir):
-    logger.info("Number of files in store forward: {0}".format(len(os.listdir(store_forwarder_dir))))
-    for file_name in os.listdir(store_forwarder_dir):
-        file_data = open(store_forwarder_dir + file_name, 'rb').read()
+def send_stored_data(back_up_dir):
+    logger.info("Number of files in store forward: {0}".format(len(os.listdir(back_up_dir))))
+    for file_name in os.listdir(back_up_dir):
+        file_data = open(back_up_dir + file_name, 'rb').read()
         file_data = file_data.decode("utf-8")
         #
         # Store notifications just in case sending fails
@@ -70,7 +70,7 @@ def send_stored_data(store_forwarder_dir):
             #
             # If the sending was successful, delete the stored data
             #
-            delete_stored_data(file_name, store_forwarder_dir)
+            delete_stored_data(file_name, back_up_dir)
 
 def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_verify=True):
     retval = True
@@ -179,9 +179,9 @@ def verify_config_parse_servers():
         logger.error('output_type is invalid.  Must be tcp, udp, http or tcp+tls')
         sys.exit(-1)
 
-    store_forward_dir = config.get('general', 'store_forwarder_dir')
+    back_up_dir = config.get('general', 'back_up_dir')
 
-    output_params['store_forward_dir'] = store_forward_dir
+    output_params['back_up_dir'] = back_up_dir
     output_params['output_type'] = output_type
     output_params['output_format'] = output_format
     output_params['https_ssl_verify'] = True
@@ -360,7 +360,7 @@ def parse_notifications(server, notifications_response, audit_response):
 
     return notifications_log, audit_log
 
-def send_data_syslog(log_messages, store_forwarder_dir):
+def send_data_syslog(log_messages, back_up_dir):
 
     def send_data(data):
 
@@ -368,7 +368,7 @@ def send_data_syslog(log_messages, store_forwarder_dir):
         hash = hashlib.sha256(byte_data).hexdigest()
 
         try:
-            with open(store_forwarder_dir + hash, 'wb') as f:
+            with open(back_up_dir + hash, 'wb') as f:
                 f.write(byte_data)
         except:
             logger.error(traceback.format_exc())
@@ -386,7 +386,7 @@ def send_data_syslog(log_messages, store_forwarder_dir):
             #
             # If successful send, then we just delete the stored version
             #
-            delete_stored_data(hash, store_forwarder_dir)
+            delete_stored_data(hash, back_up_dir)
 
     if log_messages is None:
         logger.info("There are no messages to forward to host")
@@ -434,8 +434,8 @@ def main():
         os.environ["REQUESTS_CA_BUNDLE"] = output_params['requests_ca_cert']
 
     # # Store Forward.  Attempt to send messages that have been saved but we were unable to reach the destination
-    store_forwarder_dir = output_params['store_forward_dir']
-    send_stored_data(store_forwarder_dir)
+    back_up_dir = output_params['back_up_dir']
+    send_stored_data(back_up_dir)
 
     # Error or not, there is nothing to do
     if len(server_list) == 0:
@@ -451,10 +451,10 @@ def main():
         notifications_response, audit_response = get_response(server)
         notification_log, audit_log = parse_notifications(server, notifications_response, audit_response)
         logger.info("Sending Notifications")
-        send_data_syslog(notification_log, store_forwarder_dir)
+        send_data_syslog(notification_log, back_up_dir)
         logger.info("Done Sending Notifications")
         logger.info("Sending Audit Logs")
-        send_data_syslog(audit_log, store_forwarder_dir)
+        send_data_syslog(audit_log, back_up_dir)
         logger.info("Done Sending Audit Logs")
 
 
