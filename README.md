@@ -129,30 +129,50 @@ Debug Logs are stored in `/var/log/cb/integrations/cb-defense-syslog/`
 ## Sample Config File
 
     [general]
-
+    
     #
     # Template for syslog output.
     # This is a jinja 2 template
     # NOTE: The source variable corresponds to the Cb Defense Server used to retrieve results
     #
     template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
+    
     #
-    # Configure the specific output.
-    # Valid options are: 'udp', 'tcp', 'tcp+tls'
+    #Location of the backup Directory
+    #This will be the location of back up files in the event that results fail to send to Syslog
     #
-    #  udp     - Have the events sent over a UDP socket
-    #  tcp     - Have the events sent over a TCP socket
-    #  tcp+tls - Have the events sent over a TLS+TCP socket
+    
+    back_up_dir = /Users/jdoe/Documents/
+    
     #
-    output_type=tcp
-
+    # This sets the default severity level for POLICY_ACTION notifications.  By default it is 4.
     #
-  	# Output format of the data sent. Currently support json or cef formats
-  	#
-  	# Warning: if using json output_format, we recommend NOT using UDP output_type
-  	#
-  	output_format=cef
-
+    # 0 - Emergency: System is unusable.
+    #
+    # 1 - Alert: Action must be taken immediately.
+    #
+    # 2 - Critical: Critical conditions.
+    #
+    # 3 - Error: Error conditions.
+    #
+    # 4 - Warning: Warning conditions.
+    #
+    # 5 - Notice: Normal but significant condition.
+    #
+    # 6 - Informational: Informational messages.
+    #
+    # 7 - Debug: Debug-level messages.
+    #
+    policy_action_severity = 4
+    
+    
+    #
+    # Output format of the data sent. Currently support json or cef formats
+    #
+    # Warning: if using json output_format, we recommend NOT using UDP output_type
+    #
+    output_format=cef
+    
     #
     # Configure the specific output.
     # Valid options are: 'udp', 'tcp', 'tcp+tls', 'http'
@@ -163,48 +183,61 @@ Debug Logs are stored in `/var/log/cb/integrations/cb-defense-syslog/`
     #  http    - Have the events sent over a HTTP connection
     #
     output_type=tcp
-
+    
     #
-    # udpout=IP:port - ie 1.2.3.5:8080
+    # tcpout=IP:port - ie 1.2.3.5:514
+    #
+    tcp_out=
+    
+    #
+    # udpout=IP:port - ie 1.2.3.5:514
     #
     udp_out=
-
+    
     #
     # httpout=http/https endpoint - ie https://server.company.com/endpoint
     # http_headers= {'key1': 'value1', 'key2': 'value2'} - ie {'content-type': 'application/json'}
+    # https_ssl_verify = True or False
     #
     http_out=
-    http_headers=
-
+    http_headers= {'content-type': 'application/json'}
+    https_ssl_verify=True
+    
+    #
+    # Override ca file for self signed certificates when using https
+    # This is typically a .pem file
+    #
+    #requests_ca_cert=/usr/share/cb/integrations/cb-defense-syslog/cert.pem
+    
     [tls]
-
+    
     #
     # Specify a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog
     #
-    #ca_cert = /etc/cb/integrations/cb-defense/cert.pem
-
+    #ca_cert = /etc/cb/integrations/cb-defense/ca.pem
+    
     #
     # Optionally specify a file containing PEM-encoded client certificate for verifying this client when using TLS+TCP syslog
     # If cert is specified, key is a required parameter
     #
     #cert = /etc/cb/integrations/cb-defense/cert.pem
-
+    
     #
     # Optionally specify a file containing PEM-encoded private key for verifying this client when using TLS+TCP syslog
     # If key is specified, cert is a required parameter
     #
     #key = /etc/cb/integrations/cb-defense/cert.key
-
+    
     #
     # Optionally specify the password to decrypt the given private key when using TLS+TCP syslog
     #
     #key_password = p@ssw0rd1
-
+    
     #
     # Uncomment tls_verify and set to "false" in order to disable verification of the peer server certificate
     #
     #tls_verify = true
-
+    
     [cbdefense1]
     
     #
@@ -239,6 +272,5 @@ Debug Logs are stored in `/var/log/cb/integrations/cb-defense-syslog/`
     #[cbdefenseserver2]
     #api_connector_id = KJARWBZ111
     #api_key = CQF35EIH2WDF69PTWKGC4111
-    #siem_connector_id = 
-    #siem_api_key = 
     #server_url = https://server2.yourcompany.com
+
