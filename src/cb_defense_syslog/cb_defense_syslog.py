@@ -7,7 +7,6 @@ import requests
 from jinja2 import Template
 import os
 import json
-import time
 import logging
 import logging.handlers
 import traceback

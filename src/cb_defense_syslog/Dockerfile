@@ -15,7 +15,7 @@ RUN yum update -y \
 WORKDIR /root/cb-defense-syslog
 
 # copy source into the build image
-COPY . .
+COPY ../.. .
 
 # set up environment, build binary (via rpm-build), extract it
 RUN pip install -r requirements.txt \

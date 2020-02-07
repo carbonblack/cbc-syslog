@@ -3,14 +3,11 @@
 from test.test_data import *
 from test.test_data_threathunter import *
 from test.test_data_audit import *
-import audit_log as al
-import notifications as n
+from src.cb_defense_syslog import audit_log as al, notifications as n
 import unittest
 from jinja2 import Template
-import logging
 import logging.handlers
 import json
-import difflib
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +15,7 @@ logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-from six import PY2
+from src.cb_defense_syslog.six import PY2
 
 if PY2:
     get_unicode_string = unicode

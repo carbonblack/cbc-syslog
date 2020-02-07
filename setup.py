@@ -14,39 +14,35 @@ install_requires=[
     'Flask==1.1.1'
 ]
 
-def get_data_files(rootdir):
-    # automatically build list of (dir, [file1, file2, ...],)
-    # for all files under src/root/ (or provided rootdir)
-    results = []
-    for root, dirs, files in os.walk(rootdir):
-        if len(files) > 0:
-            dirname = os.path.relpath(root, rootdir)
-            flist = [os.path.join(root, f) for f in files]
-            results.append(("/%s" % dirname, flist))
+packages=[
+    'cb_defense_syslog',
+    'cb_defense_syslog.root',
+    # 'cb_defense_syslog.root.usr.share.cb.integrations.cb-defense-syslog',
+    # #'cb_defense_syslog.root.etc',
+    # 'cb_defense_syslog.root.etc.cb.integrations.cb-defense-syslog'
 
-    return results
 
-data_files = get_data_files("root")
-data_files.append('cb-defense-syslog.spec')
-data_files.append('cb_defense_syslog.py')
-scripts = {
-    'cb-defense-syslog': {
-        'spec': 'cb-defense-syslog.spec',
-        'dest': '/usr/share/cb/integrations/cb-defense-syslog/cb-defense-syslog'
-    }
-}
+
+]
+
+scripts = ['src/cb_defense_syslog/root/usr/share/cb/integrations/cb-defense-syslog/cacert.pem',
+           'src/cb_defense_syslog/root/etc/cron.d/cb-defense-syslog',
+           'src/cb_defense_syslog/root/etc/cb/integrations/cb-defense-syslog/cb-defense-syslog.conf.example'
+           ]
 
 setup(
-        name='python-cb-defense-syslog',
-        version='2.0',
-        packages=[],
+        name='cb_defense_syslog',
+        version='0.0.5',
+        package_dir={'': 'src'},
+        packages=packages,
+        include_package_data=True,
         url='https://github.com/carbonblack/cb-defense-syslog-tls',
         license='MIT',
         author='Carbon Black Developer Network',
         author_email='cb-developer-network@vmware.com',
         description=
         'Connector for Cb Defense to send notifications to a tcp+tls host',
-        data_files=data_files,
+        #data_files=data_files,
         install_requires=install_requires,
         classifiers=[
             'Development Status :: 4 - Beta',
@@ -63,5 +59,6 @@ setup(
             'Programming Language :: Python :: 2.6',
             'Programming Language :: Python :: 2.7',
         ],
-        keywords='carbonblack'
+        keywords='carbonblack',
+        scripts= scripts
 )
