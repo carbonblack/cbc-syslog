@@ -4,7 +4,8 @@ cb-defense-syslog
 
 from setuptools import setup
 import sys
-import os
+from os import path
+import io
 
 
 install_requires=[
@@ -16,14 +17,11 @@ install_requires=[
 
 packages=[
     'cb_defense_syslog',
-    'cb_defense_syslog.root',
-    # 'cb_defense_syslog.root.usr.share.cb.integrations.cb-defense-syslog',
-    # #'cb_defense_syslog.root.etc',
-    # 'cb_defense_syslog.root.etc.cb.integrations.cb-defense-syslog'
-
-
-
+    'cb_defense_syslog.root'
 ]
+
+with io.open('PIP_README.md', 'rt' , encoding='utf8') as f:
+    long_description = f.read()
 
 scripts = ['src/cb_defense_syslog/root/usr/share/cb/integrations/cb-defense-syslog/cacert.pem',
            'src/cb_defense_syslog/root/etc/cron.d/cb-defense-syslog',
@@ -32,10 +30,12 @@ scripts = ['src/cb_defense_syslog/root/usr/share/cb/integrations/cb-defense-sysl
 
 setup(
         name='cb_defense_syslog',
-        version='0.0.5',
+        version='0.0.7',
         package_dir={'': 'src'},
         packages=packages,
         include_package_data=True,
+        long_description=long_description,
+        long_description_content_type='text/markdown',
         url='https://github.com/carbonblack/cb-defense-syslog-tls',
         license='MIT',
         author='Carbon Black Developer Network',
