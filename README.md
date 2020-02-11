@@ -22,7 +22,7 @@ installation instructions.
 
 ## Installation (via GitHub)
 
-1. Pull down the Repo. You may use `git clone` or pull down the zip file directly from Git-Hub.
+1. Pull down the Repo. You may use `git clone` or pull down the zip file directly from GitHub.
 
 2. Navigate to the following location within the package `/src/cbc_syslog`
 
