@@ -31,7 +31,7 @@ scripts = ['src/cbc_syslog/root/usr/share/cb/integrations/cb-defense-syslog/cace
 
 setup(
         name='cbc_syslog',
-        version='0.0.8',
+        version='0.0.2',
         packages=packages,
         package_dir={'': 'src'},
         include_package_data=True,
@@ -42,7 +42,7 @@ setup(
         author='Carbon Black Developer Network',
         author_email='cb-developer-network@vmware.com',
         description=
-        'Connector for Cb Defense to send notifications to a tcp+tls host',
+        'Syslog Connector for the Carbon Black Cloud',
         #data_files=data_files,
         install_requires=install_requires,
         classifiers=[

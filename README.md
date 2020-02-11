@@ -17,10 +17,84 @@ This connector is distributed as a pip package compatible with Python 2.7, runni
 
 ## Installation (via PyPi/pip)
 
-1. Please Navigate to the following URL to install the package: https://pypi.org/project/cb-defense-syslog/ and
-and follow the installation instructions.
+1. Please Navigate to the following URL to install the package: `https://pypi.org/project/cbc-syslog/` and follow the 
+installation instructions.
 
-##Installation (via GitHub)
+## Installation (via GitHub)
+
+1. Pull down the Repo. You may use `git clone` or pull down the zip file directly from Git-Hub.
+
+2. Navigate to the following location within the package `/src/cbc_syslog`
+
+3. Copy and paste the Configuration File example shown below into your own `.conf` file and modify it to your own 
+specifications. Below is a table of all the configurable inputs that can be used in the syslog connector.
+
+    | Input      | Required | Description |     
+    | ----------- | ----------- | ----------- | 
+    | template      | Y       | Template for syslog output.      |
+    | back_up_dir      | Y       | Location of the Backup Directory. This will be the location of back up files in the event that results fail to send to Syslog      |
+    | policy_action_severity      | Y       | This sets the default severity level for POLICY_ACTION notifications. By default it is 4.      |
+    | output_format      | Y       | Output format of the data sent. Currently support json, leef, and cef formats      |
+    | output_type      | Y       | Configures the specific output. Valid options are: 'udp', 'tcp', 'tcp+tls', 'http'      |
+    | tcpout      | Y       | Output Type: IP:port      |
+    | udp_out      | Y       | Output Type: IP:port      |
+    | http_out      | Y       | Output Type: http/https endpoint - ie https://server.company.com/endpoint      |
+    | http_headers      | Y       | Required if using http: {'key1': 'value1', 'key2': 'value2'}     |
+    | https_ssl_verify      | Y       | Required if using http: True or False      |
+    | requests_ca_cert      | N       | Override ca file for self signed certificates when using https      |
+    | ca_cert      | N       | Specifies a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog      |
+    | cert      | N       | Specifies a file containing PEM-encoded client certificate for verifying this client when using TLS+TCP syslog      |
+    | key      | N       | Specifies a file containing PEM-encoded private key for verifying this client when using TLS+TCP syslog      |
+    | key_password      | N       | Specifies the password to decrypt the given private key when using TLS+TCP syslog      |
+    | tls_verify      | N       |  True or False      |
+    | api_connector_id      | Y       | API Connector ID      |
+    | api_key      | Y       | API Key      |
+    | siem_connector_id      | Y       | SIEM Connector ID      |
+    | siem_api_key      | Y       |  SIEM Key      |
+    | server_url      | Y       | Server URL      |
+
+4.Create a `.txt` file for Logs.
+ 
+5. Test the new connector.:
+
+    Verify that you are running Python 2.7:
+    
+    ```
+    python --version 
+    ```
+   
+   Then run the following command:
+
+    ```
+    python cb_defense_syslog.py -l [LOG_FILE_LOCATION] -c [CONFIG_FILE_LOCATION]
+    ```
+
+    A successful run will look like:
+
+    ```
+    INFO:__main__:CB Defense Syslog 1.0
+    INFO:__main__:Number of files in store forward: 0
+    INFO:__main__:Found 2 Cb Defense Servers in config file
+    INFO:__main__:Handling notifications for https://defense-test03.cbdtest.io
+    INFO:notifications:Attempting to connect to url: https://defense-test03.cbdtest.io
+    INFO:notifications:<Response [200]>
+    INFO:notifications:successfully connected, no alerts at this time
+    INFO:__main__:Sending Notifications
+    INFO:__main__:There are no messages to forward to host
+    INFO:__main__:Done Sending Notifications
+    INFO:__main__:Sending Audit Logs
+    INFO:__main__:Sending 18 messages to 00.00.000.00:000
+    INFO:__main__:Done Sending Audit Logs
+    INFO:__main__:Handling notifications for https://defense-eap01.conferdeploy.net
+    INFO:notifications:Attempting to connect to url: https://defense-eap01.conferdeploy.net
+    INFO:notifications:<Response [200]>
+    INFO:__main__:Sending Notifications
+    INFO:__main__:Sending 3 messages to 00.00.000.00:000
+    INFO:__main__:Done Sending Notifications
+    INFO:__main__:Sending Audit Logs
+    INFO:__main__:Sending 24 messages to 00.00.000.00:000
+    INFO:__main__:Done Sending Audit Logs
+    ```
 
 ## Installation (via Docker)
 

@@ -46,7 +46,9 @@ specifications. Below is a table of all the configurable inputs that can be used
     | siem_api_key      | Y       |  SIEM Key      |
     | server_url      | Y       | Server URL      |
 
-3. Test the new connector.:
+3. Create a `.txt` file for Logs.
+
+4. Test the new connector.:
 
     Verify that you are running Python 2.7:
     
