@@ -1,10 +1,11 @@
 """
-cb-defense-syslog
+cbc-syslog
 """
 
 from setuptools import setup
 import sys
 from os import path
+from setuptools import find_packages
 import io
 
 
@@ -16,23 +17,23 @@ install_requires=[
 ]
 
 packages=[
-    'cb_defense_syslog',
-    'cb_defense_syslog.root'
+    'cbc_syslog',
+    'cbc_syslog.root'
 ]
 
 with io.open('PIP_README.md', 'rt' , encoding='utf8') as f:
     long_description = f.read()
 
-scripts = ['src/cb_defense_syslog/root/usr/share/cb/integrations/cb-defense-syslog/cacert.pem',
-           'src/cb_defense_syslog/root/etc/cron.d/cb-defense-syslog',
-           'src/cb_defense_syslog/root/etc/cb/integrations/cb-defense-syslog/cb-defense-syslog.conf.example'
+scripts = ['src/cbc_syslog/root/usr/share/cb/integrations/cb-defense-syslog/cacert.pem',
+           'src/cbc_syslog/root/etc/cron.d/cb-defense-syslog',
+           'src/cbc_syslog/root/etc/cb/integrations/cb-defense-syslog/cb-defense-syslog.conf.example'
            ]
 
 setup(
-        name='cb_defense_syslog',
-        version='0.0.7',
-        package_dir={'': 'src'},
+        name='cbc_syslog',
+        version='0.0.8',
         packages=packages,
+        package_dir={'': 'src'},
         include_package_data=True,
         long_description=long_description,
         long_description_content_type='text/markdown',

@@ -1,4 +1,4 @@
-# Cb Defense Syslog TLS Connector
+# Carbon Black Cloud Syslog Connector
 
 This connector allows you to forward alert notifications and audit logs from your Carbon Black Cloud instance 
 into local, on-premise systems that accept industry standard syslog notifications. By default, it will generate 
@@ -17,58 +17,10 @@ This connector is distributed as a pip package compatible with Python 2.7, runni
 
 ## Installation (via PyPi/pip)
 
-1. Please Navigate to the following URL to install the package: https://pypi.org/project/python-cb-defense-syslog/
+1. Please Navigate to the following URL to install the package: https://pypi.org/project/cb-defense-syslog/ and
+and follow the installation instructions.
 
-2. Proceed to install the package using the following command:
-
-    ```
-    pip install cb-defense-syslog
-   ```
-
-3. Navigate to the Python 2.7 package location `/python2.7/site-packages/cb_defense_syslog`
-
-4. Copy and paste the Configuration File example shown below into your own `.conf` file and modify it to your own specifications .
-
-5. Test the new connector.:
-
-    Verify that you are running Python 2.7:
-    
-    ```
-    python --version 
-    ```
-   
-   Then run the following command:
-
-    ```
-    python cb_defense_syslog.py -1 [LOG_FILE_LOCATION] -c [CONFIG_FILE_LOCATION]
-    ```
-
-    A successful run will look like:
-
-    ```
-    INFO:__main__:CB Defense Syslog 1.0
-    INFO:__main__:Number of files in store forward: 0
-    INFO:__main__:Found 2 Cb Defense Servers in config file
-    INFO:__main__:Handling notifications for https://defense-test03.cbdtest.io
-    INFO:notifications:Attempting to connect to url: https://defense-test03.cbdtest.io
-    INFO:notifications:<Response [200]>
-    INFO:notifications:successfully connected, no alerts at this time
-    INFO:__main__:Sending Notifications
-    INFO:__main__:There are no messages to forward to host
-    INFO:__main__:Done Sending Notifications
-    INFO:__main__:Sending Audit Logs
-    INFO:__main__:Sending 18 messages to 00.00.000.00:000
-    INFO:__main__:Done Sending Audit Logs
-    INFO:__main__:Handling notifications for https://defense-eap01.conferdeploy.net
-    INFO:notifications:Attempting to connect to url: https://defense-eap01.conferdeploy.net
-    INFO:notifications:<Response [200]>
-    INFO:__main__:Sending Notifications
-    INFO:__main__:Sending 3 messages to 00.00.000.00:000
-    INFO:__main__:Done Sending Notifications
-    INFO:__main__:Sending Audit Logs
-    INFO:__main__:Sending 24 messages to 00.00.000.00:000
-    INFO:__main__:Done Sending Audit Logs
-    ```
+##Installation (via GitHub)
 
 ## Installation (via Docker)
 

@@ -1,4 +1,4 @@
-# Cb Defense Syslog TLS Connector
+# Carbon Black Cloud Syslog Connector
 
 This connector allows you to forward alert notifications and audit logs from your Carbon Black Cloud instance 
 into local, on-premise systems that accept industry standard syslog notifications. By default, it will generate 
@@ -17,19 +17,36 @@ This connector is distributed as a pip package compatible with Python 2.7, runni
 
 ## Installation
 
-1. Please Navigate to the following URL to install the package: https://pypi.org/project/python-cb-defense-syslog/
+1. Navigate to the Python 2.7 package location `/python2.7/site-packages/cbc_syslog`
 
-2. Proceed to install the package using the following command:
+2. Copy and paste the Configuration File example shown below into your own `.conf` file and modify it to your own 
+specifications. Below is a table of all the configurable inputs that can be used in the syslog connector.
 
-    ```
-    pip install cb-defense-syslog
-   ```
+    | Input      | Required | Description |     
+    | ----------- | ----------- | ----------- | 
+    | template      | Y       | Template for syslog output.      |
+    | back_up_dir      | Y       | Location of the Backup Directory. This will be the location of back up files in the event that results fail to send to Syslog      |
+    | policy_action_severity      | Y       | This sets the default severity level for POLICY_ACTION notifications. By default it is 4.      |
+    | output_format      | Y       | Output format of the data sent. Currently support json, leef, and cef formats      |
+    | output_type      | Y       | Configures the specific output. Valid options are: 'udp', 'tcp', 'tcp+tls', 'http'      |
+    | tcpout      | Y       | Output Type: IP:port      |
+    | udp_out      | Y       | Output Type: IP:port      |
+    | http_out      | Y       | Output Type: http/https endpoint - ie https://server.company.com/endpoint      |
+    | http_headers      | Y       | Required if using http: {'key1': 'value1', 'key2': 'value2'}     |
+    | https_ssl_verify      | Y       | Required if using http: True or False      |
+    | requests_ca_cert      | N       | Override ca file for self signed certificates when using https      |
+    | ca_cert      | N       | Specifies a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog      |
+    | cert      | N       | Specifies a file containing PEM-encoded client certificate for verifying this client when using TLS+TCP syslog      |
+    | key      | N       | Specifies a file containing PEM-encoded private key for verifying this client when using TLS+TCP syslog      |
+    | key_password      | N       | Specifies the password to decrypt the given private key when using TLS+TCP syslog      |
+    | tls_verify      | N       |  True or False      |
+    | api_connector_id      | Y       | API Connector ID      |
+    | api_key      | Y       | API Key      |
+    | siem_connector_id      | Y       | SIEM Connector ID      |
+    | siem_api_key      | Y       |  SIEM Key      |
+    | server_url      | Y       | Server URL      |
 
-3. Navigate to the Python 2.7 package location `/python2.7/site-packages/cb_defense_syslog`
-
-4. Copy and paste the Configuration File example shown below into your own `.conf` file and modify it to your own specifications .
-
-5. Test the new connector.:
+3. Test the new connector.:
 
     Verify that you are running Python 2.7:
     
