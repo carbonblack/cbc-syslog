@@ -1,4 +1,4 @@
-from cb_defense_syslog import requests
+import requests
 import logging
 import time
 
