@@ -95,64 +95,7 @@ specifications. Below is a table of all the configurable inputs that can be used
     INFO:__main__:Sending 24 messages to 00.00.000.00:000
     INFO:__main__:Done Sending Audit Logs
     ```
-
-## Installation (via Docker)
-
-You may wish to use a docker image of this software, rather than installing an RPM (which requires a
-RedHat/CentOS/Fedora Linux distribution to run on).
-
-At the time of writing, there is no _official_ image on [dockerhub](https://hub.docker.com/u/carbonblack), so for now, you'll need to build one
-yourself.  Once built, you can either run this on the same system the docker image was built, or upload your newly-built image to dockerhub/a repo of your own.
-
-1. Firstly, to build the image, do this:
-
-    ```
-    docker build . -t *your-docker-image-tag*
-    ```
-
-    If you _are_ hosting this yourself, ``your-docker-image-tag`` would typically include the
-    _repo-name_/_username_/_project-name_:_tags_ you wish to use.
-
- > **Note**: You may leave off ``-t`` params, if you don't plan on publishing the image and thus don't need to tag the image (however you'll then need the *hash* of the newly-built image's to reference it later, last line of a successful build output, or from relevant line of ``docker images`` output).
-
-2.  You can then run this container manually, by doing:
-    ```
-    docker run --name cb-defense-syslog -v /path/to/your/config/dir:/etc/cb/integrations/cb-defense-syslog *your-docker-image-tag-or-hash*
-    ```
-    With the above, you'll have the directory with _your_ config file within the container (see the
-    sample at the end of this README for what to base yours on), expecting to be named appropriately
-    (expected name is ``cb-defense-syslog.conf``).
-
-> **Note**: since the config file contains sensitive credentials (the API key), you should protect it by setting appropriate ownership/permissions on the config file outside of docker, so only the user running docker can read this file.
-
-The container ran will be named ``cb-defense-syslog``, you can then re-invoke it using this name.
-
-You can then have this (containerized) software ran from ``crond`` (per **step-5** of the first _Installation_ section above) using instead either:
-
-```
-0 * * * * your-username docker run --rm --name cb-defense-syslog -v /path-to-your-config:/etc/cb/integrations/cb-defense-syslog <your-docker-image-tag>
-```
-or, if you ran the above step-2 command at least once:
-```
-0 * * * * your-username docker start cb-defense-syslog
-```
-
-..where ``your-username`` would be one that [has access to run the docker-client](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user).  This can be tested
-with ```docker info``` as that user.
-
-The difference between the two is that the first variation will run a **new** container _on-the-hour_ each time,
-and will also automatically remove that container after each run (since you can't start a new container with an
-existing name).  This however also means it's *not* ideal for debugging, since the way it's configured, its log file
-is sent only to stdout, and won't be available (since the container is removed after it runs).
-
-> However if you do want the log file to instead persist outside the container (contrary to [best practices](https://12factor.net/logs)),
-  you can simply change [the parameter to  ``--log-file``](src/cb_defense_syslog/Dockerfile#L37).  You'll then also want to add another ``-v`` mount
-  point parameter to docker run, where you want the log file to persist external to the container.
-
-The second variation better allows for log-monitoring, since it simply re-starts the container
-you previously ran (and thus named in **step-2** above), and all previous runs of the container 
-are preserved, and available from the output of ``docker logs cb-defense-syslog``.
-
+    
 ## Sample Config File
 
     [general]
