@@ -53,7 +53,7 @@ specifications. Below is a table of all the configurable inputs that can be used
     | siem_api_key      | Y       |  SIEM Key      |
     | server_url      | Y       | Server URL      |
 
-4.Create a `.txt` file for Logs.
+4. Create a `.txt` file for Logs.
 
 
 5. Test the new connector:
