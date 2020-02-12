@@ -55,7 +55,8 @@ specifications. Below is a table of all the configurable inputs that can be used
 
 4.Create a `.txt` file for Logs.
 
-5. Test the new connector.:
+
+5. Test the new connector:
 
     Verify that you are running Python 2.7:
     
