@@ -54,7 +54,7 @@ specifications. Below is a table of all the configurable inputs that can be used
     | server_url      | Y       | Server URL      |
 
 4.Create a `.txt` file for Logs.
- 
+
 5. Test the new connector.:
 
     Verify that you are running Python 2.7:
