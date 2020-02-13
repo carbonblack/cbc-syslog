@@ -10,7 +10,7 @@ The connector can be configured to use UDP, TCP, or encrypted (TCP over TLS) sys
 
 This connector is distributed as a pip package compatible with Python 2.7, running on a 64-bit Intel platform.
 
-## System Requirments:
+## System Requirements:
 
 1. Python 2.7
 2. pip 
