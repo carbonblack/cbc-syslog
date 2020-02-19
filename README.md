@@ -1,24 +1,22 @@
 # Carbon Black Cloud Syslog Connector
 
-This connector allows you to forward alert notifications and audit logs from your Carbon Black Cloud instance 
-into local, on-premise systems that accept industry standard syslog notifications. By default, it will generate 
-pipe-delimited syslog messages containing the key metadata associated with any alert identified by the Cb Defense 
-streaming prevention system.
+The syslog connector lets administrators forward alert notifications and audit logs from their Carbon Black Cloud instance to local, on-premise systems, and:
 
-The syslog connector will aggregate data from one or more Carbon Black Cloud organizations into a single syslog stream.
-The connector can be configured to use UDP, TCP, or encrypted (TCP over TLS) syslog protocols.
+* Generates pipe-delimited syslog messages with alert metadata identified by the streaming prevention system
+* Aggregates data from one or more Carbon Black Cloud organizations into a single syslog stream
+* Can be configured to use UDP, TCP, or encrypted (TCP over TLS) syslog protocols
 
-This connector is distributed as a pip package compatible with Python 2.7, running on a 64-bit Intel platform.
+### Requirements
 
-## System Requirements:
+* CB Defense or CB ThreatHunter
+* Python 2.7 running on a 64-bit Intel platform
+* pip
 
-1. Python 2.7
-2. pip 
+The receiving system must accept industry-standard syslog notifications.
 
-## Installation (via PyPi/pip)
+### Installation (via PyPi/pip)
 
-1. Please Navigate to the following URL to install the package: `https://pypi.org/project/cbc-syslog/` and follow the 
-installation instructions.
+The installation package and instructions can be found at https://pypi.org/project/cbc-syslog/.
 
 ## Installation (via GitHub)
 
