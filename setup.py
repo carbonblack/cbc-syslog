@@ -13,7 +13,8 @@ install_requires=[
     'Jinja2>=2.8.1',
     'MarkupSafe==1.1.1',
     'requests==2.22.0',
-    'Flask==1.1.1'
+    'Flask==1.1.1',
+    'psutil==5.7.0'
 ]
 
 packages=[
