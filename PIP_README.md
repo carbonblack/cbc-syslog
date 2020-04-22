@@ -17,7 +17,9 @@ This connector is distributed as a pip package compatible with Python 2.7, runni
 
 ## Installation
 
-1. Navigate to the Python 2.7 package location `/python2.7/site-packages/cbc_syslog`
+1. Navigate to the Python 2.7 package location: 
+    MacOS: `/python2.7/site-packages/cbc_syslog` 
+    Windows: `C:\Python27\Lib\site-packages\cbc_syslog`
 
 2. Copy and paste the Configuration File example shown below into your own `.conf` file and modify it to your own 
 specifications. Below is a table of all the configurable inputs that can be used in the syslog connector.
@@ -47,16 +49,11 @@ specifications. Below is a table of all the configurable inputs that can be used
     | server_url      | Y       | Server URL      |
 
 3. Create a `.txt` file for Logs.
-
-4. Test the new connector.:
-
-    Verify that you are running Python 2.7:
-    
-    ```
-    python --version 
-    ```
+4. Create an empty Back up folder. The location of this folder will be placed in back_up_dir seen in the 
+Configuration file.  
+5. Test the new connector.:
    
-   Then run the following command:
+   Run the following command:
 
     ```
     python cb_defense_syslog.py -l [LOG_FILE_LOCATION] -c [CONFIG_FILE_LOCATION]
@@ -234,5 +231,21 @@ specifications. Below is a table of all the configurable inputs that can be used
     #[cbdefenseserver2]
     #api_connector_id = KJARWBZ111
     #api_key = CQF35EIH2WDF69PTWKGC4111
+    #siem_connector_id = UEUWR4U111
+    #siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
     #server_url = https://server2.yourcompany.com
+
+## Helpful Links
+
+##### Downloading Python 2.7:
+
+https://www.python.org/download/releases/2.7/
+
+##### Downloading pip for Python 2.7 :
+
+https://pip.pypa.io/en/stable/installing/
+
+##### Updating PATH in a Windows Environment:
+
+https://www.java.com/en/download/help/path.xml
 
