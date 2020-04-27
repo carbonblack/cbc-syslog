@@ -9,8 +9,13 @@ The syslog connector lets administrators forward alert notifications and audit l
 ### Requirements
 
 * CB Defense or CB ThreatHunter
-* Python 2.7 running on a 64-bit Intel platform
-* pip
+* [Python 2.7 running on a 64-bit Intel platform](https://www.python.org/download/releases/2.7/)
+* [pip](https://pip.pypa.io/en/stable/installing/)
+* [Jinja2](https://pypi.org/project/Jinja2/)
+* [MarkupSafe](https://pypi.org/project/MarkupSafe/1.1.1/)
+* [requests](https://pypi.org/project/requests/2.22.0/)
+* [Flask](https://pypi.org/project/Flask/1.1.1/)
+* [psutil](https://pypi.org/project/psutil/5.7.0/)
 
 The receiving system must accept industry-standard syslog notifications.
 
@@ -30,7 +35,7 @@ specifications. Below is a table of all the configurable inputs that can be used
     | Input      | Required | Description |     
     | ----------- | ----------- | ----------- | 
     | template      | Y       | Template for syslog output.      |
-    | back_up_dir      | Y       | Location of the Backup Directory. This will be the location of back up files in the event that results fail to send to Syslog      |
+    | back_up_dir      | Y       | Location of the Backup Directory. This will be the location of backup files in the event that results fail to send to Syslog. The backup files are deleted upon a successful process.     |
     | policy_action_severity      | Y       | This sets the default severity level for POLICY_ACTION notifications. By default it is 4.      |
     | output_format      | Y       | Output format of the data sent. Currently support json, leef, and cef formats      |
     | output_type      | Y       | Configures the specific output. Valid options are: 'udp', 'tcp', 'tcp+tls', 'http'      |
@@ -53,16 +58,11 @@ specifications. Below is a table of all the configurable inputs that can be used
 
 4. Create a `.txt` file for Logs.
 
+5. Create an empty backup folder. The location of this folder will be placed in back_up_dir seen in the 
+Configuration file.  For more information on the behavior of the backup folder please see the description of back_up_dir 
+in Step 2. 
 
-5. Test the new connector:
-
-    Verify that you are running Python 2.7:
-    
-    ```
-    python --version 
-    ```
-   
-   Then run the following command:
+5. Test the new connector and run the following command:
 
     ```
     python cb_defense_syslog.py -l [LOG_FILE_LOCATION] -c [CONFIG_FILE_LOCATION]
@@ -243,3 +243,8 @@ specifications. Below is a table of all the configurable inputs that can be used
     #api_key = CQF35EIH2WDF69PTWKGC4111
     #server_url = https://server2.yourcompany.com
 
+## Helpful Links
+
+##### Updating PATH in a Windows Environment:
+
+https://www.java.com/en/download/help/path.xml

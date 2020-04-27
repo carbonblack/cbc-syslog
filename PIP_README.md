@@ -242,3 +242,7 @@ in Step 2.
 
 https://www.java.com/en/download/help/path.xml
 
+##### GitHub Installation Instructions:
+
+https://github.com/carbonblack/cbc-syslog
+
