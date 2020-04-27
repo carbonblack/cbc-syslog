@@ -241,6 +241,8 @@ in Step 2.
     #[cbdefenseserver2]
     #api_connector_id = KJARWBZ111
     #api_key = CQF35EIH2WDF69PTWKGC4111
+    #siem_connector_id = UEUWR4U111
+    #siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
     #server_url = https://server2.yourcompany.com
 
 ## Helpful Links
