@@ -14,7 +14,7 @@ install_requires=[
     'MarkupSafe==1.1.1',
     'requests==2.22.0',
     'Flask==1.1.1',
-    'psutil==5.7.0'
+    'psutil==5.7.0',
 ]
 
 packages=[
@@ -32,7 +32,7 @@ scripts = ['src/cbc_syslog/root/usr/share/cb/integrations/cb-defense-syslog/cace
 
 setup(
         name='cbc_syslog',
-        version='1.0.0',
+        version='1.0.2',
         packages=packages,
         package_dir={'': 'src'},
         include_package_data=True,
@@ -47,7 +47,6 @@ setup(
         #data_files=data_files,
         install_requires=install_requires,
         classifiers=[
-            'Development Status :: 4 - Beta',
 
             # Indicate who your project is intended for
             'Intended Audience :: Developers',
