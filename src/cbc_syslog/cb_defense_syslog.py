@@ -11,7 +11,7 @@ import logging
 import logging.handlers
 import traceback
 import hashlib
-import fcntl
+import psutil
 import audit_log as al
 import notifications as n
 
@@ -480,14 +480,17 @@ if __name__ == "__main__":
     logger.info("CB Defense Syslog 2.0")
 
     try:
-        pid_file = 'root/usr/share/cb/integrations/cb-defense-syslog.pid'
-        fp = open(pid_file, 'w')
-        try:
-            fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except IOError:
-            logger.error("An instance of cb defense syslog connector is already running")
-            # another instance is running
-            sys.exit(0)
+        for process in psutil.process_iter():
+            try:
+                if process.name() == 'cb-defense-syslog.pid':
+                    logger.error("An instance of cb defense syslog connector is already running")
+                    # another instance is running
+                    sys.exit(0)
+            except psutil.NoSuchProcess:
+                    continue
+            except psutil.ZombieProcess:
+                continue
+
         main()
     except Exception as e:
         logger.error(e, exc_info=True)
