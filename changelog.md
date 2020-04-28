@@ -1,8 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.1
 
-## Version 2.0
+### Bug Fix
+
+Removed the package fcntl and replaced it with the package psutils. This ensures multi-platform functionality for 
+the connector.
+
+## Version 1.0.0
 
 ### New Installation instructions 
 
@@ -66,7 +72,6 @@ program will grab only the notifications that have been generated since the last
 
 > **Note**: All events types will be pulled from the Syslog Connector. As of now, no additional filtering is 
 compatible for the ThreatHunter Notifications.
-
 
 
 

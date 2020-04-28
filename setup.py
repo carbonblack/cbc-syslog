@@ -32,7 +32,7 @@ scripts = ['src/cbc_syslog/root/usr/share/cb/integrations/cb-defense-syslog/cace
 
 setup(
         name='cbc_syslog',
-        version='1.0.3',
+        version='1.0.1',
         packages=packages,
         package_dir={'': 'src'},
         include_package_data=True,
