@@ -28,7 +28,7 @@ Use the [Developer Community Forum](https://community.carbonblack.com/t5/user/us
 
 ## Installation
 
-You can install the Syslog Connector using either PyPi or GitHub.
+You can install the Syslog Connector using either PyPI or GitHub.
 
 ### PyPI Installation
 
