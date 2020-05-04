@@ -6,6 +6,14 @@ The syslog connector lets administrators forward alert notifications and audit l
 * Aggregates data from one or more Carbon Black Cloud organizations into a single syslog stream
 * Can be configured to use UDP, TCP, or encrypted (TCP over TLS) syslog protocols
 
+
+### Helpful Links
+* [Updating PATH in a Windows Environment](https://www.java.com/en/download/help/path.xml)
+
+### Customer Support
+
+Use the [Developer Community Forum](https://community.carbonblack.com/t5/user/userloginpage?redirectreason=permissiondenied&dest_url=https%3A%2F%2Fcommunity.carbonblack.com%2Ft5%2FDeveloper-Relations%2Fbd-p%2Fdeveloper-relations) to report bugs, request changes, and discuss with other API developers in the Carbon Black Community.
+
 ### Requirements
 
 * CB Defense or CB ThreatHunter
@@ -17,7 +25,12 @@ The syslog connector lets administrators forward alert notifications and audit l
 * [Flask](https://pypi.org/project/Flask/1.1.1/)
 * [psutil](https://pypi.org/project/psutil/5.7.0/)
 
-## PyPI Installation
+
+## Installation
+
+You can install the Syslog Connector using either PyPi or GitHub.
+
+### PyPI Installation
 
 1. Run the following command in your terminal: `pip install cbc-syslog`
 
@@ -88,7 +101,7 @@ in Step 2.
     INFO:__main__:Sending 24 messages to 00.00.000.00:000
     INFO:__main__:Done Sending Audit Logs
     ```
-## GitHub Installation
+### GitHub Installation
 
 1. Pull down the Repo. You may use `git clone` or pull down the zip file directly from GitHub.
 
@@ -96,7 +109,7 @@ in Step 2.
 
 3. Follow Steps 3-6 in the PyPI installation instructions.
 
-## Sample Config File
+### Sample Config File
 
     [general]
     
@@ -246,10 +259,5 @@ in Step 2.
     #siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
     #server_url = https://server2.yourcompany.com
 
-## Helpful Links
-
-##### Updating PATH in a Windows Environment:
-
-https://www.java.com/en/download/help/path.xml
 
 
