@@ -88,7 +88,7 @@ in Step 2.
     INFO:__main__:Sending 24 messages to 00.00.000.00:000
     INFO:__main__:Done Sending Audit Logs
     ```
-##GitHub Installation
+## GitHub Installation
 
 1. Pull down the Repo. You may use `git clone` or pull down the zip file directly from GitHub.
 
