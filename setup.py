@@ -22,7 +22,7 @@ packages=[
     'cbc_syslog.root'
 ]
 
-with io.open('PIP_README.md', 'rt' , encoding='utf8') as f:
+with io.open('README.md', 'rt' , encoding='utf8') as f:
     long_description = f.read()
 
 scripts = ['src/cbc_syslog/root/usr/share/cb/integrations/cb-defense-syslog/cacert.pem',
