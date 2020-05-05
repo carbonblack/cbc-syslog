@@ -6,6 +6,14 @@ The syslog connector lets administrators forward alert notifications and audit l
 * Aggregates data from one or more Carbon Black Cloud organizations into a single syslog stream
 * Can be configured to use UDP, TCP, or encrypted (TCP over TLS) syslog protocols
 
+
+### Helpful Links
+* [Updating PATH in a Windows Environment](https://www.java.com/en/download/help/path.xml)
+
+### Customer Support
+
+Use the [Developer Community Forum](https://community.carbonblack.com/t5/user/userloginpage?redirectreason=permissiondenied&dest_url=https%3A%2F%2Fcommunity.carbonblack.com%2Ft5%2FDeveloper-Relations%2Fbd-p%2Fdeveloper-relations) to report bugs, request changes, and discuss with other API developers in the Carbon Black Community.
+
 ### Requirements
 
 * CB Defense or CB ThreatHunter
@@ -17,17 +25,18 @@ The syslog connector lets administrators forward alert notifications and audit l
 * [Flask](https://pypi.org/project/Flask/1.1.1/)
 * [psutil](https://pypi.org/project/psutil/5.7.0/)
 
-The receiving system must accept industry-standard syslog notifications.
 
-### Installation (via PyPi/pip)
+## Installation
 
-The installation package and instructions can be found at https://pypi.org/project/cbc-syslog/.
+You can install the Syslog Connector using either PyPI or GitHub.
 
-## Installation (via GitHub)
+### PyPI Installation
 
-1. Pull down the Repo. You may use `git clone` or pull down the zip file directly from GitHub.
+1. Run the following command in your terminal: `pip install cbc-syslog`
 
-2. Navigate to the following location within the package `/src/cbc_syslog`
+2. Navigate to the Python 2.7 package location: 
+    MacOS: `/python2.7/site-packages/cbc_syslog` 
+    Windows: `C:\Python27\Lib\site-packages\cbc_syslog`
 
 3. Copy and paste the Configuration File example shown below into your own `.conf` file and modify it to your own 
 specifications. Below is a table of all the configurable inputs that can be used in the syslog connector.
@@ -35,7 +44,7 @@ specifications. Below is a table of all the configurable inputs that can be used
     | Input      | Required | Description |     
     | ----------- | ----------- | ----------- | 
     | template      | Y       | Template for syslog output.      |
-    | back_up_dir      | Y       | Location of the Backup Directory. This will be the location of backup files in the event that results fail to send to Syslog. The backup files are deleted upon a successful process.     |
+    | back_up_dir      | Y       | Location of the Backup Directory. This will be the location of backup files in the event that results fail to send to Syslog. The backup files are deleted upon a successful process.      |
     | policy_action_severity      | Y       | This sets the default severity level for POLICY_ACTION notifications. By default it is 4.      |
     | output_format      | Y       | Output format of the data sent. Currently support json, leef, and cef formats      |
     | output_type      | Y       | Configures the specific output. Valid options are: 'udp', 'tcp', 'tcp+tls', 'http'      |
@@ -57,12 +66,10 @@ specifications. Below is a table of all the configurable inputs that can be used
     | server_url      | Y       | Server URL      |
 
 4. Create a `.txt` file for Logs.
-
 5. Create an empty backup folder. The location of this folder will be placed in back_up_dir seen in the 
 Configuration file.  For more information on the behavior of the backup folder please see the description of back_up_dir 
-in Step 3. 
-
-5. Test the new connector and run the following command:
+in Step 2. 
+6. Test the new connector and run the following command: 
 
     ```
     python cb_defense_syslog.py -l [LOG_FILE_LOCATION] -c [CONFIG_FILE_LOCATION]
@@ -94,8 +101,15 @@ in Step 3.
     INFO:__main__:Sending 24 messages to 00.00.000.00:000
     INFO:__main__:Done Sending Audit Logs
     ```
-    
-## Sample Config File
+### GitHub Installation
+
+1. Pull down the Repo. You may use `git clone` or pull down the zip file directly from GitHub.
+
+2. Navigate to the following location within the package `/src/cbc_syslog`
+
+3. Follow Steps 3-6 in the PyPI installation instructions.
+
+### Sample Config File
 
     [general]
     
@@ -245,8 +259,5 @@ in Step 3.
     #siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
     #server_url = https://server2.yourcompany.com
 
-## Helpful Links
 
-##### Updating PATH in a Windows Environment:
 
-https://www.java.com/en/download/help/path.xml
