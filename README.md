@@ -68,7 +68,7 @@ specifications. Below is a table of all the configurable inputs that can be used
 4. Create a `.txt` file for Logs.
 5. Create an empty backup folder. The location of this folder will be placed in back_up_dir seen in the 
 Configuration file.  For more information on the behavior of the backup folder please see the description of back_up_dir 
-in Step 2. 
+in Step 3. 
 6. Test the new connector and run the following command: 
 
     ```
