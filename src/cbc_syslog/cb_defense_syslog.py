@@ -172,6 +172,14 @@ def verify_config_parse_servers():
         logger.error('An output_type is required in the general stanza')
         sys.exit(-1)
 
+    if config.has_option('general', 'disable_notifications'):
+        try:
+            config.getboolean('general', 'disable_notifications')
+        except ValueError as e:
+            logger.error(traceback.format_exc())
+            logger.error("disable_notifications must be either true or false")
+            sys.exit(-1)
+
     output_type = config.get('general', 'output_type')
     if output_type not in ['tcp', 'udp', 'tcp+tls', 'http']:
         logger.error('output_type is invalid.  Must be tcp, udp, http or tcp+tls')
@@ -448,9 +456,15 @@ def main():
 
         notifications_response, audit_response = get_response(server)
         notification_log, audit_log = parse_notifications(server, notifications_response, audit_response)
-        logger.info("Sending Notifications")
-        send_data_syslog(notification_log, back_up_dir)
-        logger.info("Done Sending Notifications")
+
+        if (config.has_option('general','disable_notifications') and
+                config.getboolean('general', 'disable_notifications')):
+            logger.info("Not Sending Notifications")
+        else:
+            logger.info("Sending Notifications")
+            send_data_syslog(notification_log, back_up_dir)
+            logger.info("Done Sending Notifications")
+
         logger.info("Sending Audit Logs")
         send_data_syslog(audit_log, back_up_dir)
         logger.info("Done Sending Audit Logs")
@@ -495,4 +509,3 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(e, exc_info=True)
         sys.exit(-1)
-
