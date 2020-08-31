@@ -34,15 +34,15 @@ You can install the Syslog Connector using either PyPI or GitHub.
 
 1. Run the following command in your terminal: `pip install cbc-syslog`
 
-2. Navigate to the Python 2.7 package location: 
-    MacOS: `/python2.7/site-packages/cbc_syslog` 
+2. Navigate to the Python 2.7 package location:
+    MacOS: `/python2.7/site-packages/cbc_syslog`
     Windows: `C:\Python27\Lib\site-packages\cbc_syslog`
 
-3. Copy and paste the Configuration File example shown below into your own `.conf` file and modify it to your own 
+3. Copy and paste the Configuration File example shown below into your own `.conf` file and modify it to your own
 specifications. Below is a table of all the configurable inputs that can be used in the syslog connector.
 
     | Input      | Required | Description |     
-    | ----------- | ----------- | ----------- | 
+    | ----------- | ----------- | ----------- |
     | template      | Y       | Template for syslog output.      |
     | back_up_dir      | Y       | Location of the Backup Directory. This will be the location of backup files in the event that results fail to send to Syslog. The backup files are deleted upon a successful process.      |
     | policy_action_severity      | Y       | This sets the default severity level for POLICY_ACTION notifications. By default it is 4.      |
@@ -66,10 +66,10 @@ specifications. Below is a table of all the configurable inputs that can be used
     | server_url      | Y       | Server URL      |
 
 4. Create a `.txt` file for Logs.
-5. Create an empty backup folder. The location of this folder will be placed in back_up_dir seen in the 
-Configuration file.  For more information on the behavior of the backup folder please see the description of back_up_dir 
-in Step 3. 
-6. Test the new connector and run the following command: 
+5. Create an empty backup folder. The location of this folder will be placed in back_up_dir seen in the
+Configuration file.  For more information on the behavior of the backup folder please see the description of back_up_dir
+in Step 3.
+6. Test the new connector and run the following command:
 
     ```
     python cb_defense_syslog.py -l [LOG_FILE_LOCATION] -c [CONFIG_FILE_LOCATION]
@@ -101,6 +101,28 @@ in Step 3.
     INFO:__main__:Sending 24 messages to 00.00.000.00:000
     INFO:__main__:Done Sending Audit Logs
     ```
+
+
+**Note: If you're having trouble installing on Centos 7 follow these instructions**
+
+* Verify python verison:
+```
+>$ python --version
+Python 2.7.5
+```
+
+* Pip not found
+```
+>$ sudo yum install epel-release
+>$ yum -y install python-pip
+```
+
+* Python.h file not found with compile errors
+```
+>$ sudo yum install python-devel
+>$ sudo pip install cbc-syslog
+```
+
 ### GitHub Installation
 
 1. Pull down the Repo. You may use `git clone` or pull down the zip file directly from GitHub.
@@ -112,21 +134,21 @@ in Step 3.
 ### Sample Config File
 
     [general]
-    
+
     #
     # Template for syslog output.
     # This is a jinja 2 template
     # NOTE: The source variable corresponds to the Cb Defense Server used to retrieve results
     #
     template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
-    
+
     #
     #Location of the Backup Directory
     #This will be the location of back up files in the event that results fail to send to Syslog
     #
-    
+
     back_up_dir = /Users/jdoe/Documents/
-    
+
     #
     # This sets the default severity level for POLICY_ACTION notifications.  By default it is 4.
     #
@@ -147,15 +169,15 @@ in Step 3.
     # 7 - Debug: Debug-level messages.
     #
     policy_action_severity = 4
-    
-    
+
+
     #
     # Output format of the data sent. Currently support json or cef formats
     #
     # Warning: if using json output_format, we recommend NOT using UDP output_type
     #
     output_format=cef
-    
+
     #
     # Configure the specific output.
     # Valid options are: 'udp', 'tcp', 'tcp+tls', 'http'
@@ -166,17 +188,17 @@ in Step 3.
     #  http    - Have the events sent over a HTTP connection
     #
     output_type=tcp
-    
+
     #
     # tcpout=IP:port - ie 1.2.3.5:514
     #
     tcp_out=
-    
+
     #
     # udpout=IP:port - ie 1.2.3.5:514
     #
     udp_out=
-    
+
     #
     # httpout=http/https endpoint - ie https://server.company.com/endpoint
     # http_headers= {'key1': 'value1', 'key2': 'value2'} - ie {'content-type': 'application/json'}
@@ -185,70 +207,70 @@ in Step 3.
     http_out=
     http_headers= {'content-type': 'application/json'}
     https_ssl_verify=True
-    
+
     #
     # Override ca file for self signed certificates when using https
     # This is typically a .pem file
     #
     #requests_ca_cert=/usr/share/cb/integrations/cb-defense-syslog/cert.pem
-    
+
     [tls]
-    
+
     #
     # Specify a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog
     #
     #ca_cert = /etc/cb/integrations/cb-defense/ca.pem
-    
+
     #
     # Optionally specify a file containing PEM-encoded client certificate for verifying this client when using TLS+TCP syslog
     # If cert is specified, key is a required parameter
     #
     #cert = /etc/cb/integrations/cb-defense/cert.pem
-    
+
     #
     # Optionally specify a file containing PEM-encoded private key for verifying this client when using TLS+TCP syslog
     # If key is specified, cert is a required parameter
     #
     #key = /etc/cb/integrations/cb-defense/cert.key
-    
+
     #
     # Optionally specify the password to decrypt the given private key when using TLS+TCP syslog
     #
     #key_password = p@ssw0rd1
-    
+
     #
     # Uncomment tls_verify and set to "false" in order to disable verification of the peer server certificate
     #
     #tls_verify = true
-    
+
     [cbdefense1]
-    
+
     #
     # Cb Defense API Connector ID
     #
     api_connector_id = GO5M953111
-    
+
     #
     # Cb Defense API Key
     #
     api_key = BYCRM7BRNSH0CXZR5V1Y3111
-    
+
     #
     # Cb Defense SIEM Connector ID
     #
     siem_connector_id = UEUWR4U111
-    
+
     #
     # Cb Defense SIEM Key
     #
     siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
-    
+
     #
     # Cb Defense Server URL
     # NOTE: this is not the url to the web ui, but to the API URL (for example, https://api-prod05.conferdeploy.net)
     #
     server_url = https://server1.yourcompany.com
-    
+
     #
     # For more than one Cb Defense Server, add another server using the following template including the stanza
     #
@@ -258,6 +280,3 @@ in Step 3.
     #siem_connector_id = UEUWR4U111
     #siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
     #server_url = https://server2.yourcompany.com
-
-
-
