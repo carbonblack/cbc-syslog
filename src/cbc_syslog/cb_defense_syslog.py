@@ -2,9 +2,7 @@ import socket
 import ssl
 import sys
 import argparse
-import ConfigParser
 import requests
-from jinja2 import Template
 import os
 import json
 import logging
@@ -12,8 +10,14 @@ import logging.handlers
 import traceback
 import hashlib
 import psutil
-import audit_log as al
-import notifications as n
+
+from six import PY2
+from six.moves.configparser import ConfigParser
+from jinja2 import Template
+
+from audit_log import get_audit_logs, parse_response_json, parse_response_cef, parse_response_leef
+from notifications import (notification_server_request, parse_response_json_psc,
+                           parse_response_cef_psc, parse_response_leef_psc)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -21,12 +25,11 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 
 policy_action_severity = 4
 
-from six import PY2
-
 if PY2:
     get_unicode_string = unicode
 else:
     get_unicode_string = str
+
 
 def parse_config():
     """
@@ -35,7 +38,7 @@ def parse_config():
     """
     global config
     try:
-        config = ConfigParser.ConfigParser()
+        config = ConfigParser()
         config.readfp(open(args.config_file))
     except Exception as e:
         logging.error(e, exc_info=True)
@@ -47,9 +50,8 @@ def parse_config():
 def delete_stored_data(hash, back_up_dir):
     try:
         os.remove(back_up_dir + hash)
-    except:
+    except Exception:
         logger.error(traceback.format_exc())
-
 
 
 def send_stored_data(back_up_dir):
@@ -69,6 +71,7 @@ def send_stored_data(back_up_dir):
             # If the sending was successful, delete the stored data
             #
             delete_stored_data(file_name, back_up_dir)
+
 
 def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_verify=True):
     retval = True
@@ -90,7 +93,7 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
 
             client_socket.connect((server_url, port))
             client_socket.send(data.encode("utf-8"))
-        except Exception as e:
+        except Exception:
             logger.error(traceback.format_exc())
             retval = False
         finally:
@@ -103,7 +106,7 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
         try:
             client_socket.connect((server_url, port))
             client_socket.send(data.encode("utf-8"))
-        except Exception as e:
+        except Exception:
             logger.error(traceback.format_exc())
             retval = False
         finally:
@@ -114,7 +117,7 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
         unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             unsecured_client_socket.sendto(data.encode("utf-8"), (server_url, port))
-        except Exception as e:
+        except Exception:
             logger.error(traceback.format_exc())
             retval = False
         finally:
@@ -128,11 +131,12 @@ def send_syslog_tls(server_url, port, data, output_type, output_format, ssl_veri
                                  data=data.encode("utf-8"),
                                  verify=ssl_verify)
             logger.info(resp)
-        except Exception as e:
+        except Exception:
             logger.error(traceback.format_exc())
             retval = False
 
     return retval
+
 
 def verify_config_parse_servers():
     """
@@ -155,7 +159,7 @@ def verify_config_parse_servers():
 
     output_format = config.get('general', 'output_format').lower()
 
-    if not output_format == 'cef' and not output_format == 'json' and output_format == 'leef':
+    if not output_format == 'cef' and not output_format == 'json' and not output_format == 'leef':
         logger.error('invalid output_format type was specified')
         logger.error('Must specify JSON, CEF , or LEEF output format')
         logger.warn('Setting output format to CEF')
@@ -196,7 +200,7 @@ def verify_config_parse_servers():
         try:
             output_params['output_host'] = config.get('general', 'tcp_out').strip().split(":")[0]
             output_params['output_port'] = int(config.get('general', 'tcp_out').strip().split(':')[1])
-        except Exception as e:
+        except Exception:
             logger.error(traceback.format_exc())
             logger.error("tcp_out must be of format <ip>:<port>")
             sys.exit(-1)
@@ -211,7 +215,7 @@ def verify_config_parse_servers():
         try:
             output_params['output_host'] = config.get('general', 'udp_out').strip().split(":")[0]
             output_params['output_port'] = int(config.get('general', 'udp_out').strip().split(':')[1])
-        except Exception as e:
+        except Exception:
             logger.error(traceback.format_exc())
             logger.error("udp_out must be of format <ip>:<port>")
             sys.exit(-1)
@@ -231,7 +235,7 @@ def verify_config_parse_servers():
             sys.exit(-1)
         try:
             config.getboolean('tls', 'tls_verify')
-        except ValueError as e:
+        except ValueError:
             logger.error(traceback.format_exc())
             logger.error("tls_verify must be either true or false")
             sys.exit(-1)
@@ -242,7 +246,7 @@ def verify_config_parse_servers():
         try:
             output_params['output_host'] = config.get('general', 'http_out')
             output_params['output_port'] = None
-        except Exception as e:
+        except Exception:
             logger.error(traceback.format_exc())
             logger.error("http_out must be of format http(s)://<ip>:<port>")
             sys.exit(-1)
@@ -298,7 +302,7 @@ def verify_config_parse_servers():
             server['api_connector_id'] = config.get(section, 'api_connector_id')
             server['api_key'] = config.get(section, 'api_key')
 
-        if not 'server_url' in server or not 'api_connector_id' in server or not 'api_key' in server:
+        if 'server_url' not in server or 'api_connector_id' not in server or 'api_key' not in server:
             logger.error("The {0} section does not contain the necessary CB Defense parameters".format(section))
             sys.exit(-1)
 
@@ -307,14 +311,15 @@ def verify_config_parse_servers():
 
     return output_params, server_list
 
-def get_response(server):
-    notification_response = n.notification_server_request(server.get('server_url'),
-                                                          server.get('siem_api_key'),
-                                                          server.get('siem_connector_id'),
-                                                          True)
 
-    audit_response = al.get_audit_logs(server.get('server_url'), server.get('api_key'), server.get('api_connector_id'),
-                                       server.get('https_ssl_verify'))
+def get_response(server):
+    notification_response = notification_server_request(server.get('server_url'),
+                                                        server.get('siem_api_key'),
+                                                        server.get('siem_connector_id'),
+                                                        True)
+
+    audit_response = get_audit_logs(server.get('server_url'), server.get('api_key'), server.get('api_connector_id'),
+                                    server.get('https_ssl_verify'))
     if notification_response is None:
         logger.warn(
             "Received unexpected (or no) response from Cb Defense Server {0}. Proceeding to next connector.".format(
@@ -325,15 +330,16 @@ def get_response(server):
 
     if audit_response is None:
         logger.info("Retrieval of Audit Logs Failed")
-        audit_response=None
+        audit_response = None
     else:
         audit_response = json.loads(audit_response.content)
 
     return notifications_response, audit_response
 
+
 def parse_notifications(server, notifications_response, audit_response):
     source = server.get('source', '')
-    accepted_formats=['json', 'leef', 'cef']
+    accepted_formats = ['json', 'leef', 'cef']
     notifications_log = None
     audit_log = None
 
@@ -342,21 +348,22 @@ def parse_notifications(server, notifications_response, audit_response):
 
     if notifications_response is not None:
         if config.get('general', 'output_format').lower() == 'json':
-            notifications_log = n.parse_response_json_psc(notifications_response, source, get_unicode_string)
+            notifications_log = parse_response_json_psc(notifications_response, source, get_unicode_string)
         elif config.get('general', 'output_format').lower() == 'cef':
-            notifications_log = n.parse_response_cef_psc(notifications_response, source, get_unicode_string)
+            notifications_log = parse_response_cef_psc(notifications_response, source, get_unicode_string)
         else:
-            notifications_log = n.parse_response_leef_psc(notifications_response, source, get_unicode_string)
+            notifications_log = parse_response_leef_psc(notifications_response, source, get_unicode_string)
 
     if audit_response is not None:
         if config.get('general', 'output_format').lower() == 'json':
-            audit_log = al.parse_response_json(audit_response, source, get_unicode_string)
+            audit_log = parse_response_json(audit_response, source, get_unicode_string)
         elif config.get('general', 'output_format').lower() == 'cef':
-            audit_log = al.parse_response_cef(audit_response, source, get_unicode_string)
+            audit_log = parse_response_cef(audit_response, source, get_unicode_string)
         else:
-            audit_log = al.parse_response_leef(audit_response, source, get_unicode_string)
+            audit_log = parse_response_leef(audit_response, source, get_unicode_string)
 
     return notifications_log, audit_log
+
 
 def send_data_syslog(log_messages, back_up_dir):
 
@@ -368,7 +375,7 @@ def send_data_syslog(log_messages, back_up_dir):
         try:
             with open(back_up_dir + hash, 'wb') as f:
                 f.write(byte_data)
-        except:
+        except Exception:
             logger.error(traceback.format_exc())
             return None
 
@@ -416,6 +423,7 @@ def send_data_syslog(log_messages, back_up_dir):
 
             send_data(final_data)
 
+
 def main():
 
     global output_params
@@ -456,7 +464,6 @@ def main():
         logger.info("Done Sending Audit Logs")
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--config-file', '-c', help="Absolute path to configuration file")
@@ -487,7 +494,7 @@ if __name__ == "__main__":
                     # another instance is running
                     sys.exit(0)
             except psutil.NoSuchProcess:
-                    continue
+                continue
             except psutil.ZombieProcess:
                 continue
 
@@ -495,4 +502,3 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(e, exc_info=True)
         sys.exit(-1)
-

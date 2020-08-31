@@ -20,11 +20,13 @@ Use the [Developer Community Forum](https://community.carbonblack.com/t5/user/us
 * [Python 2.7 running on a 64-bit Intel platform](https://www.python.org/download/releases/2.7/)
 * [pip](https://pip.pypa.io/en/stable/installing/)
 * [Jinja2](https://pypi.org/project/Jinja2/)
-* [MarkupSafe](https://pypi.org/project/MarkupSafe/1.1.1/)
 * [requests](https://pypi.org/project/requests/2.22.0/)
-* [Flask](https://pypi.org/project/Flask/1.1.1/)
 * [psutil](https://pypi.org/project/psutil/5.7.0/)
 
+### Test Requirements
+
+* [Flask](https://pypi.org/project/Flask/1.1.1/)
+* [Pytest](https://pypi.org/project/pytest/6.0.1)
 
 ## Installation
 

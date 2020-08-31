@@ -12,7 +12,7 @@ template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signa
 #This will be the location of back up files in the event that results fail to send to Syslog
 #
 
-back_up_dir = /Users/jdoe/Documents/
+back_up_dir = /Users/avanbrunt/Desktop/backdir
 
 #
 # This sets the default severity level for POLICY_ACTION notifications.  By default it is 4.
@@ -41,7 +41,7 @@ policy_action_severity = 4
 #
 # Warning: if using json output_format, we recommend NOT using UDP output_type
 #
-output_format=cef
+output_format=leef
 
 #
 # Configure the specific output.
@@ -57,7 +57,7 @@ output_type=tcp
 #
 # tcpout=IP:port - ie 1.2.3.5:514
 #
-tcp_out=
+tcp_out=0.0.0.0:8887
 
 #
 # udpout=IP:port - ie 1.2.3.5:514
@@ -134,7 +134,7 @@ siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
 # Cb Defense Server URL
 # NOTE: this is not the url to the web ui, but to the API URL (for example, https://api-prod05.conferdeploy.net)
 #
-server_url = https://server1.yourcompany.com
+server_url = http://0.0.0.0:5001
 
 #
 # For more than one Cb Defense Server, add another server using the following template including the stanza

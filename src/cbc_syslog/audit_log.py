@@ -22,10 +22,10 @@ def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, proxi
         notifications = response.json()
 
     except Exception as e:
-        logger.error("Exception {0} when retrieving audit logs".format(get_unicode_string(e)), exc_info=True)
+        logger.error("Exception {0} when retrieving audit logs".format(e), exc_info=True)
         return None
 
-    if notifications.get("success", False) != True:
+    if not notifications.get("success", False):
         logger.error("Unsuccessful HTTP response retrieving audit logs: {0}"
                      .format(notifications.get("message")))
         return None
@@ -104,14 +104,11 @@ def parse_response_leef(response, source, get_unicode_string):
     product = 'CbDefense'
     dev_version = '0.1'
     hex_sep = "x09"
-    splitDomain = True
 
     leef_header = '|'.join([version, vendor, product, dev_version])
     log_messages = []
 
-
     for audits in response['notifications']:
-        severity = 1
 
         indicators = []
         current_notification_leef_header = leef_header
@@ -121,7 +118,6 @@ def parse_response_leef(response, source, get_unicode_string):
         devTime = time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(devTime / 1000))
         devTimeFormat = "MMM dd yyyy HH:mm:ss z"
         url = audits.get("requestUrl", "noUrlProvided")
-        app_name = get_unicode_string('Syslog').encode("utf-8").strip()
         kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url})
 
         current_notification_leef_header += "|{0}|{1}|".format("PSC", hex_sep)
@@ -148,6 +144,7 @@ def parse_response_leef(response, source, get_unicode_string):
             log_messages.append(indicator_dict)
 
     return log_messages
+
 
 def parse_response_json(response, source, get_unicode_string):
 

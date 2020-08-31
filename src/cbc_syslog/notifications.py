@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
+
 def notification_server_request(url, siem_api_key, siem_connector_id, ssl_verify, proxies=None):
     logger.info("Attempting to connect to url: " + url)
 
@@ -37,9 +38,8 @@ def gather_notification_context(url, notification_id, api_key_query, connector_i
 
         return response.json()
     except Exception as e:
-        logger.exception("Could not retrieve notification context for org id {1}: {2}".format(
-            notification_id,
-            str(e)))
+        logger.exception("Could not retrieve notification context for org id {0}: {1}".format(
+                         notification_id, str(e)))
         return None
 
 
@@ -53,6 +53,7 @@ def parse_cb_defense_notifications_get_incidentids(response):
                 incidentids.append(incidentid)
     return incidentids
 
+
 def parse_response_leef_psc(response, source, get_unicode_string):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 | Extension
     version = 'LEEF:2.0'
@@ -60,12 +61,9 @@ def parse_response_leef_psc(response, source, get_unicode_string):
     product = 'CbDefense'
     dev_version = '0.1'
     hex_sep = "x09"
-    splitDomain = True
 
     leef_header = '|'.join([version, vendor, product, dev_version])
     log_messages = []
-
-    success = False
 
     if response[u'success']:
 
@@ -108,7 +106,8 @@ def parse_response_leef_psc(response, source, get_unicode_string):
                 sha256 = get_unicode_string(note['policyAction']['sha256Hash']).encode("utf-8").strip()
                 action = note.get('policyAction', {}).get('action', None)
                 current_notification_leef_header += "|" + (
-                    get_unicode_string(action).encode("utf-8").strip() if action else "POLICY_ACTION") + "|" + hex_sep + "|"
+                    get_unicode_string(action).encode("utf-8").strip() if action else
+                    "POLICY_ACTION") + "|" + hex_sep + "|"
                 app_name = get_unicode_string(note['policyAction']['applicationName']).encode("utf-8").strip()
                 reputation = get_unicode_string(note['policyAction'].get('reputation', "")).encode("utf-8").strip()
                 url = get_unicode_string(note['url']).encode("utf-8").strip()
@@ -143,7 +142,6 @@ def parse_response_leef_psc(response, source, get_unicode_string):
             else:
                 continue
 
-
             log_messages.append(
                 current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]))
 
@@ -156,6 +154,7 @@ def parse_response_leef_psc(response, source, get_unicode_string):
                 log_messages.append(indicator_dict)
 
     return log_messages
+
 
 def parse_response_cef_psc(response, source, get_unicode_string):
     version = 'CEF:0'
@@ -229,14 +228,14 @@ def parse_response_cef_psc(response, source, get_unicode_string):
                 link = get_unicode_string(note['url'])
                 extension = ''
                 extension += 'rt="' + timestamp + '"'
-                if '\\' in device_name and splitDomain == True:
+                if '\\' in device_name and splitDomain:
                     (domain_name, device) = device_name.split('\\')
                     extension += ' sntdom=' + domain_name
                     extension += ' dvchost=' + device
                 else:
                     extension += ' dvchost=' + device_name
 
-                if '\\' in user_name and splitDomain == True:
+                if '\\' in user_name and splitDomain:
                     (domain_name, user) = user_name.split('\\')
                     extension += ' duser=' + user
                 else:
