@@ -114,7 +114,7 @@ Python 2.7.5
 * Pip not found
 ```
 >$ sudo yum install epel-release
->$ yum -y install python-pip
+>$ sudo yum -y install python-pip
 ```
 
 * Python.h file not found with compile errors
