@@ -155,7 +155,7 @@ def verify_config_parse_servers():
 
     output_format = config.get('general', 'output_format').lower()
 
-    if not output_format == 'cef' and not output_format == 'json' and output_format == 'leef':
+    if not output_format == 'cef' and not output_format == 'json' and not output_format == 'leef':
         logger.error('invalid output_format type was specified')
         logger.error('Must specify JSON, CEF , or LEEF output format')
         logger.warn('Setting output format to CEF')
