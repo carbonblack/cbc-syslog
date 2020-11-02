@@ -16,9 +16,9 @@ logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
-def delete_stored_data(hash, back_up_dir):
+def delete_stored_data(back_up_dir, hash):
     try:
-        os.remove(back_up_dir + hash)
+        os.remove("{}{}".format(back_up_dir, hash))
     except Exception:
         logger.error(traceback.format_exc())
 
@@ -26,15 +26,14 @@ def delete_stored_data(hash, back_up_dir):
 def store_data(back_up_dir, data):
     byte_data = data.encode("utf-8")
     hash = hashlib.sha256(byte_data).hexdigest()
-
     try:
-        with open(back_up_dir + hash, 'wb') as f:
+        with open("{}{}".format(back_up_dir, hash), 'wb') as f:
             f.write(byte_data)
-        return True
+        return hash
     except Exception:
         logger.error(traceback.format_exc())
         logger.error('Unable to store data to {}'.format(back_up_dir))
-        return False
+        return None
 
 
 def send_syslog(output_params, data):
@@ -110,11 +109,11 @@ def send_stored_data(output_params):
     back_up_dir = output_params['back_up_dir']
     logger.info("Number of files in store forward: {0}".format(len(os.listdir(back_up_dir))))
     for file_name in os.listdir(back_up_dir):
-        file_data = open(back_up_dir + file_name, 'rb').read()
+        file_data = open("{}{}".format(back_up_dir, file_name), 'rb').read()
         file_data = file_data.decode("utf-8")
         if send_syslog(output_params, file_data):
             # If the sending was successful, delete the stored data
-            delete_stored_data(file_name, back_up_dir)
+            delete_stored_data(back_up_dir, file_name)
 
 
 def send_new_data(output_params, log_messages):
@@ -142,9 +141,9 @@ def send_new_data(output_params, log_messages):
             final_data = log + "\n"
 
         # Store notifications just in case sending fails
-        file_written = store_data(output_params['back_up_dir'], final_data)
+        hash = store_data(output_params['back_up_dir'], final_data)
 
         if send_syslog(output_params, final_data):
             # If successful send, then we just delete the stored version
-            if file_written:
-                delete_stored_data(hash, output_params['back_up_dir'])
+            if hash:
+                delete_stored_data(output_params['back_up_dir'], hash)

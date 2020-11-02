@@ -32,7 +32,7 @@ def notification_server_request(url, siem_api_key, siem_connector_id, ssl_verify
         return None
 
     else:
-        return response.json()
+        return response
 
 
 def parse_notification_leef(response, source, get_unicode_string):

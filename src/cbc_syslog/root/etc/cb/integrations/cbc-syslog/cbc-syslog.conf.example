@@ -12,7 +12,7 @@ template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signa
 #This will be the location of back up files in the event that results fail to send to Syslog
 #
 
-back_up_dir = /Users/avanbrunt/Desktop/backdir
+back_up_dir = /Users/avanbrunt/Desktop/backdir/
 
 #
 # This sets the default severity level for POLICY_ACTION notifications.  By default it is 4.
