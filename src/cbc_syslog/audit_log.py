@@ -8,12 +8,13 @@ logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
-def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, proxies=None):
+def audit_log_server_request(url, api_key_query, api_connector_id_query, ssl_verify, proxies=None):
+    logger.info("Attempting to connect to url: " + url)
+
     headers = {'X-Auth-Token': "{0}/{1}".format(api_key_query, api_connector_id_query)}
     try:
         response = requests.get("{0}/integrationServices/v3/auditlogs".format(url),
-                                headers=headers,
-                                timeout=15, proxies=proxies)
+                                headers=headers, timeout=15, verify=ssl_verify, proxies=proxies)
 
         if response.status_code != 200:
             logger.error("Could not retrieve audit logs: {0}".format(response.status_code))
@@ -21,24 +22,19 @@ def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, proxi
 
         notifications = response.json()
 
+        if not notifications.get("success", False):
+            logger.error("Unsuccessful HTTP response retrieving audit logs: {0}"
+                         .format(notifications.get("message")))
+            return None
+
     except Exception as e:
         logger.error("Exception {0} when retrieving audit logs".format(e), exc_info=True)
-        return None
-
-    if not notifications.get("success", False):
-        logger.error("Unsuccessful HTTP response retrieving audit logs: {0}"
-                     .format(notifications.get("message")))
-        return None
-
-    notifications = notifications.get("notifications", [])
-    if not notifications:
-        logger.info("No audit logs available")
         return None
 
     return response
 
 
-def parse_response_cef(response, source, get_unicode_string):
+def parse_audit_log_cef(response, source, get_unicode_string):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'
@@ -97,7 +93,7 @@ def parse_response_cef(response, source, get_unicode_string):
     return log_messages
 
 
-def parse_response_leef(response, source, get_unicode_string):
+def parse_audit_log_leef(response, source, get_unicode_string):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 |
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
@@ -146,7 +142,7 @@ def parse_response_leef(response, source, get_unicode_string):
     return log_messages
 
 
-def parse_response_json(response, source, get_unicode_string):
+def parse_audit_log_json(response, source, get_unicode_string):
 
     for notification in response[u'notifications']:
         notification['type'] = 'AUDIT'

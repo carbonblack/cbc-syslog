@@ -13,48 +13,29 @@ def notification_server_request(url, siem_api_key, siem_connector_id, ssl_verify
 
     headers = {'X-Auth-Token': "{0}/{1}".format(siem_api_key, siem_connector_id)}
     try:
-        response = requests.get(url + '/integrationServices/v3/notification', headers=headers, timeout=15,
-                                verify=ssl_verify, proxies=proxies)
-        logger.info(response)
+        response = requests.get("{0}/integrationServices/v3/notification".format(url),
+                                headers=headers, timeout=15, verify=ssl_verify, proxies=proxies)
+
+        if response.status_code != 200:
+            logger.error("Could not retrieve notifications: {0}".format(response.status_code))
+            return None
+
+        notifications = response.json()
+
+        if not notifications.get("success", False):
+            logger.error("Unsuccessful HTTP response retrieving notifications: {0}"
+                         .format(notifications.get("message")))
+            return None
 
     except Exception as e:
         logger.error(e, exc_info=True)
         return None
 
     else:
-        return response
-
-
-def gather_notification_context(url, notification_id, api_key_query, connector_id_query, ssl_verify, proxies=None):
-    try:
-        response = requests.get("{0}/integrationServices/v3/alert/{1}".format(url,
-                                                                              notification_id),
-                                headers={"X-Auth-Token": "{0}/{1}".format(api_key_query,
-                                                                          connector_id_query)})
-        if response.status_code != 200:
-            logger.error("Could not retrieve context for id {0}: {1}".format(notification_id,
-                                                                             response.status_code))
-            return None
-
         return response.json()
-    except Exception as e:
-        logger.exception("Could not retrieve notification context for org id {0}: {1}".format(
-                         notification_id, str(e)))
-        return None
 
 
-def parse_cb_defense_notifications_get_incidentids(response):
-    incidentids = []
-    for notification in response['notifications']:
-        threatinfo = notification.get('threatInfo', None)
-        if threatinfo is not None:
-            incidentid = threatinfo.get('incidentId', None)
-            if incidentid is not None:
-                incidentids.append(incidentid)
-    return incidentids
-
-
-def parse_response_leef_psc(response, source, get_unicode_string):
+def parse_notification_leef(response, source, get_unicode_string):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 | Extension
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
@@ -156,7 +137,7 @@ def parse_response_leef_psc(response, source, get_unicode_string):
     return log_messages
 
 
-def parse_response_cef_psc(response, source, get_unicode_string):
+def parse_notification_cef(response, source, get_unicode_string):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'
@@ -300,7 +281,7 @@ def parse_response_cef_psc(response, source, get_unicode_string):
     return log_messages
 
 
-def parse_response_json_psc(response, source, get_unicode_string):
+def parse_notification_json(response, source, get_unicode_string):
     def encode_decode():
         pass
 
