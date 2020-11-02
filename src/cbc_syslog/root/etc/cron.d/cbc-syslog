@@ -15,6 +15,6 @@
 # *  *  *  *  * user-name command to be executed
 
 #
-# Uncomment to enable the cb-defense-connector with cron
+# Uncomment to enable the cbc-connector with cron
 #
-#  0  *  *  *  * root /usr/share/cb/integrations/cb-defense-syslog/cb-defense-syslog --config-file /etc/cb/integrations/cb-defense-syslog/cb-defense-syslog.conf --log-file /var/log/cb/integrations/cb-defense-syslog/cb-defense-syslog.log
+#  0  *  *  *  * root /usr/share/cb/integrations/cbc-syslog/cbc-syslog --config-file /etc/cb/integrations/cbc-syslog/cbc-syslog.conf --log-file /var/log/cb/integrations/cbc-syslog/cbc-syslog.log

@@ -8,9 +8,9 @@ import io
 
 
 install_requires = [
-    'Jinja2>=2.8.1',
-    'requests==2.22.0',
-    'psutil==5.7.0',
+    'Jinja2==2.10.1',
+    'requests==2.24.0',
+    'psutil==5.7.3',
     ]
 
 packages = [
@@ -34,7 +34,7 @@ setup(
     include_package_data=True,
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/carbonblack/cb-defense-syslog-tls',
+    url='https://github.com/carbonblack/cbc-syslog',
     license='MIT',
     author='Carbon Black Developer Network',
     author_email='cb-developer-network@vmware.com',

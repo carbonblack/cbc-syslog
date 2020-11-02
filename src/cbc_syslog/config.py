@@ -158,7 +158,7 @@ def verify_config(config):
         else:
             output_params['https_ssl_verify'] = True
 
-        output_params['requests_ca_cert'] = "/usr/share/cb/integrations/cb-defense-syslog/cacert.pem"
+        output_params['requests_ca_cert'] = "/usr/share/cb/integrations/cbc-syslog/cacert.pem"
         if config.has_option('general', 'requests_ca_cert'):
             output_params['requests_ca_cert'] = config.get('general', 'requests_ca_cert')
 
