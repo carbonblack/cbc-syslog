@@ -39,8 +39,8 @@ def parse_notification_leef(response, source, get_unicode_string, policy_action_
     # LEEF: 2.0 | Vendor | Product | Version | EventID | x09 | Extension
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
-    product = 'CbDefense'
-    dev_version = '0.1'
+    product = 'Cloud'
+    dev_version = '1.0'
     hex_sep = "x09"
 
     leef_header = '|'.join([version, vendor, product, dev_version])
@@ -105,7 +105,7 @@ def parse_notification_leef(response, source, get_unicode_string, policy_action_
 
                 current_notification_leef_header += "|{0}|{1}|".format("THREAT_HUNTER", hex_sep)
                 kvpairs['cat'] = "THREAT_HUNTER"
-                kvpairs['incidentId'] = note['threatInfo'].get("incidentId", "")
+                kvpairs['incidentId'] = note['threatHunterInfo'].get("incidentId", "")
                 kvpairs['sev'] = get_unicode_string(note['threatHunterInfo']['score'])
                 kvpairs['summary'] = get_unicode_string(note['threatHunterInfo'].get('summary', ""))
                 kvpairs['deviceId'] = get_unicode_string(note['deviceInfo']['deviceId'])

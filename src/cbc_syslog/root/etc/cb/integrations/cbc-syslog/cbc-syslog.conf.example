@@ -3,7 +3,7 @@
 #
 # Template for syslog output.
 # This is a jinja 2 template
-# NOTE: The source variable corresponds to the Cb Defense Server used to retrieve results
+# NOTE: The source variable corresponds to the Carbon Black Cloud Server used to retrieve results
 #
 template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
 
@@ -12,7 +12,7 @@ template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signa
 #This will be the location of back up files in the event that results fail to send to Syslog
 #
 
-back_up_dir = /Users/avanbrunt/Desktop/backdir/
+back_up_dir = /Users/jdoe/Documents/
 
 #
 # This sets the default severity level for POLICY_ACTION notifications.  By default it is 4.
@@ -41,7 +41,7 @@ policy_action_severity = 4
 #
 # Warning: if using json output_format, we recommend NOT using UDP output_type
 #
-output_format=leef
+output_format=cef
 
 #
 # Configure the specific output.
@@ -57,7 +57,7 @@ output_type=tcp
 #
 # tcpout=IP:port - ie 1.2.3.5:514
 #
-tcp_out=0.0.0.0:8887
+tcp_out=
 
 #
 # udpout=IP:port - ie 1.2.3.5:514
@@ -84,19 +84,19 @@ https_ssl_verify=True
 #
 # Specify a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog
 #
-#ca_cert = /etc/cb/integrations/cb-defense/ca.pem
+#ca_cert = /etc/cb/integrations/cbc-syslog/ca.pem
 
 #
 # Optionally specify a file containing PEM-encoded client certificate for verifying this client when using TLS+TCP syslog
 # If cert is specified, key is a required parameter
 #
-#cert = /etc/cb/integrations/cb-defense/cert.pem
+#cert = /etc/cb/integrations/cbc-syslog/cert.pem
 
 #
 # Optionally specify a file containing PEM-encoded private key for verifying this client when using TLS+TCP syslog
 # If key is specified, cert is a required parameter
 #
-#key = /etc/cb/integrations/cb-defense/cert.key
+#key = /etc/cb/integrations/cbc-syslog/cert.key
 
 #
 # Optionally specify the password to decrypt the given private key when using TLS+TCP syslog
@@ -108,38 +108,38 @@ https_ssl_verify=True
 #
 #tls_verify = true
 
-[cbdefense1]
+[CarbonBlackCloudServer1]
 
 #
-# Cb Defense API Connector ID
+# Carbon Black Cloud API Connector ID
 #
 api_connector_id = GO5M953111
 
 #
-# Cb Defense API Key
+# Carbon Black Cloud API Key
 #
 api_key = BYCRM7BRNSH0CXZR5V1Y3111
 
 #
-# Cb Defense SIEM Connector ID
+# Carbon Black Cloud SIEM Connector ID
 #
 siem_connector_id = UEUWR4U111
 
 #
-# Cb Defense SIEM Key
+# Carbon Black Cloud SIEM Key
 #
 siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
 
 #
-# Cb Defense Server URL
+# Carbon Black Cloud Server URL
 # NOTE: this is not the url to the web ui, but to the API URL (for example, https://api-prod05.conferdeploy.net)
 #
-server_url = http://0.0.0.0:5001
+server_url = https://server1.yourcompany.com
 
 #
-# For more than one Cb Defense Server, add another server using the following template including the stanza
+# For more than one Carbon Black Cloud Server, add another server using the following template including the stanza
 #
-#[cbdefenseserver2]
+#[CarbonBlackCloudServer2]
 #api_connector_id = KJARWBZ111
 #api_key = CQF35EIH2WDF69PTWKGC4111
 #server_url = https://server2.yourcompany.com

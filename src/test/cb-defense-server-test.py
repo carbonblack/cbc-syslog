@@ -7,7 +7,7 @@ import pprint
 import logging
 
 from flask import Flask, request, jsonify
-from test_data import test_data_notification
+from test_data import raw_notifications
 from test_data_audit import test_data_audit
 
 logging.basicConfig(level=logging.INFO)
@@ -41,7 +41,7 @@ def session():
 @app.route('/integrationServices/v3/notification', methods=['GET', 'POST'])
 def notificationv3():
     try:
-        return jsonify(test_data_notification)
+        return jsonify(raw_notifications)
     except Exception:
         traceback.print_exc()
         return jsonify({})
