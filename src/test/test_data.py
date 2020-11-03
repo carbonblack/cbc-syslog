@@ -5,6 +5,98 @@ null = ""
 true = "true"
 false = "false"
 
+cef_single_notification = 'test CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|A known virus (Sality: Keylogger, Password or Data stealer, Backdoor) was detected running.|7|rt="Apr 15 2016 06:54:00" sntdom=COMPANY dvchost=Demo_CaretoPC duser=FirstName.LastName dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004118/incident/Z7NG6" cs4Label="Threat_ID" cs4="Z7NG6" act=Alert'
+leef_single_notification = "LEEF:2.0|CarbonBlack|CbDefense|0.1|THREAT|x09|identHostName=COMPANY\\Demo_CaretoPC\tdeviceName=COMPANY\\Demo_CaretoPC\tsev=7\tdeviceHostName=\texternalIpAddress=\tdeviceId=2004118\truleName=syslog alert\tidentSrc=\tcat=THREAT\teventId=f279d0e6035211e6be8701df2c083974\tsrc=\tresource=COMPANY\\Demo_CaretoPC\ttargetPriorityCode=0\turl=https://testserver.company.net/ui#investigate/events/device/2004118/incident/Z7NG6\tinternalIpAddress=\tdst=\tsummary=A known virus (Sality: Keylogger, Password or Data stealer, Backdoor) was detected running.\tgroupName=default\tdeviceType=WINDOWS\tdevTime=Apr-15-2016 06:54:00 GMT\ttargetPriorityType=MEDIUM\tsignature=Active_Threat\tdevTimeFormat=MMM dd yyyy HH:mm:ss z\tincidentId=Z7NG6\ttype=THREAT\temail=COMPANY\\FirstName.LastName\tdeviceVersion=XP x86 SP: 0"
+
+single_notification = {
+    "notifications": [{
+        "threatInfo": {
+            "incidentId": "Z7NG6",
+            "score": 7,
+            "summary": "A known virus (Sality: Keylogger, Password or Data stealer, Backdoor) was detected running.",
+            "indicators": [{
+                "indicatorName": "PACKED_CALL",
+                "applicationName": "ShippingInvoice.pdf.exe",
+                "sha256Hash": "cfe0ae57f314a9f747a7cec605907cdaf1984b3cdea74ee8d5893d00ae0886cc"
+            },
+                {
+                "indicatorName": "TARGET_MALWARE_APP",
+                "applicationName": "explorer.exe",
+                "sha256Hash": "1e675cb7df214172f7eb0497f7275556038a0d09c6e5a3e6862c5e26885ef455"
+            },
+                {
+                "indicatorName": "HAS_PACKED_CODE",
+                "applicationName": "ShippingInvoice.pdf.exe",
+                "sha256Hash": "cfe0ae57f314a9f747a7cec605907cdaf1984b3cdea74ee8d5893d00ae0886cc"
+            },
+                {
+                "indicatorName": "KNOWN_DOWNLOADER",
+                "applicationName": "ShippingInvoice.pdf.exe",
+                "sha256Hash": "cfe0ae57f314a9f747a7cec605907cdaf1984b3cdea74ee8d5893d00ae0886cc"
+            },
+                {
+                "indicatorName": "ENUMERATE_PROCESSES",
+                "applicationName": "ShippingInvoice.pdf.exe",
+                "sha256Hash": "cfe0ae57f314a9f747a7cec605907cdaf1984b3cdea74ee8d5893d00ae0886cc"
+            },
+                {
+                "indicatorName": "SET_SYSTEM_SECURITY",
+                "applicationName": "ShippingInvoice.pdf.exe",
+                "sha256Hash": "cfe0ae57f314a9f747a7cec605907cdaf1984b3cdea74ee8d5893d00ae0886cc"
+            },
+                {
+                "indicatorName": "MODIFY_MEMORY_PROTECTION",
+                "applicationName": "ShippingInvoice.pdf.exe",
+                "sha256Hash": "cfe0ae57f314a9f747a7cec605907cdaf1984b3cdea74ee8d5893d00ae0886cc"
+            },
+                {
+                "indicatorName": "KNOWN_PASSWORD_STEALER",
+                "applicationName": "ShippingInvoice.pdf.exe",
+                "sha256Hash": "cfe0ae57f314a9f747a7cec605907cdaf1984b3cdea74ee8d5893d00ae0886cc"
+            },
+                {
+                "indicatorName": "RUN_MALWARE_APP",
+                "applicationName": "explorer.exe",
+                "sha256Hash": "1e675cb7df214172f7eb0497f7275556038a0d09c6e5a3e6862c5e26885ef455"
+            },
+                {
+                "indicatorName": "MODIFY_PROCESS",
+                "applicationName": "ShippingInvoice.pdf.exe",
+                "sha256Hash": "cfe0ae57f314a9f747a7cec605907cdaf1984b3cdea74ee8d5893d00ae0886cc"
+            },
+                {
+                "indicatorName": "MALWARE_APP",
+                "applicationName": "ShippingInvoice.pdf.exe",
+                "sha256Hash": "cfe0ae57f314a9f747a7cec605907cdaf1984b3cdea74ee8d5893d00ae0886cc"
+            }
+            ],
+            "time": 1460703240678
+        },
+        "url": "https://testserver.company.net/ui#investigate/events/device/2004118/incident/Z7NG6",
+        "eventTime": 1460703240678,
+        "eventId": "f279d0e6035211e6be8701df2c083974",
+        "eventDescription": "[syslog alert] [Cb Defense has detected a threat against your company.] [https://testserver.company.net/ui#device/2004118/incident/Z7NG6] [A known virus (Sality: Keylogger, Password or Data stealer, Backdoor) was detected running.] [Incident id: Z7NG6] [Threat score: 7] [Group: default] [Email: FirstName.LastName@company.net.demo] [Name: Demo_CaretoPC] [Type and OS: WINDOWS XP x86 SP: 0]\n",
+        "deviceInfo": {
+            "email": "COMPANY\\FirstName.LastName",
+            "groupName": "default",
+            "internalIpAddress": null,
+            "externalIpAddress": null,
+            "deviceType": "WINDOWS",
+            "deviceVersion": "XP x86 SP: 0",
+            "targetPriorityType": "MEDIUM",
+            "deviceId": 2004118,
+            "deviceName": "COMPANY\\Demo_CaretoPC",
+            "deviceHostName": null,
+            "targetPriorityCode": 0
+        },
+        "ruleName": "syslog alert",
+        "type": "THREAT"
+    }],
+    "success": true,
+    "message": "Success"
+}
+
+
 test_data_notification = {"notifications": [{"threatInfo": {"incidentId": "Z7NG6", "score": 7,
                                                "summary": "A known virus (Sality: Keylogger, Password or Data stealer, Backdoor) was detected running.",
                                                "indicators": [{"indicatorName": "PACKED_CALL",
@@ -520,7 +612,6 @@ test_data_notification = {"notifications": [{"threatInfo": {"incidentId": "Z7NG6
                                    "ruleName": "syslog alert", "type": "THREAT"}
                                ], "success": true,
              "message": "Success"}
-
 
 cef_output_notification = """test CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|A known virus (Sality: Keylogger, Password or Data stealer, Backdoor) was detected running.|7|rt="Apr 15 2016 06:54:00" sntdom=COMPANY dvchost=Demo_CaretoPC duser=FirstName.LastName dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004118/incident/Z7NG6" cs4Label="Threat_ID" cs4="Z7NG6" act=Alert
 test CEF:0|CarbonBlack|CbDefense_Syslog_Connector|2.0|Active_Threat|A known virus (Sality: Keylogger, Password or Data stealer, Backdoor) was detected running.|7|rt="Apr 15 2016 06:54:00" sntdom=COMPANY dvchost=Demo_CaretoPC duser=FirstName.LastName@company.net.demo dvc= cs3Label="Link" cs3="https://testserver.company.net/ui#investigate/events/device/2004118/incident/YL5RZ" cs4Label="Threat_ID" cs4="YL5RZ" act=Alert

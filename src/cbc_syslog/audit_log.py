@@ -123,7 +123,7 @@ def parse_audit_log_leef(response, source, get_unicode_string):
 
         audit_log = current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs])
 
-        log_messages.append(audit_log.encode("utf-8"))
+        log_messages.append(audit_log)
 
     return log_messages
 

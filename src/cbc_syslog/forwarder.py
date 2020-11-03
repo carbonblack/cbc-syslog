@@ -138,7 +138,7 @@ def send_new_data(output_params, log_messages):
             template = Template(output_params['template'])
             final_data = template.render(log) + '\n'
         elif output_format == 'leef':
-            final_data = log + "\n"
+            final_data = log
 
         # Store notifications just in case sending fails
         hash = store_data(output_params['back_up_dir'], final_data)

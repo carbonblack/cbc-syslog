@@ -81,7 +81,7 @@ def parse_notification_leef(response, source, get_unicode_string, policy_action_
                     indicator_header = leef_header + "|{0}|{1}|".format('INDICATOR', hex_sep)
                     indicator_log = indicator_header + "\t".join(
                         ["{0}={1}".format(k, indicator[k]) for k in indicator])
-                    log_messages.append(indicator_log.encode("utf-8"))
+                    log_messages.append(indicator_log)
 
             elif note.get('type', None) == 'POLICY_ACTION' or note.get("policyAction", False):
                 current_notification_leef_header += "|{0}|{1}|".format("POLICY_ACTION", hex_sep)
@@ -135,14 +135,14 @@ def parse_notification_leef(response, source, get_unicode_string, policy_action_
                     indicator_header = leef_header + "|{0}|{1}|".format('INDICATOR', hex_sep)
                     indicator_log = indicator_header + "\t".join(
                         ["{0}={1}".format(k, indicator[k]) for k in indicator])
-                    log_messages.append(indicator_log.encode("utf-8"))
+                    log_messages.append(indicator_log)
 
             else:
                 # Unknown notification type
                 continue
 
             leef_log = current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs])
-            log_messages.append(leef_log.encode("utf-8"))
+            log_messages.append(leef_log)
 
     return log_messages
 
