@@ -28,7 +28,7 @@ scripts = ['src/cbc_syslog/root/usr/share/cb/integrations/cbc-syslog/cacert.pem'
 
 setup(
     name='cbc_syslog',
-    version='1.0.2',
+    version='1.1.0',
     package_dir={'': 'src'},
     packages=find_packages(where="src", exclude=["tests.*", "tests"]),
     include_package_data=True,
@@ -48,11 +48,9 @@ setup(
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
 
-        # Specify the Python versions you support here. In particular, ensure
-        # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         ],
     keywords='carbonblack',
     scripts=scripts)
