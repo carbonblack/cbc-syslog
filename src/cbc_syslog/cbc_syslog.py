@@ -12,8 +12,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-policy_action_severity = 4
-
 
 def main(args):
     # Parse config file
@@ -31,7 +29,9 @@ def main(args):
     for server in server_list:
         logger.info("Handling notifications for {0}".format(server.get('server_url')))
 
-        notification_logs = fetch_notification_logs(server, output_params['output_format'], output_params['policy_action_severity'])
+        notification_logs = fetch_notification_logs(server,
+                                                    output_params['output_format'],
+                                                    output_params['policy_action_severity'])
 
         logger.info("Sending Notifications")
         send_new_data(output_params, notification_logs)
