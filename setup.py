@@ -21,9 +21,9 @@ packages = [
 with io.open('README.md', 'rt', encoding='utf8') as f:
     long_description = f.read()
 
-scripts = ['src/cbc_syslog/root/usr/share/cb/integrations/cb-defense-syslog/cacert.pem',
-           'src/cbc_syslog/root/etc/cron.d/cb-defense-syslog',
-           'src/cbc_syslog/root/etc/cb/integrations/cb-defense-syslog/cb-defense-syslog.conf.example'
+scripts = ['src/cbc_syslog/root/usr/share/cb/integrations/cbc-syslog/cacert.pem',
+           'src/cbc_syslog/root/etc/cron.d/cbc-syslog',
+           'src/cbc_syslog/root/etc/cb/integrations/cbc-syslog/cbc-syslog.conf.example'
            ]
 
 setup(
