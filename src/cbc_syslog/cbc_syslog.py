@@ -31,7 +31,7 @@ def main(args):
     for server in server_list:
         logger.info("Handling notifications for {0}".format(server.get('server_url')))
 
-        notification_logs = fetch_notification_logs(server, output_params['output_format'])
+        notification_logs = fetch_notification_logs(server, output_params['output_format'], output_params['policy_action_severity'])
 
         logger.info("Sending Notifications")
         send_new_data(output_params, notification_logs)

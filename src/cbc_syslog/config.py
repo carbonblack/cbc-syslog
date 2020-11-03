@@ -80,6 +80,7 @@ def verify_config(config):
 
     output_params['output_type'] = output_type
     output_params['output_format'] = output_format
+    output_params['policy_action_severity'] = config.get('general', 'policy_action_severity', fallback=1)
 
     if output_type == 'tcp':
         if not config.has_option('general', 'tcp_out'):

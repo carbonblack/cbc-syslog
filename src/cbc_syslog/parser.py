@@ -1,5 +1,3 @@
-import json
-
 from six import PY2
 from audit_log import (audit_log_server_request,
                        parse_audit_log_json,
@@ -23,7 +21,7 @@ else:
     get_unicode_string = str
 
 
-def fetch_notification_logs(server, output_format):
+def fetch_notification_logs(server, output_format, policy_action_severity=1):
     notification_response = notification_server_request(server.get('server_url'),
                                                         server.get('siem_api_key'),
                                                         server.get('siem_connector_id'),
@@ -34,20 +32,22 @@ def fetch_notification_logs(server, output_format):
                 server.get('server_url')))
         return None
     else:
-        notifications_response = json.loads(notification_response.content)
+        notification_json = notification_response.json()
 
         if output_format == 'json':
-            notifications_logs = parse_notification_json(notifications_response,
+            notifications_logs = parse_notification_json(notification_json,
                                                          server.get('server_url'),
                                                          get_unicode_string)
         elif output_format == 'leef':
-            notifications_logs = parse_notification_leef(notifications_response,
+            notifications_logs = parse_notification_leef(notification_json,
                                                          server.get('server_url'),
-                                                         get_unicode_string)
+                                                         get_unicode_string,
+                                                         policy_action_severity)
         else:
-            notifications_logs = parse_notification_cef(notifications_response,
+            notifications_logs = parse_notification_cef(notification_json,
                                                         server.get('server_url'),
-                                                        get_unicode_string)
+                                                        get_unicode_string,
+                                                        policy_action_severity)
         return notifications_logs
 
 
@@ -63,13 +63,13 @@ def fetch_audit_logs(server, output_format):
                 server.get('server_url')))
         return None
     else:
-        audit_response = json.loads(audit_response.content)
+        audit_json = audit_response.json()
 
         if output_format == 'json':
-            audit_logs = parse_audit_log_json(audit_response, server.get('server_url'), get_unicode_string)
+            audit_logs = parse_audit_log_json(audit_json, server.get('server_url'), get_unicode_string)
         elif output_format == 'leef':
-            audit_logs = parse_audit_log_leef(audit_response, server.get('server_url'), get_unicode_string)
+            audit_logs = parse_audit_log_leef(audit_json, server.get('server_url'), get_unicode_string)
         else:
-            audit_logs = parse_audit_log_cef(audit_response, server.get('server_url'), get_unicode_string)
+            audit_logs = parse_audit_log_cef(audit_json, server.get('server_url'), get_unicode_string)
 
         return audit_logs

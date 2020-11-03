@@ -35,8 +35,8 @@ def notification_server_request(url, siem_api_key, siem_connector_id, ssl_verify
         return response
 
 
-def parse_notification_leef(response, source, get_unicode_string):
-    # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 | Extension
+def parse_notification_leef(response, source, get_unicode_string, policy_action_severity=1):
+    # LEEF: 2.0 | Vendor | Product | Version | EventID | x09 | Extension
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
     product = 'CbDefense'
@@ -52,98 +52,107 @@ def parse_notification_leef(response, source, get_unicode_string):
             logger.info('successfully connected, no alerts at this time')
             return None
         for note in response[u'notifications']:
-            indicators = []
             current_notification_leef_header = leef_header
-            eventId = get_unicode_string(note.get('eventId'))
-            kvpairs = {"eventId": eventId}
-            devTime = note.get("eventTime", 0)
-            devTime = time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(devTime / 1000))
-            devTimeFormat = "MMM dd yyyy HH:mm:ss z"
-            url = note.get("url", "noUrlProvided")
-            ruleName = note.get("ruleName", "noRuleName")
-            kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url, "ruleName": ruleName})
-            if note.get('type', 'noType') == 'THREAT' or note.get('threatInfo', False):
+            kvpairs = {"eventId": get_unicode_string(note.get('eventId'))}
+            kvpairs['devTime'] = time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(note.get("eventTime", 0) / 1000))
+            kvpairs['devTimeFormat'] = "MMM dd yyyy HH:mm:ss z"
+            kvpairs['url'] = note.get("url", "")
+            kvpairs['ruleName'] = note.get("ruleName", "noRuleName")
+
+            if note.get('type', None) == 'THREAT' or note.get('threatInfo', False):
                 current_notification_leef_header += "|{0}|{1}|".format("THREAT", hex_sep)
-                cat = "THREAT"
-                indicators = note['threatInfo'].get('indicators', [])
-                kvpairs.update(note.get("deviceInfo", {}))
-                kvpairs.update({"incidentId": note['threatInfo'].get("incidentId", "noIncidentId")})
-                signature = 'Active_Threat'
-                summary = get_unicode_string(note['threatInfo'].get('summary', "")).encode("utf-8").strip()
-                sev = get_unicode_string(note['threatInfo']['score']).encode("utf-8").strip()
-                device_name = get_unicode_string(note['deviceInfo']['deviceName']).encode("utf-8").strip()
-                email = get_unicode_string(note['deviceInfo']['email']).encode("utf-8").strip()
-                src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0")).encode("utf-8").strip()
-                kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature, "sev": sev,
-                                "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
-                                "identHostName": device_name, "summary": summary})
+                kvpairs['cat'] = "THREAT"
+                kvpairs['incidentId'] = note['threatInfo'].get("incidentId", "")
+                kvpairs['summary'] = get_unicode_string(note['threatInfo'].get('summary', ""))
+                kvpairs['sev'] = get_unicode_string(note['threatInfo']['score'])
+                kvpairs['deviceId'] = get_unicode_string(note['deviceInfo']['deviceId'])
+                kvpairs['deviceType'] = get_unicode_string(note['deviceInfo']['deviceType'])
+                kvpairs['resource'] = get_unicode_string(note['deviceInfo']['deviceName'])
+                kvpairs['realm'] = get_unicode_string(note['deviceInfo']['groupName'])
+                kvpairs['identSrc'] = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
+                kvpairs['identHostName'] = get_unicode_string(note['deviceInfo'].get('deviceHostName', ""))
+                kvpairs['targetPriorityType'] = get_unicode_string(note['deviceInfo']['targetPriorityType'])
 
-            elif note.get('type', "noType") == 'POLICY_ACTION' or note.get("policyAction", False):
-                severity = 1
-                summary = get_unicode_string(note['policyAction'].get('summary', '')).encode("utf-8").strip()
-                device_name = get_unicode_string(note['deviceInfo']['deviceName']).encode("utf-8").strip()
-                email = get_unicode_string(note['deviceInfo']['email']).encode("utf-8").strip()
-                src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0")).encode("utf-8").strip()
-                sha256 = get_unicode_string(note['policyAction']['sha256Hash']).encode("utf-8").strip()
-                action = note.get('policyAction', {}).get('action', None)
-                current_notification_leef_header += "|" + (
-                    get_unicode_string(action).encode("utf-8").strip() if action else
-                    "POLICY_ACTION") + "|" + hex_sep + "|"
-                app_name = get_unicode_string(note['policyAction']['applicationName']).encode("utf-8").strip()
-                reputation = get_unicode_string(note['policyAction'].get('reputation', "")).encode("utf-8").strip()
-                url = get_unicode_string(note['url']).encode("utf-8").strip()
-                kvpairs.update({"cat": "POLICY_ACTION", "sev": severity, "type": "POLICY_ACTION", "action": action,
-                                "reputation": reputation, "resource": device_name, "email": email, "src": src,
-                                "dst": src, "identSrc": src, "identHostName": device_name, "summary": summary,
-                                "sha256Hash": sha256, "applicationName": app_name, "url": url})
+                for indicator in note['threatInfo'].get("indicators", []):
+                    indicator["sev"] = kvpairs['incidentId']
+                    indicator["cat"] = "INDICATOR"
+                    indicator["incidentId"] = kvpairs['incidentId']
 
-            elif note.get('type', "noType") == 'THREAT_HUNTER':
+                    indicator_header = leef_header + "|{0}|{1}|".format('INDICATOR', hex_sep)
+                    indicator_log = indicator_header + "\t".join(
+                        ["{0}={1}".format(k, indicator[k]) for k in indicator])
+                    log_messages.append(indicator_log.encode("utf-8"))
 
-                current_notification_leef_header += "|{0}|{1}|".format("THREAT", hex_sep)
-                cat = "THREAT_HUNTER"
+            elif note.get('type', None) == 'POLICY_ACTION' or note.get("policyAction", False):
+                current_notification_leef_header += "|{0}|{1}|".format("POLICY_ACTION", hex_sep)
+                kvpairs['cat'] = "POLICY_ACTION"
+                kvpairs['sev'] = policy_action_severity
+                kvpairs['summary'] = get_unicode_string(note['policyAction'].get('summary', ""))
+                kvpairs['deviceId'] = get_unicode_string(note['deviceInfo']['deviceId'])
+                kvpairs['deviceType'] = get_unicode_string(note['deviceInfo']['deviceType'])
+                kvpairs['resource'] = get_unicode_string(note['deviceInfo']['deviceName'])
+                kvpairs['realm'] = get_unicode_string(note['deviceInfo']['groupName'])
+                kvpairs['identSrc'] = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
+                kvpairs['identHostName'] = get_unicode_string(note['deviceInfo'].get('deviceHostName', ""))
+                kvpairs['targetPriorityType'] = get_unicode_string(note['deviceInfo']['targetPriorityType'])
 
-                indicators = note['threatHunterInfo'].get('indicators', [])
-                kvpairs.update(note.get("deviceInfo", {}))
-                kvpairs.update({"incidentId": note['threatHunterInfo'].get("incidentId", "noIncidentId")})
-                signature = 'Threat_Hunter'
-                summary = get_unicode_string(note['threatHunterInfo'].get('summary', "")).encode("utf-8").strip()
-                sev = get_unicode_string(note['threatHunterInfo']['score']).encode("utf-8").strip()
-                device_name = get_unicode_string(note['deviceInfo']['deviceName']).encode("utf-8").strip()
-                email = get_unicode_string(note['deviceInfo']['email']).encode("utf-8").strip()
-                src = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0")).encode("utf-8").strip()
-                sha256 = get_unicode_string(note["threatHunterInfo"]['sha256']).encode("utf-8").strip()
-                reputation = get_unicode_string(note['threatHunterInfo'].get('reputation', "")).encode("utf-8").strip()
-                url = get_unicode_string(note['url']).encode("utf-8").strip()
+                kvpairs['sha256'] = get_unicode_string(note['policyAction']['sha256Hash'])
+                kvpairs['action'] = get_unicode_string(note['policyAction']['action'])
+                kvpairs['applicationName'] = get_unicode_string(note['policyAction']['applicationName'])
+                kvpairs['reputation'] = get_unicode_string(note['policyAction'].get('reputation', ""))
 
-                kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature, "sev": sev,
-                                "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
-                                "identHostName": device_name, "summary": summary, "sha256Hash": sha256,
-                                "reputation": reputation})
+            elif note.get('type', None) == 'THREAT_HUNTER':
+
+                current_notification_leef_header += "|{0}|{1}|".format("THREAT_HUNTER", hex_sep)
+                kvpairs['cat'] = "THREAT_HUNTER"
+                kvpairs['incidentId'] = note['threatInfo'].get("incidentId", "")
+                kvpairs['sev'] = get_unicode_string(note['threatHunterInfo']['score'])
+                kvpairs['summary'] = get_unicode_string(note['threatHunterInfo'].get('summary', ""))
+                kvpairs['deviceId'] = get_unicode_string(note['deviceInfo']['deviceId'])
+                kvpairs['deviceType'] = get_unicode_string(note['deviceInfo']['deviceType'])
+                kvpairs['resource'] = get_unicode_string(note['deviceInfo']['deviceName'])
+                kvpairs['realm'] = get_unicode_string(note['deviceInfo']['groupName'])
+                kvpairs['identSrc'] = get_unicode_string(note['deviceInfo'].get('internalIpAddress', "0.0.0.0"))
+                kvpairs['identHostName'] = get_unicode_string(note['deviceInfo'].get('deviceHostName', ""))
+                kvpairs['targetPriorityType'] = get_unicode_string(note['deviceInfo']['targetPriorityType'])
+
+                kvpairs['reputation'] = get_unicode_string(note['threatHunterInfo'].get('reputation', ""))
+                kvpairs["watchlists"] = ""
+                for watchlist in note['threatHunterInfo'].get("watchLists", []):
+                    kvpairs["watchlists"] = watchlist["name"] + ", " + kvpairs["watchlists"]
+                kvpairs["watchlists"] = kvpairs["watchlists"][:-2]
+                kvpairs['reportName'] = get_unicode_string(note['threatHunterInfo']['reportName'])
+                kvpairs['sha256'] = get_unicode_string(note['threatHunterInfo']['sha256'])
+                kvpairs['runState'] = get_unicode_string(note['threatHunterInfo']['runState'])
+                kvpairs['processGuid'] = get_unicode_string(note['threatHunterInfo']['processGuid'])
+                kvpairs['processPath'] = get_unicode_string(note['threatHunterInfo']['processPath'])
+
+                for indicator in note['threatHunterInfo'].get("indicators", []):
+                    indicator["sev"] = kvpairs['incidentId']
+                    indicator["cat"] = "INDICATOR"
+                    indicator["incidentId"] = kvpairs['incidentId']
+
+                    indicator_header = leef_header + "|{0}|{1}|".format('INDICATOR', hex_sep)
+                    indicator_log = indicator_header + "\t".join(
+                        ["{0}={1}".format(k, indicator[k]) for k in indicator])
+                    log_messages.append(indicator_log.encode("utf-8"))
 
             else:
+                # Unknown notification type
                 continue
 
-            log_messages.append(
-                current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]))
-
-            for indicator in indicators:
-                indicator_name = indicator['indicatorName']
-                indicator_header = leef_header + "|{0}|{1}|".format(indicator_name, hex_sep)
-                indicator_dict = indicator_header + "\t".join(
-                    ["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]) + "\t" + "\t".join(
-                    ["{0}={1}".format(k, indicator[k]) for k in indicator])
-                log_messages.append(indicator_dict)
+            leef_log = current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs])
+            log_messages.append(leef_log.encode("utf-8"))
 
     return log_messages
 
 
-def parse_notification_cef(response, source, get_unicode_string):
+def parse_notification_cef(response, source, get_unicode_string, policy_action_severity=1):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'
     dev_version = '2.0'
     splitDomain = True
-    policy_action_severity = '1'
 
     log_messages = []
 
