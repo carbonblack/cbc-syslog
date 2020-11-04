@@ -8,12 +8,13 @@ logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
-def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, proxies=None):
+def audit_log_server_request(url, api_key_query, api_connector_id_query, ssl_verify, proxies=None):
+    logger.info("Attempting to connect to url: " + url)
+
     headers = {'X-Auth-Token': "{0}/{1}".format(api_key_query, api_connector_id_query)}
     try:
         response = requests.get("{0}/integrationServices/v3/auditlogs".format(url),
-                                headers=headers,
-                                timeout=15, proxies=proxies)
+                                headers=headers, timeout=15, verify=ssl_verify, proxies=proxies)
 
         if response.status_code != 200:
             logger.error("Could not retrieve audit logs: {0}".format(response.status_code))
@@ -21,24 +22,19 @@ def get_audit_logs(url, api_key_query, api_connector_id_query, ssl_verify, proxi
 
         notifications = response.json()
 
+        if not notifications.get("success", False):
+            logger.error("Unsuccessful HTTP response retrieving audit logs: {0}"
+                         .format(notifications.get("message")))
+            return None
+
     except Exception as e:
-        logger.error("Exception {0} when retrieving audit logs".format(get_unicode_string(e)), exc_info=True)
-        return None
-
-    if notifications.get("success", False) != True:
-        logger.error("Unsuccessful HTTP response retrieving audit logs: {0}"
-                     .format(notifications.get("message")))
-        return None
-
-    notifications = notifications.get("notifications", [])
-    if not notifications:
-        logger.info("No audit logs available")
+        logger.error("Exception {0} when retrieving audit logs".format(e), exc_info=True)
         return None
 
     return response
 
 
-def parse_response_cef(response, source, get_unicode_string):
+def parse_audit_log_cef(response, source, get_unicode_string):
     version = 'CEF:0'
     vendor = 'CarbonBlack'
     product = 'CbDefense_Syslog_Connector'
@@ -97,59 +93,42 @@ def parse_response_cef(response, source, get_unicode_string):
     return log_messages
 
 
-def parse_response_leef(response, source, get_unicode_string):
+def parse_audit_log_leef(response, source, get_unicode_string):
     # LEEF: 2.0 | Vendor | Product | Version | EventID | xa6 |
     version = 'LEEF:2.0'
     vendor = 'CarbonBlack'
     product = 'CbDefense'
     dev_version = '0.1'
     hex_sep = "x09"
-    splitDomain = True
 
     leef_header = '|'.join([version, vendor, product, dev_version])
     log_messages = []
 
+    for audit in response['notifications']:
 
-    for audits in response['notifications']:
-        severity = 1
-
-        indicators = []
         current_notification_leef_header = leef_header
-        eventId = get_unicode_string(audits.get('eventId')).encode("utf-8").strip()
-        kvpairs = {"eventId": eventId}
-        devTime = audits.get("eventTime", 0)
-        devTime = time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(devTime / 1000))
-        devTimeFormat = "MMM dd yyyy HH:mm:ss z"
-        url = audits.get("requestUrl", "noUrlProvided")
-        app_name = get_unicode_string('Syslog').encode("utf-8").strip()
-        kvpairs.update({"devTime": devTime, "devTimeFormat": devTimeFormat, "url": url})
+        kvpairs = {"eventId": get_unicode_string(audit.get('eventId'))}
+        kvpairs['devTime'] = time.strftime('%b-%d-%Y %H:%M:%S GMT', time.gmtime(audit.get("eventTime", 0) / 1000))
+        kvpairs['devTimeFormat'] = "MMM dd yyyy HH:mm:ss z"
 
-        current_notification_leef_header += "|{0}|{1}|".format("PSC", hex_sep)
-        cat = "PSC"
-        indicators = audits.get('indicators', [])
-        signature = 'Active_Threat'
-        summary = get_unicode_string(audits.get('summary', "")).encode("utf-8").strip()
-        device_name = get_unicode_string(audits['orgName']).encode("utf-8").strip()
-        email = get_unicode_string(audits['loginName']).encode("utf-8").strip()
-        src = get_unicode_string(audits.get('internalIpAddress', "0.0.0.0")).encode("utf-8").strip()
-        kvpairs.update({"cat": cat, "url": url, "type": "THREAT", "signature": signature,
-                        "resource": device_name, "email": email, "src": src, "identSrc": src, "dst": src,
-                        "identHostName": device_name, "summary": summary})
+        current_notification_leef_header += "|{0}|{1}|".format("AUDIT", hex_sep)
+        kvpairs['cat'] = "AUDIT"
+        kvpairs['loginName'] = get_unicode_string(audit.get('loginName'))
+        kvpairs['orgName'] = get_unicode_string(audit.get('orgName'))
+        kvpairs['src'] = get_unicode_string(audit.get('clientIp'))
 
-        log_messages.append(
-            current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]))
+        kvpairs["summary"] = audit.get("description", "<unknown>")
+        if len(kvpairs["summary"]) > 1000:
+            kvpairs["summary"] = kvpairs["summary"][:1000] + ' [truncated]'
 
-        for indicator in indicators:
-            indicator_name = indicator['indicatorName']
-            indicator_header = leef_header + "|{0}|{1}|".format(indicator_name, hex_sep)
-            indicator_dict = indicator_header + "\t".join(
-                ["{0}={1}".format(k, kvpairs[k]) for k in kvpairs]) + "\t" + "\t".join(
-                ["{0}={1}".format(k, indicator[k]) for k in indicator])
-            log_messages.append(indicator_dict)
+        audit_log = current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs])
+
+        log_messages.append(audit_log)
 
     return log_messages
 
-def parse_response_json(response, source, get_unicode_string):
+
+def parse_audit_log_json(response, source, get_unicode_string):
 
     for notification in response[u'notifications']:
         notification['type'] = 'AUDIT'

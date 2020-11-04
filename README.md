@@ -20,11 +20,13 @@ Use the [Developer Community Forum](https://community.carbonblack.com/t5/user/us
 * [Python 2.7 running on a 64-bit Intel platform](https://www.python.org/download/releases/2.7/)
 * [pip](https://pip.pypa.io/en/stable/installing/)
 * [Jinja2](https://pypi.org/project/Jinja2/)
-* [MarkupSafe](https://pypi.org/project/MarkupSafe/1.1.1/)
 * [requests](https://pypi.org/project/requests/2.22.0/)
-* [Flask](https://pypi.org/project/Flask/1.1.1/)
 * [psutil](https://pypi.org/project/psutil/5.7.0/)
 
+### Test Requirements
+
+* [Flask](https://pypi.org/project/Flask/1.1.1/)
+* [Pytest](https://pypi.org/project/pytest/6.0.1)
 
 ## Installation
 
@@ -72,15 +74,15 @@ in Step 3.
 6. Test the new connector and run the following command:
 
     ```
-    python cb_defense_syslog.py -l [LOG_FILE_LOCATION] -c [CONFIG_FILE_LOCATION]
+    python cbc_syslog.py -l [LOG_FILE_LOCATION] -c [CONFIG_FILE_LOCATION]
     ```
 
     A successful run will look like:
 
     ```
-    INFO:__main__:CB Defense Syslog 1.0
+    INFO:__main__:Carbon Black Cloud Syslog 2.0
     INFO:__main__:Number of files in store forward: 0
-    INFO:__main__:Found 2 Cb Defense Servers in config file
+    INFO:__main__:Found 2 Carbon Black Cloud Servers in config file
     INFO:__main__:Handling notifications for https://defense-test03.cbdtest.io
     INFO:notifications:Attempting to connect to url: https://defense-test03.cbdtest.io
     INFO:notifications:<Response [200]>
@@ -153,7 +155,7 @@ sudo docker container run -it <containerId> /bin/bash
     #
     # Template for syslog output.
     # This is a jinja 2 template
-    # NOTE: The source variable corresponds to the Cb Defense Server used to retrieve results
+    # NOTE: The source variable corresponds to the Carbon Black Cloud Server used to retrieve results
     #
     template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
 
@@ -227,26 +229,26 @@ sudo docker container run -it <containerId> /bin/bash
     # Override ca file for self signed certificates when using https
     # This is typically a .pem file
     #
-    #requests_ca_cert=/usr/share/cb/integrations/cb-defense-syslog/cert.pem
+    #requests_ca_cert=/usr/share/cb/integrations/cbc-syslog/cert.pem
 
     [tls]
 
     #
     # Specify a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog
     #
-    #ca_cert = /etc/cb/integrations/cb-defense/ca.pem
+    #ca_cert = /etc/cb/integrations/cbc-syslog/ca.pem
 
     #
     # Optionally specify a file containing PEM-encoded client certificate for verifying this client when using TLS+TCP syslog
     # If cert is specified, key is a required parameter
     #
-    #cert = /etc/cb/integrations/cb-defense/cert.pem
+    #cert = /etc/cb/integrations/cbc-syslog/cert.pem
 
     #
     # Optionally specify a file containing PEM-encoded private key for verifying this client when using TLS+TCP syslog
     # If key is specified, cert is a required parameter
     #
-    #key = /etc/cb/integrations/cb-defense/cert.key
+    #key = /etc/cb/integrations/cbc-syslog/cert.key
 
     #
     # Optionally specify the password to decrypt the given private key when using TLS+TCP syslog
@@ -258,40 +260,38 @@ sudo docker container run -it <containerId> /bin/bash
     #
     #tls_verify = true
 
-    [cbdefense1]
+    [CarbonBlackCloudServer1]
 
     #
-    # Cb Defense API Connector ID
+    # Carbon Black Cloud API Connector ID
     #
     api_connector_id = GO5M953111
 
     #
-    # Cb Defense API Key
+    # Carbon Black Cloud API Key
     #
     api_key = BYCRM7BRNSH0CXZR5V1Y3111
 
     #
-    # Cb Defense SIEM Connector ID
+    # Carbon Black Cloud SIEM Connector ID
     #
     siem_connector_id = UEUWR4U111
 
     #
-    # Cb Defense SIEM Key
+    # Carbon Black Cloud SIEM Key
     #
     siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
 
     #
-    # Cb Defense Server URL
+    # Carbon Black Cloud Server URL
     # NOTE: this is not the url to the web ui, but to the API URL (for example, https://api-prod05.conferdeploy.net)
     #
     server_url = https://server1.yourcompany.com
 
     #
-    # For more than one Cb Defense Server, add another server using the following template including the stanza
+    # For more than one Carbon Black Cloud Server, add another server using the following template including the stanza
     #
-    #[cbdefenseserver2]
+    #[CarbonBlackCloudServer2]
     #api_connector_id = KJARWBZ111
     #api_key = CQF35EIH2WDF69PTWKGC4111
-    #siem_connector_id = UEUWR4U111
-    #siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
     #server_url = https://server2.yourcompany.com

@@ -3,7 +3,7 @@
 #
 # Template for syslog output.
 # This is a jinja 2 template
-# NOTE: The source variable corresponds to the Cb Defense Server used to retrieve results
+# NOTE: The source variable corresponds to the Carbon Black Cloud Server used to retrieve results
 #
 template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
 
@@ -77,26 +77,26 @@ https_ssl_verify=True
 # Override ca file for self signed certificates when using https
 # This is typically a .pem file
 #
-#requests_ca_cert=/usr/share/cb/integrations/cb-defense-syslog/cert.pem
+#requests_ca_cert=/usr/share/cb/integrations/cbc-syslog/cert.pem
 
 [tls]
 
 #
 # Specify a file containing PEM-encoded CA certificates for verifying the peer server when using TLS+TCP syslog
 #
-#ca_cert = /etc/cb/integrations/cb-defense/ca.pem
+#ca_cert = /etc/cb/integrations/cbc-syslog/ca.pem
 
 #
 # Optionally specify a file containing PEM-encoded client certificate for verifying this client when using TLS+TCP syslog
 # If cert is specified, key is a required parameter
 #
-#cert = /etc/cb/integrations/cb-defense/cert.pem
+#cert = /etc/cb/integrations/cbc-syslog/cert.pem
 
 #
 # Optionally specify a file containing PEM-encoded private key for verifying this client when using TLS+TCP syslog
 # If key is specified, cert is a required parameter
 #
-#key = /etc/cb/integrations/cb-defense/cert.key
+#key = /etc/cb/integrations/cbc-syslog/cert.key
 
 #
 # Optionally specify the password to decrypt the given private key when using TLS+TCP syslog
@@ -108,38 +108,38 @@ https_ssl_verify=True
 #
 #tls_verify = true
 
-[cbdefense1]
+[CarbonBlackCloudServer1]
 
 #
-# Cb Defense API Connector ID
+# Carbon Black Cloud API Connector ID
 #
 api_connector_id = GO5M953111
 
 #
-# Cb Defense API Key
+# Carbon Black Cloud API Key
 #
 api_key = BYCRM7BRNSH0CXZR5V1Y3111
 
 #
-# Cb Defense SIEM Connector ID
+# Carbon Black Cloud SIEM Connector ID
 #
 siem_connector_id = UEUWR4U111
 
 #
-# Cb Defense SIEM Key
+# Carbon Black Cloud SIEM Key
 #
 siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
 
 #
-# Cb Defense Server URL
+# Carbon Black Cloud Server URL
 # NOTE: this is not the url to the web ui, but to the API URL (for example, https://api-prod05.conferdeploy.net)
 #
 server_url = https://server1.yourcompany.com
 
 #
-# For more than one Cb Defense Server, add another server using the following template including the stanza
+# For more than one Carbon Black Cloud Server, add another server using the following template including the stanza
 #
-#[cbdefenseserver2]
+#[CarbonBlackCloudServer2]
 #api_connector_id = KJARWBZ111
 #api_key = CQF35EIH2WDF69PTWKGC4111
 #server_url = https://server2.yourcompany.com

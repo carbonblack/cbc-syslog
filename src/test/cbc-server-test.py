@@ -1,5 +1,3 @@
-from flask import Flask, request, jsonify
-from test_data import test_data
 import threading
 import socket
 import ssl
@@ -7,6 +5,10 @@ import traceback
 import json
 import pprint
 import logging
+
+from flask import Flask, request, jsonify
+from test_data import raw_notifications
+from test_data_audit import test_data_audit
 
 logging.basicConfig(level=logging.INFO)
 
@@ -26,7 +28,7 @@ def http_out():
     try:
         content = request.json
         logger.info(content)
-    except:
+    except Exception:
         logger.info(traceback.format_exc())
     return jsonify({})
 
@@ -39,56 +41,43 @@ def session():
 @app.route('/integrationServices/v3/notification', methods=['GET', 'POST'])
 def notificationv3():
     try:
-        #
-        # Yes str vs json since this emulates what the Cb Defense returns
-        #
-        # list_data = test_data["notifications"]
-
-        # for i in range(1):
-        #    test_data["notifications"].extend(list_data)
-
-        print len(test_data["notifications"])
-        return jsonify(test_data)
-    except Exception as e:
+        return jsonify(raw_notifications)
+    except Exception:
         traceback.print_exc()
         return jsonify({})
 
 
-@app.route('/integrationServices/v2/notification', methods=['GET', 'POST'])
-def notificationv2():
-    #
-    # Yes str vs json since this emulates what the Cb Defense returns
-    #
-    list_data = test_data["notifications"]
-
-    for i in range(1):
-        test_data["notifications"].extend(list_data)
-    return jsonify(test_data)
-
-    # return jsonify({})
+@app.route('/integrationServices/v3/auditlogs', methods=['GET', 'POST'])
+def audit_logsv3():
+    try:
+        return jsonify(test_data_audit)
+    except Exception:
+        traceback.print_exc()
+        return jsonify({})
 
 
 class FuncThread(threading.Thread):
     def __init__(self, target, *args):
+        threading.Thread.__init__(self)
         self._target = target
         self._args = args
-        threading.Thread.__init__(self)
 
     def run(self):
+        print(type(self._target))
         self._target(*self._args)
 
 
 def udp_server():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_address = ('0.0.0.0', udp_server_port)
-    print "udp_server is listening on port {}".format(udp_server_port)
+    print("udp_server is listening on port {}".format(udp_server_port))
     sock.bind(server_address)
 
     while True:
         data, address = sock.recvfrom(4096)
-        print address
-        print len(data)
-        print repr(data)
+        print(address)
+        print(len(data))
+        print(repr(data))
 
 
 def tcp_server():
@@ -96,20 +85,20 @@ def tcp_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('0.0.0.0', tcp_server_port))
     server_socket.listen(1)
-    print "tcp_server is listening on port {}".format(tcp_server_port)
+    print("tcp_server is listening on port {}".format(tcp_server_port))
 
     while True:
         new_client_socket, address = server_socket.accept()
 
         secured_client_socket = new_client_socket
 
-        print new_client_socket, address
+        print(new_client_socket, address)
         buffer = secured_client_socket.recv(4096)
-        print len(buffer)
+        print(len(buffer))
         try:
             pprint.pprint(json.loads(buffer))
-        except:
-            print buffer
+        except Exception:
+            print(buffer)
             pass
         secured_client_socket.close()
 
@@ -119,7 +108,7 @@ def tcp_tls_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('0.0.0.0', tcp_tls_server_port))
     server_socket.listen(1)
-    print "tcp_tls_server is listening on port {}".format(tcp_tls_server_port)
+    print("tcp_tls_server is listening on port {}".format(tcp_tls_server_port))
 
     while True:
         new_client_socket, address = server_socket.accept()
@@ -130,10 +119,10 @@ def tcp_tls_server():
                                                 keyfile=key_file,
                                                 ssl_version=ssl.PROTOCOL_TLSv1)
 
-        print new_client_socket, address
+        print(new_client_socket, address)
         buffer = secured_client_socket.recv()
-        print len(buffer)
-        print repr(buffer)
+        print(len(buffer))
+        print(repr(buffer))
         secured_client_socket.close()
 
 
