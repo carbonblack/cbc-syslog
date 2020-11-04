@@ -4,4 +4,4 @@ MAINTAINER cb-developer-network@vmware.com
 COPY . /app
 WORKDIR /app
 
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r src/test/requirements.txt
