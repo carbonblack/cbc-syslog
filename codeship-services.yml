@@ -1,0 +1,11 @@
+testingpython27:
+  build:
+    dockerfile: ./docker/python2.7/Dockerfile
+
+testingpython36:
+  build:
+    dockerfile: ./docker/python3.6/Dockerfile
+
+testingpython37:
+  build:
+    dockerfile: ./docker/python3.7/Dockerfile

@@ -17,11 +17,11 @@ Use the [Developer Community Forum](https://community.carbonblack.com/t5/user/us
 ### Requirements
 
 * CB Defense or CB ThreatHunter
-* [Python 2.7 running on a 64-bit Intel platform](https://www.python.org/download/releases/2.7/)
+* [Python 2.7 or Python 3 running on a 64-bit Intel platform](https://www.python.org/downloads/)
 * [pip](https://pip.pypa.io/en/stable/installing/)
 * [Jinja2](https://pypi.org/project/Jinja2/)
-* [requests](https://pypi.org/project/requests/2.22.0/)
-* [psutil](https://pypi.org/project/psutil/5.7.0/)
+* [requests](https://pypi.org/project/requests/2.24.0/)
+* [psutil](https://pypi.org/project/psutil/5.7.3/)
 
 ### Test Requirements
 
@@ -36,9 +36,17 @@ You can install the Syslog Connector using either PyPI or GitHub.
 
 1. Run the following command in your terminal: `pip install cbc-syslog`
 
-2. Navigate to the Python 2.7 package location:
+2. Navigate to the Python package location:
+
+    Python {Version}
+    MacOS: `/python{version}/site-packages/cbc_syslog`
+    Windows: `C:\Python{version}\Lib\site-packages\cbc_syslog`
+    Linux: `/usr/lib/python{version}/site-packages/cbc_syslog`
+
+    Python 2.7
     MacOS: `/python2.7/site-packages/cbc_syslog`
     Windows: `C:\Python27\Lib\site-packages\cbc_syslog`
+    Linux: `/usr/lib/python2.7/site-packages/cbc_syslog`
 
 3. Copy and paste the Configuration File example shown below into your own `.conf` file and modify it to your own
 specifications. Below is a table of all the configurable inputs that can be used in the syslog connector.
@@ -83,16 +91,6 @@ in Step 3.
     INFO:__main__:Carbon Black Cloud Syslog 2.0
     INFO:__main__:Number of files in store forward: 0
     INFO:__main__:Found 2 Carbon Black Cloud Servers in config file
-    INFO:__main__:Handling notifications for https://defense-test03.cbdtest.io
-    INFO:notifications:Attempting to connect to url: https://defense-test03.cbdtest.io
-    INFO:notifications:<Response [200]>
-    INFO:notifications:successfully connected, no alerts at this time
-    INFO:__main__:Sending Notifications
-    INFO:__main__:There are no messages to forward to host
-    INFO:__main__:Done Sending Notifications
-    INFO:__main__:Sending Audit Logs
-    INFO:__main__:Sending 18 messages to 00.00.000.00:000
-    INFO:__main__:Done Sending Audit Logs
     INFO:__main__:Handling notifications for https://defense-eap01.conferdeploy.net
     INFO:notifications:Attempting to connect to url: https://defense-eap01.conferdeploy.net
     INFO:notifications:<Response [200]>
@@ -136,7 +134,7 @@ Python 2.7.5
 ### Using Docker
 This assumes that docker is installed in your environments.  See https://www.docker.com/ for more information
 
-1. Build the docker container: 
+1. Build the docker container:
 ```
 sudo docker build -f src/Dockerfile .
 ```
