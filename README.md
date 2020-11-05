@@ -137,7 +137,7 @@ This assumes that docker is installed in your environments.  See https://www.doc
 
 1. Build the docker container:
 ```
-sudo docker build -f src/Dockerfile .
+sudo docker build -f docker/Dockerfile .
 ```
 The last line will be "Successfully built <container Id>".  Take note of the container id to connect to it.
 
