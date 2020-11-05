@@ -121,7 +121,8 @@ def parse_audit_log_leef(response, source, get_unicode_string):
         if len(kvpairs["summary"]) > 1000:
             kvpairs["summary"] = kvpairs["summary"][:1000] + ' [truncated]'
 
-        audit_log = current_notification_leef_header + "\t".join(["{0}={1}".format(k, kvpairs[k]) for k in kvpairs])
+        audit_log = current_notification_leef_header + "\t".join(
+            ["{0}={1}".format(k, kvpairs[k]) for k in sorted(kvpairs.keys())])
 
         log_messages.append(audit_log)
 
