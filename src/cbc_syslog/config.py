@@ -155,16 +155,16 @@ def verify_config(config):
         output_params['http_headers'] = {'content-type': 'application/json'}
         if config.has_option('general', 'http_headers'):
             try:
-                headers = config.get('general', 'http_headers').strip()  # Get the headers from config file
-                headers = ast.literal_eval(headers)                      # Convert the str to a dict
-                output_params['http_headers'] = json.dumps(headers)      # Convert the dict to JSON
+                headers = config.get('general', 'http_headers').strip()    # Get the headers from config file
+                output_params['http_headers'] = ast.literal_eval(headers)  # Convert the str to a dict
             except Exception as e:
                 logger.error(str(e))
                 logger.error("Invalid http_headers: unable to parse JSON")
                 sys.exit(-1)
 
         if config.has_option('general', 'https_ssl_verify'):
-            output_params['https_ssl_verify'] = bool(config.get('general', 'https_ssl_verify'))
+            output_params['https_ssl_verify'] = False if \
+                config.get('general', 'https_ssl_verify') in ['False', 'false', '0'] else True
         else:
             output_params['https_ssl_verify'] = True
 
