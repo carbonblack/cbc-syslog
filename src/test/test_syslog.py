@@ -21,10 +21,10 @@ else:
     get_unicode_string = str
 
 
-class TestCbDefenseSyslogConnector(unittest.TestCase):
+class TestCBCSyslogConnector(unittest.TestCase):
 
     def setUp(self):
-        super(TestCbDefenseSyslogConnector, self).setUp()
+        super(TestCBCSyslogConnector, self).setUp()
         self.addTypeEqualityFunc(str, self.assertMultiLineEqual)
         self.addTypeEqualityFunc(dict, self.assertDictEqual)
         self.addTypeEqualityFunc(list, self.assertListEqual)
