@@ -80,7 +80,11 @@ def verify_config(config):
 
     output_params['output_type'] = output_type
     output_params['output_format'] = output_format
-    output_params['policy_action_severity'] = config.get('general', 'policy_action_severity', fallback=1)
+
+    try:
+        output_params['policy_action_severity'] = config.get('general', 'policy_action_severity')
+    except Exception:
+        output_params['policy_action_severity'] = 1
 
     if output_type == 'tcp':
         if not config.has_option('general', 'tcp_out'):
@@ -126,7 +130,11 @@ def verify_config(config):
         else:
             output_params['tls_cert'] = config.get('tls', 'cert')
             output_params['tls_key'] = config.get('tls', 'key')
-            output_params['tls_key_password'] = config.get('tls', 'key_password', fallback=None)
+
+            try:
+                output_params['tls_key_password'] = config.get('tls', 'key_password')
+            except Exception:
+                output_params['tls_key_password'] = None
 
         try:
             output_params['tls_verify'] = config.getboolean('tls', 'tls_verify')
