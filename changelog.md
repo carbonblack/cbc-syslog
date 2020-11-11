@@ -74,7 +74,7 @@ ThreatHunter notifications are now available to be pulled from the Syslog Connec
 ThreatHunter notifications you need to add the API Key as shown below in the configuration file:
 
 
-    cbdefense1]
+    [cbdefense1]
     siem_connector_id = UEUWR4U111
     siem_api_key = XNS5UKWZXZMCC3CYC7DFM111
 
