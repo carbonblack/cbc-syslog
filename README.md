@@ -1,5 +1,4 @@
 # Carbon Black Cloud Syslog Connector
-[![Codeship Status for carbonblack/cbc-syslog](https://app.codeship.com/projects/ca4a7b50-9ac7-4318-ab6f-e30bfe4dec47/status?branch=master)](https://app.codeship.com/projects/417115)
 
 The syslog connector lets administrators forward alert notifications and audit logs from their Carbon Black Cloud instance to local, on-premise systems, and:
 
