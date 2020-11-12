@@ -1,5 +1,12 @@
 # Carbon Black Cloud Syslog Connector
 
+## Breaking Changes with v1.1.0
+
+* Leef format logs have been rewritten to better utilize common variables and include as much information as possible
+* `cb_defense_syslog.py` has been renamed to `cbc_syslog.py`
+* Example config file and cacert have moved from the `cb-defense-syslog` folder to a `cbc-syslog` folder
+* Example cron job file has been renamed to cbc-syslog and uses the new file and folder locations
+
 The syslog connector lets administrators forward alert notifications and audit logs from their Carbon Black Cloud instance to local, on-premise systems, and:
 
 * Generates pipe-delimited syslog messages with alert metadata identified by the streaming prevention system

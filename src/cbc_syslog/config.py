@@ -1,5 +1,4 @@
 import ast
-import json
 import os
 import sys
 
@@ -80,7 +79,11 @@ def verify_config(config):
 
     output_params['output_type'] = output_type
     output_params['output_format'] = output_format
-    output_params['policy_action_severity'] = config.get('general', 'policy_action_severity', fallback=1)
+
+    try:
+        output_params['policy_action_severity'] = config.get('general', 'policy_action_severity')
+    except Exception:
+        output_params['policy_action_severity'] = 1
 
     if output_type == 'tcp':
         if not config.has_option('general', 'tcp_out'):
@@ -126,7 +129,11 @@ def verify_config(config):
         else:
             output_params['tls_cert'] = config.get('tls', 'cert')
             output_params['tls_key'] = config.get('tls', 'key')
-            output_params['tls_key_password'] = config.get('tls', 'key_password', fallback=None)
+
+            try:
+                output_params['tls_key_password'] = config.get('tls', 'key_password')
+            except Exception:
+                output_params['tls_key_password'] = None
 
         try:
             output_params['tls_verify'] = config.getboolean('tls', 'tls_verify')
@@ -155,16 +162,16 @@ def verify_config(config):
         output_params['http_headers'] = {'content-type': 'application/json'}
         if config.has_option('general', 'http_headers'):
             try:
-                headers = config.get('general', 'http_headers').strip()  # Get the headers from config file
-                headers = ast.literal_eval(headers)                      # Convert the str to a dict
-                output_params['http_headers'] = json.dumps(headers)      # Convert the dict to JSON
+                headers = config.get('general', 'http_headers').strip()    # Get the headers from config file
+                output_params['http_headers'] = ast.literal_eval(headers)  # Convert the str to a dict
             except Exception as e:
                 logger.error(str(e))
                 logger.error("Invalid http_headers: unable to parse JSON")
                 sys.exit(-1)
 
         if config.has_option('general', 'https_ssl_verify'):
-            output_params['https_ssl_verify'] = bool(config.get('general', 'https_ssl_verify'))
+            output_params['https_ssl_verify'] = False if \
+                config.get('general', 'https_ssl_verify') in ['False', 'false', '0'] else True
         else:
             output_params['https_ssl_verify'] = True
 
