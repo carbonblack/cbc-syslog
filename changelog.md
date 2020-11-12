@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Version 1.1.0
+## Version 1.3.0
 
 **Breaking Changes:**
 * Leef output has been rewritten to better utilize common properties and include as much information as possible
