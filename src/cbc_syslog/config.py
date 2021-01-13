@@ -20,7 +20,7 @@ def parse_config(config_file):
     """
     try:
         config = ConfigParser()
-        config.readfp(open(config_file))
+        config.read_file(open(config_file))
     except Exception as e:
         logging.error(e, exc_info=True)
         logger.error("Error parsing config file")
