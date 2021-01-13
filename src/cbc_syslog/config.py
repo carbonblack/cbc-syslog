@@ -2,6 +2,7 @@ import ast
 import os
 import sys
 
+from six import PY2
 from six.moves.configparser import ConfigParser
 
 import logging
@@ -20,7 +21,11 @@ def parse_config(config_file):
     """
     try:
         config = ConfigParser()
-        config.read_file(open(config_file))
+        if PY2:
+            config.readfp(open(config_file))
+        else:
+            config.read_file(open(config_file))
+
     except Exception as e:
         logging.error(e, exc_info=True)
         logger.error("Error parsing config file")
