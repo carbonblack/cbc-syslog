@@ -2,8 +2,8 @@ import ast
 import os
 import sys
 
-from cbc_syslog.six import PY2
-from cbc_syslog.six.moves.configparser import ConfigParser
+from .six import PY2
+from .six.moves.configparser import ConfigParser
 
 import logging
 import logging.handlers
