@@ -1,13 +1,13 @@
-from six import PY2
-from audit_log import (audit_log_server_request,
-                       parse_audit_log_json,
-                       parse_audit_log_cef,
-                       parse_audit_log_leef)
+from cbc_syslog.six import PY2
+from cbc_syslog.audit_log import (audit_log_server_request,
+                                  parse_audit_log_json,
+                                  parse_audit_log_cef,
+                                  parse_audit_log_leef)
 
-from notifications import (notification_server_request,
-                           parse_notification_json,
-                           parse_notification_cef,
-                           parse_notification_leef)
+from cbc_syslog.notifications import (notification_server_request,
+                                      parse_notification_json,
+                                      parse_notification_cef,
+                                      parse_notification_leef)
 
 import logging
 
