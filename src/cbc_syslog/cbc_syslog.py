@@ -4,9 +4,9 @@ import logging
 import logging.handlers
 import psutil
 
-from config import parse_config, verify_config
-from forwarder import send_stored_data, send_new_data
-from parser import fetch_audit_logs, fetch_notification_logs
+from .config import parse_config, verify_config
+from .forwarder import send_stored_data, send_new_data
+from .resource_fetcher import fetch_audit_logs, fetch_notification_logs
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -45,11 +45,11 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--config-file', '-c', help="Absolute path to configuration file")
-    parser.add_argument('--log-file', '-l', help="Log file location")
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument('--config-file', '-c', help="Absolute path to configuration file")
+    argparser.add_argument('--log-file', '-l', help="Log file location")
 
-    args = parser.parse_args()
+    args = argparser.parse_args()
     if not args.config_file:
         logger.error("a config file must be supplied")
         sys.exit(-1)
