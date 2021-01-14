@@ -4,9 +4,9 @@ import logging
 import logging.handlers
 import psutil
 
-from .config import parse_config, verify_config
-from .forwarder import send_stored_data, send_new_data
-from .resource_fetcher import fetch_audit_logs, fetch_notification_logs
+from config import parse_config, verify_config
+from forwarder import send_stored_data, send_new_data
+from resource_fetcher import fetch_audit_logs, fetch_notification_logs
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
