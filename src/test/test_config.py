@@ -3,7 +3,7 @@ import logging.handlers
 import unittest
 import os
 
-from cbc_syslog.config import parse_config, verify_config
+from cbc_syslog.util.config import parse_config, verify_config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

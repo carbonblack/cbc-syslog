@@ -4,9 +4,9 @@ import unittest
 
 from .test_data import raw_notifications, cef_notifications, leef_notifications, json_notifications
 from .test_data_audit import test_data_audit, cef_output_audit, leef_output_audit, json_output_audit
-from cbc_syslog.audit_log import parse_audit_log_json, parse_audit_log_cef, parse_audit_log_leef
-from cbc_syslog.notifications import parse_notification_json, parse_notification_cef, parse_notification_leef
-from cbc_syslog.six import PY2
+from cbc_syslog.util.audit_log import parse_audit_log_json, parse_audit_log_cef, parse_audit_log_leef
+from cbc_syslog.util.notifications import parse_notification_json, parse_notification_cef, parse_notification_leef
+from cbc_syslog.util.six import PY2
 from jinja2 import Template
 
 logger = logging.getLogger(__name__)
