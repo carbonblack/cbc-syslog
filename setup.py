@@ -28,7 +28,7 @@ scripts = ['src/cbc_syslog/root/usr/share/cb/integrations/cbc-syslog/cacert.pem'
 
 setup(
     name='cbc_syslog',
-    version='1.3.0',
+    version='1.3.1',
     package_dir={'': 'src'},
     packages=find_packages(where="src", exclude=["tests.*", "tests"]),
     include_package_data=True,

@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.3.1
+
+**General:**
+* Update to latest jinja2 package
+
+**Bug fixes:**
+* Rename parser file to prevent conflict on windows
+* Reformat package to move files into a util subfolder
+
 ## Version 1.3.0
 
 **Breaking Changes:**

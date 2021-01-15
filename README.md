@@ -1,6 +1,6 @@
 # Carbon Black Cloud Syslog Connector
 
-## Breaking Changes with v1.3.0
+## Breaking Changes with v1.3.1
 
 * Leef format logs have been rewritten to better utilize common variables and include as much information as possible
 * `cb_defense_syslog.py` has been renamed to `cbc_syslog.py`
