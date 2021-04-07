@@ -21,10 +21,12 @@ packages = [
 with io.open('README.md', 'rt', encoding='utf8') as f:
     long_description = f.read()
 
-scripts = ['src/cbc_syslog/root/usr/share/cb/integrations/cbc-syslog/cacert.pem',
-           'src/cbc_syslog/root/etc/cron.d/cbc-syslog',
-           'src/cbc_syslog/root/etc/cb/integrations/cbc-syslog/cbc-syslog.conf.example'
-           ]
+# todo: https://setuptools.readthedocs.io/en/latest/userguide/datafiles.html
+scripts = [
+    'src/cbc_syslog/root/usr/share/cb/integrations/cbc-syslog/cacert.pem',
+    'src/cbc_syslog/root/etc/cron.d/cbc-syslog',
+    'src/cbc_syslog/root/etc/cb/integrations/cbc-syslog/cbc-syslog.conf.example'
+]
 
 setup(
     name='cbc_syslog',
@@ -53,4 +55,7 @@ setup(
         'Programming Language :: Python :: 3',
         ],
     keywords='carbonblack',
-    scripts=scripts)
+    scripts=scripts,
+    entry_points={
+        'console_scripts': ['cbc-syslog-cli=cbc_syslog.cbc_syslog:run_main'],
+    })
