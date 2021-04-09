@@ -45,19 +45,21 @@ You can install the Syslog Connector using either PyPI or GitHub.
 
 1. Run the following command in your terminal: `pip install cbc-syslog`
 
-2. Navigate to the Python package location:
+<!-- 2. Navigate to the Python package location: -->
 
-    Python {Version}
-    MacOS: `/python{version}/site-packages/cbc_syslog`
-    Windows: `C:\Python{version}\Lib\site-packages\cbc_syslog`
-    Linux: `/usr/lib/python{version}/site-packages/cbc_syslog`
+<!--     Python {Version} -->
+<!--     MacOS: `/python{version}/site-packages/cbc_syslog` -->
+<!--     Windows: `C:\Python{version}\Lib\site-packages\cbc_syslog` -->
+<!--     Linux: `/usr/lib/python{version}/site-packages/cbc_syslog` -->
 
-    Python 2.7
-    MacOS: `/python2.7/site-packages/cbc_syslog`
-    Windows: `C:\Python27\Lib\site-packages\cbc_syslog`
-    Linux: `/usr/lib/python2.7/site-packages/cbc_syslog`
+<!--     Python 2.7 -->
+<!--     MacOS: `/python2.7/site-packages/cbc_syslog` -->
+<!--     Windows: `C:\Python27\Lib\site-packages\cbc_syslog` -->
+<!--     Linux: `/usr/lib/python2.7/site-packages/cbc_syslog` -->
 
-3. Copy and paste the Configuration File example shown below into your own `.conf` file and modify it to your own
+# todo: add conf file to data in setup.py. Also, conf file lives in bin due to `scripts` in setup.py
+3. Copy and paste the Configuration File example from {which location}
+into your own `.conf` file and modify it to your own
 specifications. Below is a table of all the configurable inputs that can be used in the syslog connector.
 
     | Input      | Required | Description |     
@@ -302,3 +304,10 @@ sudo docker container run -it <containerId> /bin/bash
     #api_connector_id = KJARWBZ111
     #api_key = CQF35EIH2WDF69PTWKGC4111
     #server_url = https://server2.yourcompany.com
+
+
+## developer installation
+
+## running tests
+
+# what do you do with cbc-server-test.py??
