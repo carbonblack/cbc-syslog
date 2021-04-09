@@ -45,22 +45,21 @@ You can install the Syslog Connector using either PyPI or GitHub.
 
 1. Run the following command in your terminal: `pip install cbc-syslog`
 
-<!-- 2. Navigate to the Python package location: -->
+2. Navigate to the Python package location. This will vary depending on your OS and virtual environment but will commonly be found at:
+```
 
-<!--     Python {Version} -->
-<!--     MacOS: `/python{version}/site-packages/cbc_syslog` -->
-<!--     Windows: `C:\Python{version}\Lib\site-packages\cbc_syslog` -->
-<!--     Linux: `/usr/lib/python{version}/site-packages/cbc_syslog` -->
+    Python {Version}
+    MacOS: `/python{version}/site-packages/cbc_syslog`
+    Windows: `C:\Python{version}\Lib\site-packages\cbc_syslog`
+    Linux: `/usr/lib/python{version}/site-packages/cbc_syslog`
 
-<!--     Python 2.7 -->
-<!--     MacOS: `/python2.7/site-packages/cbc_syslog` -->
-<!--     Windows: `C:\Python27\Lib\site-packages\cbc_syslog` -->
-<!--     Linux: `/usr/lib/python2.7/site-packages/cbc_syslog` -->
+    Python 2.7
+    MacOS: `/python2.7/site-packages/cbc_syslog`
+    Windows: `C:\Python27\Lib\site-packages\cbc_syslog`
+    Linux: `/usr/lib/python2.7/site-packages/cbc_syslog`
+```
+3. Copy and paste the Configuration File example from the directory cbc_syslog_conf_examples into your own `.conf` file and modify it to your own specifications. Below is a table of all the configurable inputs that can be used in the syslog connector.
 
-# todo: add conf file to data in setup.py. Also, conf file lives in bin due to `scripts` in setup.py
-3. Copy and paste the Configuration File example from {which location}
-into your own `.conf` file and modify it to your own
-specifications. Below is a table of all the configurable inputs that can be used in the syslog connector.
 
     | Input      | Required | Description |     
     | ----------- | ----------- | ----------- |
