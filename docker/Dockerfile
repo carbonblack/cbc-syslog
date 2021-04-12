@@ -6,7 +6,7 @@ RUN yum update -y \
   && yum install -y gcc python-devel \
   && yum install -y epel-release \
   && yum install -y python-pip rpm-build \
-  && pip install --upgrade pip \
+  && pip install --upgrade "pip<21.0.0" \
   && pip install pyinstaller==3.5 \
   && mkdir -p \
     /root/build-root \

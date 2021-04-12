@@ -45,20 +45,16 @@ You can install the Syslog Connector using either PyPI or GitHub.
 
 1. Run the following command in your terminal: `pip install cbc-syslog`
 
-2. Navigate to the Python package location. This will vary depending on your OS and virtual environment but will commonly be found at:
-```
-
-    Python {Version}
-    MacOS: `/python{version}/site-packages/cbc_syslog`
-    Windows: `C:\Python{version}\Lib\site-packages\cbc_syslog`
-    Linux: `/usr/lib/python{version}/site-packages/cbc_syslog`
-
-    Python 2.7
-    MacOS: `/python2.7/site-packages/cbc_syslog`
-    Windows: `C:\Python27\Lib\site-packages\cbc_syslog`
-    Linux: `/usr/lib/python2.7/site-packages/cbc_syslog`
-```
-3. Copy and paste the Configuration File example from the directory cbc_syslog_conf_examples into your own `.conf` file and modify it to your own specifications. Below is a table of all the configurable inputs that can be used in the syslog connector.
+2. Copy and paste the Configuration File example from the directory `cbc_syslog_conf_examples` into your 
+   own `.conf` file and modify it to your own specifications. Below is a table of all the configurable 
+   inputs that can be used in the syslog connector.
+   
+   ---
+   **NOTE**: 
+   The `cbc_syslog_conf_examples` will be located ether
+   under your pythonn virtual environment or in the system location (usually `/usr/local/`)if you installed 
+   into global python.
+   ---
 
 
     | Input      | Required | Description |     
@@ -92,7 +88,7 @@ in Step 3.
 6. Test the new connector and run the following command:
 
     ```
-    python cbc_syslog.py -l [LOG_FILE_LOCATION] -c [CONFIG_FILE_LOCATION]
+    cbc-syslog-cli -l [LOG_FILE_LOCATION] -c [CONFIG_FILE_LOCATION]
     ```
 
     A successful run will look like:
@@ -146,13 +142,13 @@ This assumes that docker is installed in your environments.  See https://www.doc
 
 1. Build the docker container:
 ```
-sudo docker build -f docker/Dockerfile .
+docker build -f docker/Dockerfile .
 ```
 The last line will be "Successfully built <container Id>".  Take note of the container id to connect to it.
 
 2. Run the container interactively:  
 ```
-sudo docker container run -it <containerId> /bin/bash
+docker container run -it <containerId> /bin/bash
 ```
 3. Within the container, configure syslog as per Steps 3-6 in the PyPI installation instructions.
 
