@@ -269,12 +269,12 @@ def parse_notification_cef(response, source, get_unicode_string, policy_action_s
                 else:
                     extension += ' duser=' + user_name
 
-                    extension += ' dvc=' + device_ip
-                    extension += ' cs3Label="Link"'
-                    extension += ' cs3="' + link + '"'
-                    extension += ' cs4Label="Threat_ID"'
-                    extension += ' cs4="' + tid + '"'
-                    extension += ' hash=' + sha256
+                extension += ' dvc=' + device_ip
+                extension += ' cs3Label="Link"'
+                extension += ' cs3="' + link + '"'
+                extension += ' cs4Label="Threat_ID"'
+                extension += ' cs4="' + tid + '"'
+                extension += ' hash=' + sha256
 
             else:
                 continue
