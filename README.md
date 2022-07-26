@@ -25,7 +25,8 @@ Use the [Developer Community Forum](https://community.carbonblack.com/t5/user/us
 
 ### Requirements
 
-* CB Defense or CB ThreatHunter
+* Carbon Black Cloud Endpoint Standard or Enterprise EDR
+  * Note that the Syslog Connector is not supported on the USA GovCloud.  See the [Developer Network](https://developer.carbonblack.com/reference/carbon-black-cloud/integrations/syslog-connector/) for alternative solutions.
 * [Python 2.7 or Python 3 running on a 64-bit Intel platform](https://www.python.org/downloads/)
 * [pip](https://pip.pypa.io/en/stable/installing/)
 * [Jinja2](https://pypi.org/project/Jinja2/)
