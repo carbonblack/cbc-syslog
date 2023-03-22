@@ -1,5 +1,5 @@
 - name: Linters
-  service: testingpython38
+  service: testingamazon
   command: bin/linters.sh
 
 - name: Tests
