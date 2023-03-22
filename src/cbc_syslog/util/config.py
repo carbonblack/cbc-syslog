@@ -95,13 +95,13 @@ class Config:
             if not self.config.has_option("general", "template"):
                 format = self.config.get("general", "output_format").lower()
                 if format == "cef":
-                    log.warn(f"Section (general): template missing using default {self.DEFAULT_CEF_TEMPLATE}")
+                    log.warning(f"Section (general): template missing using default {self.DEFAULT_CEF_TEMPLATE}")
                 elif format == "leef":
-                    log.warn(f"Section (general): template missing using default {self.DEFAULT_LEEF_TEMPLATE}")
+                    log.warning(f"Section (general): template missing using default {self.DEFAULT_LEEF_TEMPLATE}")
 
         # Verify output_type and their required properties
         if not self.config.has_option("general", "output_type"):
-            log.error("Section (general): output_format required")
+            log.error("Section (general): output_type required")
             valid = False
         elif "tcp" in self.config.get("general", "output_type").lower():
             if not self.config.has_option("general", "tcp_out"):
@@ -114,7 +114,7 @@ class Config:
             # Verify TLS required properties
             if "+tls" in self.config.get("general", "output_type").lower():
                 if not self.config.has_option("tls", "tls_verify"):
-                    log.warn("Section (tls): tls_verify not specified defaulting to TRUE")
+                    log.warning("Section (tls): tls_verify not specified defaulting to TRUE")
 
                 if not self.config.has_option("tls", "ca_cert"):
                     log.error("Section (tls): ca_cert required when output_type is tcp+tls")
@@ -138,12 +138,12 @@ class Config:
                 valid = False
             if self.config.has_option("general", "http_headers"):
                 try:
-                    json.loads(self.config.get("general", "output_type"))
+                    json.loads(self.config.get("general", "http_headers"))
                 except ValueError:
                     log.error("Section (general): http_headers is not valid json must follow format {'content-type': 'application/json'}")  # noqa 501
                     valid = False
             if not self.config.has_option("general", "https_ssl_verify"):
-                log.warn("Section (general): https_ssl_verify not specified defaulting to TRUE")
+                log.warning("Section (general): https_ssl_verify not specified defaulting to TRUE")
 
         # Check for Carbon Black Cloud instances
         has_server = False
