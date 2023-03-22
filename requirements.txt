@@ -1,5 +1,5 @@
 # Package dependencies
-cbc_sdk
+carbon-black-cloud-sdk
 Jinja2
 psutil
 
