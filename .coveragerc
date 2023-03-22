@@ -1,5 +1,5 @@
 [run]
-source = src/cbc_sdk
+source = src/cbc_syslog
 [report]
 exclude_lines =
     pragma: no cover
