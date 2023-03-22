@@ -4,41 +4,17 @@
 # Template for syslog output.
 # This is a jinja 2 template
 # NOTE: The source variable corresponds to the Carbon Black Cloud Server used to retrieve results
-#
+
 template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}
 
 #
-#Location of the Backup Directory
-#This will be the location of back up files in the event that results fail to send to Syslog
+# Location of the Backup Directory
+# This will be the location of back up files in the event that results fail to send to Syslog
 #
-
 back_up_dir = /Users/jdoe/Documents/
 
 #
-# This sets the default severity level for POLICY_ACTION notifications.  By default it is 4.
-#
-# 0 - Emergency: System is unusable.
-#
-# 1 - Alert: Action must be taken immediately.
-#
-# 2 - Critical: Critical conditions.
-#
-# 3 - Error: Error conditions.
-#
-# 4 - Warning: Warning conditions.
-#
-# 5 - Notice: Normal but significant condition.
-#
-# 6 - Informational: Informational messages.
-#
-# 7 - Debug: Debug-level messages.
-#
-policy_action_severity = 4
-
-
-#
 # Output format of the data sent. Currently support json or cef formats
-#
 # Warning: if using json output_format, we recommend NOT using UDP output_type
 #
 output_format=cef
@@ -72,12 +48,6 @@ udp_out=
 http_out=
 http_headers= {'content-type': 'application/json'}
 https_ssl_verify=True
-
-#
-# Override ca file for self signed certificates when using https
-# This is typically a .pem file
-#
-#requests_ca_cert=/usr/share/cb/integrations/cbc-syslog/cert.pem
 
 [tls]
 

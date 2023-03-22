@@ -1,0 +1,17 @@
+testingamazon:
+  build:
+    dockerfile: ./docker/amazon/Dockerfile
+  encrypted_env_file:
+    - env.encrypted
+
+testingrhel:
+  build:
+    dockerfile: ./docker/rhel/Dockerfile
+
+testingsuse:
+  build:
+    dockerfile: ./docker/suse/Dockerfile
+
+testingubuntu:
+  build:
+    dockerfile: ./docker/ubuntu/Dockerfile

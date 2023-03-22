@@ -1,0 +1,22 @@
+- name: Linters
+  service: testingpython38
+  command: bin/linters.sh
+
+- name: Tests
+  type: parallel
+  steps:
+  - name: OS - Amazon & Coveralls
+    service: testingamazon
+    command: bin/tests_n_reports.sh
+
+  - name: OS - Red Hat
+    service: testingrhel
+    command: pytest
+
+  - name: OS - Ubuntu
+    service: testingubuntu
+    command: pytest
+
+  - name: OS - SUSE
+    service: testingsuse
+    command: pytest
