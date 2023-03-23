@@ -136,6 +136,9 @@ class Config:
             if not self.config.has_option("general", "http_out"):
                 log.error("Section (general): http_out required when output_type is http")
                 valid = False
+            elif "://" not in self.config.get("general", "http_out"):
+                log.warning("Section (general): http_out missing protocol default to https://")
+
             if self.config.has_option("general", "http_headers"):
                 try:
                     json.loads(self.config.get("general", "http_headers"))
@@ -172,9 +175,66 @@ class Config:
         return valid
 
     def output(self):
-        """Output properties"""
-        pass
+        """
+        Output properties
+
+        Returns:
+            (dict):  output configuration
+        """
+        params = {
+            "back_up_dir": self.config.get("general", "back_up_dir"),
+            "format": self.config.get("general", "output_format").lower(),
+            "template": self.config.get("general", "template", fallback=None),
+            "type": self.config.get("general", "output_type").lower(),
+            "host": None,
+            "port": None
+        }
+
+        if params["template"] is None:
+            if params["format"] == "cef":
+                params["template"] = self.DEFAULT_CEF_TEMPLATE
+            elif params["format"] == "leef":
+                params["template"] = self.DEFAULT_LEEF_TEMPLATE
+
+        if "tcp" in params["type"]:
+            params["host"], params["port"] = self.config.get("general", "tcp_out").split(":")
+
+            if "+tls" in params["type"]:
+                params["ca_cert"] = self.config.get("tls", "ca_cert")
+                params["tls_verify"] = self.config.getboolean("tls", "tls_verify", fallback=True)
+
+                params["cert"] = self.config.get("tls", "cert", fallback=None)
+                params["key"] = self.config.get("tls", "key", fallback=None)
+                params["key_password"] = self.config.get("tls", "key_password", fallback=None)
+
+        elif "udp" in params["type"]:
+            params["host"], params["port"] = self.config.get("general", "udp_out").split(":")
+        elif "http" in params["type"]:
+            params["host"] = self.config.get("general", "http_out")
+            if "://" not in params["host"]:
+                params["host"] = "https://" + params["host"]
+
+            params["http_headers"] = json.loads(self.config.get("general", "http_headers"))
+            params["tls_verify"] = self.config.getboolean("general", "https_ssl_verify", fallback=True)
+
+        return params
 
     def sources(self):
-        """Carbon Black Cloud instances"""
-        pass
+        """
+        Carbon Black Cloud instances
+
+        Returns:
+            (dict): sources configuration
+        """
+        sources = []
+
+        for section in self.config.sections():
+            if self.config.has_option(section, "server_url"):
+                sources.append({
+                    "custom_api_id": self.config.get(section, "custom_api_id"),
+                    "custom_api_key": self.config.get(section, "custom_api_key"),
+                    "org_key": self.config.get(section, "org_key"),
+                    "server_url": self.config.get(section, "server_url"),
+                })
+
+        return sources

@@ -24,7 +24,7 @@ FIXTURES_PATH = pathlib.Path(__file__).joinpath("../../fixtures").resolve()
     ("confs/leef.conf", True)
 ])
 def test_validate(file_path, valid):
-    """Test Validate"""
+    """Validate supported configuration files"""
     resolved_path = str(FIXTURES_PATH.joinpath(file_path))
     config = Config(resolved_path)
     assert config.validate()
@@ -58,10 +58,82 @@ def test_validate(file_path, valid):
     ])
 ])
 def test_validate_invalid(file_path, valid, caplog, logs):
-    """Test Validate"""
+    """Test Validate with invalid configuration files"""
     resolved_path = str(FIXTURES_PATH.joinpath(file_path))
     config = Config(resolved_path)
     assert not config.validate()
 
     for index, record in enumerate(caplog.records):
         assert record.msg == logs[index]
+
+
+@pytest.mark.parametrize("file_path, expected_params", [
+    ("confs/cef.conf",
+        {
+            "back_up_dir": "/Users/jdoe/Documents/",
+            "format": "cef",
+            "template": "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}",  # noqa 501
+            "type": "udp",
+            "host": "0.0.0.0",
+            "port": "8886"
+        }),
+    ("confs/json.conf",
+        {
+            "back_up_dir": "/Users/avanbrunt/Desktop/backdir",
+            "format": "json",
+            "template": None,
+            "type": "http",
+            "host": "http://0.0.0.0:5001/http_out",
+            "port": None,
+            "http_headers": {"content-type": "application/json"},
+            "tls_verify": False
+        }),
+    ("confs/leef.conf",
+        {
+            "back_up_dir": "/Users/jdoe/Documents/",
+            "ca_cert": "/etc/cb/integrations/cbc-syslog/ca.pem",
+            "cert": "/etc/cb/integrations/cbc-syslog/cert.pem",
+            "format": "leef",
+            "host": "0.0.0.0",
+            "key": "/etc/cb/integrations/cbc-syslog/cert.key",
+            "key_password": None,
+            "port": "8888",
+            "template": "",
+            "tls_verify": True,
+            "type": "tcp+tls"})
+])
+def test_output(file_path, expected_params):
+    """Verify output creates valid configuration dict"""
+    resolved_path = str(FIXTURES_PATH.joinpath(file_path))
+    config = Config(resolved_path)
+    output_params = config.output()
+    assert output_params == expected_params
+
+
+@pytest.mark.parametrize("file_path, expected_sources", [
+    ("confs/json.conf",
+        [{
+            "custom_api_id": "RANDOM_ID",
+            "custom_api_key": "RANDOM_SECRET",
+            "org_key": "SOME_ORG",
+            "server_url": "http://0.0.0.0:5001"
+        }]),
+    ("confs/multi-tenant.conf",
+        [{
+            "custom_api_id": "RANDOM_ID",
+            "custom_api_key": "RANDOM_SECRET",
+            "org_key": "SOME_ORG", "server_url":
+            "http://0.0.0.0:5001"
+        }, {
+            "custom_api_id": "RANDOM_ID",
+            "custom_api_key": "RANDOM_SECRET",
+            "org_key": "DIFFERENT_ORG",
+            "server_url": "http://0.0.0.0:5001"
+        }]),
+])
+def test_sources(file_path, expected_sources):
+    """Verify output creates valid configuration dict"""
+    resolved_path = str(FIXTURES_PATH.joinpath(file_path))
+    config = Config(resolved_path)
+    sources = config.sources()
+    assert sources == expected_sources
