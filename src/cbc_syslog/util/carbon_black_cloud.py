@@ -29,8 +29,6 @@ if "pytest" in sys.modules:
 class CarbonBlackCloud:
     """Carbon Black Cloud manager"""
 
-    instances = []
-
     def __init__(self, sources):
         """
         Initialize the CarbonBlackCloud object.
@@ -51,6 +49,8 @@ class CarbonBlackCloud:
                 }
             }
         """
+        self.instances = []
+
         for source in sources:
             instance = {
                 "api": CBCloudAPI(url=source["server_url"],
