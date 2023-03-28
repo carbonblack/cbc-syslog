@@ -47,9 +47,6 @@ class Config:
         org_key =
         server_url =
     """
-
-    config = None
-
     OUTPUT_TYPES = ["tcp", "udp", "tcp+tls", "http"]
 
     DEFAULT_CEF_TEMPLATE = "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}"  # noqa 501
