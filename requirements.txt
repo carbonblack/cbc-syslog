@@ -5,6 +5,7 @@ psutil
 
 # Dev dependencies
 flask
+cryptography
 pytest==7.2.1
 coverage==6.5.0
 coveralls==3.3.1
