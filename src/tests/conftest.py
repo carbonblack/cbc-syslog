@@ -36,22 +36,33 @@ udp_server_port = 8886
 
 def pytest_configure():
     """Pytest Global Variables"""
-    pytest.alert_search_response = {
-        "num_found": 0,
-        "num_available": 0,
-        "results": []
-    }
+    pytest.alert_search_request = None
+    pytest.alert_search_response = None
 
 #
 # Carbon Black Cloud Mocked Endpoints
 #
 
 
-@app.route('/appservices/v6/orgs/ORG_KEY/alerts/_search', methods=['POST'])
-def alert_search():
+@app.route('/appservices/v6/orgs/<org_key>/alerts/_search', methods=['POST'])
+def alert_search(org_key):
     """alert_search"""
     logger.info("Fetched Alerts")
-    return jsonify(pytest.alert_search_response)
+
+    # Save the request for verification
+    pytest.alert_search_request = request.get_json()
+
+    output = {
+        "num_found": 0,
+        "num_available": 0,
+        "results": []
+    }
+    if callable(pytest.alert_search_response):
+        output = pytest.alert_search_response(pytest.alert_search_request)
+    else:
+        output = pytest.alert_search_response
+
+    return jsonify(output)
 
 
 #

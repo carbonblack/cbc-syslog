@@ -45,7 +45,32 @@ class CarbonBlackCloud:
                 "audit_logs_enabled": True,
                 "alerts_enabled": True,
                 "alert_criteria": {
-                    "type": []
+                    "type": [
+                        "CB_ANALYTICS",
+                        "WATCHLIST",
+                        "DEVICE_CONTROL",
+                        "CONTAINER_RUNTIME",
+                        "HOST_BASED_FIREWALL",
+                        "IDS",
+                        "NTA"
+                    ],
+                    "minimum_severity": 1-10,
+                    "policy_id": [],
+
+                    # Watchlist Alerts
+                    "watchlist_id": [],
+
+                    # CB Analytics
+                    "policy_applied": True/False,
+                    "ttps": [],
+
+                    # Not Recommended OBSERVED only applies to CB_ANALYTICS
+                    "category": ["THREAT", "OBSERVED"]
+
+                    # Support any property with key and list of values
+                    "key": ["values"]
+
+                    e.g. "device_os": ["WINDOWS", "MAC"]
                 }
             }
         """
@@ -82,34 +107,52 @@ class CarbonBlackCloud:
         time_field = "last_update_time"
         time_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
+        def build_query(cb, alert_criteria, start, end):
+            """Build CBC SDK Alert Query"""
+            query = cb.select(BaseAlert) \
+                      .set_time_range(time_field,
+                                      start=start.strftime(time_format),
+                                      end=end.strftime(time_format)) \
+                      .sort_by(time_field, "ASC")
+
+            # Iterate criteria options
+            for key in alert_criteria.keys():
+
+                # Check for custom criteria
+                if key == "minimum_severity":
+                    query.set_minimum_severity(alert_criteria[key])
+
+                # Changes with UAE v7 alerts
+                # if key == "policy_applied":
+                #     query.set_policy_applied(alert_criteria[key])
+
+                # Add standard list value criteria
+                else:
+                    query.add_criteria(key, alert_criteria[key])
+
+            return query
+
+        # Iterate saved instances to fetch alerts for each instance
         for instance in self.instances:
             cb = instance["api"]
             org_alerts = []
 
             try:
                 # Fetch initial Alert batch
-                org_alerts.extend(list(cb.select(BaseAlert)
-                                         .set_time_range(time_field,
-                                                         start=start.strftime(time_format),
-                                                         end=end.strftime(time_format))
-                                         .sort_by(time_field, "ASC")))
+                org_alerts.extend(build_query(cb, instance["alert_criteria"], start, end)[0:10000])
 
                 # Check if 10k limit was hit and iteratively fetch remaining alerts
                 #   by increasing start time to the last alert fetched
                 if len(org_alerts) >= 10000:
-                    last_alert = alerts[-1]
+                    last_alert = org_alerts[-1]
                     while True:
                         new_start = datetime.strptime(last_alert[time_field], time_format) + timedelta(milliseconds=1)
-                        overflow = list(cb.select(BaseAlert)
-                                          .set_time_range(time_field,
-                                                          start=new_start.strftime(time_format),
-                                                          end=end.strftime(time_format))
-                                          .sort_by(time_field, "ASC"))
+                        overflow = build_query(cb, instance["alert_criteria"], new_start, end)
 
                         # Extend alert list with follow up alert batches
-                        org_alerts.extend(overflow)
+                        org_alerts.extend(overflow[0:10000])
                         if len(overflow) >= 10000:
-                            last_alert = overflow[-1]
+                            last_alert = org_alerts[-1]
                         else:
                             break
                 alerts.extend(org_alerts)
