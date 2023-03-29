@@ -15,7 +15,7 @@ import pytest
 from cbc_syslog.util import CarbonBlackCloud
 from datetime import datetime, timedelta, timezone
 
-from tests.fixtures.mock_alerts import GET_ALERTS_SINGLE
+from tests.fixtures.mock_alerts import GET_ALERTS_SINGLE, GET_ALERTS_BULK
 
 
 def test_init():
@@ -80,7 +80,9 @@ def test_fetch_alerts():
         "audit_logs_enabled": True,
         "alerts_enabled": True,
         "alert_criteria": {
-            "type": []
+            "type": ["CB_ANALYTICS"],
+            "policy_id": [7113786],
+            "minimum_severity": 3
         }
     }
 
@@ -90,6 +92,57 @@ def test_fetch_alerts():
     end = datetime.now(timezone.utc) - timedelta(seconds=30)
     start = end - timedelta(minutes=5)
     cbcloud = CarbonBlackCloud([source])
+
     alerts, errors = cbcloud.fetch_alerts(start, end)
     assert len(alerts) == 1
+    assert errors == []
+
+    # Verify Alert Request
+    assert pytest.alert_search_request["criteria"]["type"] == source["alert_criteria"]["type"]
+    assert pytest.alert_search_request["criteria"]["policy_id"] == source["alert_criteria"]["policy_id"]
+    assert pytest.alert_search_request["criteria"]["minimum_severity"] == source["alert_criteria"]["minimum_severity"]
+
+
+def test_fetch_alerts_overflow():
+    """Test CarbonBlackCloud fetch alerts with overflow 25k alerts"""
+    source = {
+        "custom_api_id": "CUSTOM_ID",
+        "custom_api_key": "CUSTOM_KEY",
+        "org_key": "ORG_KEY",
+        "server_url": "https://0.0.0.0:5001",
+        "audit_logs_enabled": True,
+        "alerts_enabled": True,
+        "alert_criteria": {}
+    }
+
+    num_requests = 0
+
+    def alert_output(request):
+        """Alert output callable"""
+        nonlocal num_requests
+
+        # First request for 10k results
+        if num_requests == 0:
+            num_requests += 1
+            return GET_ALERTS_BULK(10000, 25000)
+        # Second request for next 10k results
+        elif num_requests == 1:
+            num_requests += 1
+            return GET_ALERTS_BULK(10000, 15000)
+        # Third request for remaining 5k results
+        elif num_requests == 2:
+            num_requests += 1
+            return GET_ALERTS_BULK(5000, 5000)
+        else:
+            pytest.fail(f"Received unexpected number of API requests: {num_requests}")
+
+    # Set Alert Response
+    pytest.alert_search_response = alert_output
+
+    end = datetime.now(timezone.utc) - timedelta(seconds=30)
+    start = end - timedelta(minutes=5)
+    cbcloud = CarbonBlackCloud([source])
+
+    alerts, errors = cbcloud.fetch_alerts(start, end)
+    assert len(alerts) == 25000
     assert errors == []
