@@ -1,0 +1,13 @@
+[general]
+back_up_dir = "/Users/avanbrunt/Desktop/backdir"
+output_format = "json"
+output_type = "http"
+http_out = "http://0.0.0.0:5001/http_out"
+http_headers = "{ \"content-type\": \"application/json\" }"
+https_ssl_verify = false
+
+[CarbonBlackCloudServer]
+custom_api_id = "RANDOM_ID"
+custom_api_key = "RANDOM_SECRET"
+org_key = "SOME_ORG"
+server_url = "http://0.0.0.0:5001"

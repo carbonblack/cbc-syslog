@@ -19,9 +19,9 @@ FIXTURES_PATH = pathlib.Path(__file__).joinpath("../../fixtures").resolve()
 
 
 @pytest.mark.parametrize("file_path, valid", [
-    ("confs/cef.conf", True),
-    ("confs/json.conf", True),
-    ("confs/leef.conf", True)
+    ("confs/cef.toml", True),
+    ("confs/json.toml", True),
+    ("confs/leef.toml", True)
 ])
 def test_validate(file_path, valid):
     """Validate supported configuration files"""
@@ -31,26 +31,26 @@ def test_validate(file_path, valid):
 
 
 @pytest.mark.parametrize("file_path, valid, logs", [
-    ("confs/invalid.conf", True, [
+    ("confs/invalid.toml", True, [
         "Section (general): back_up_dir required to save output in case of a destination failure",
         "Section (general): output_format required",
         "Section (general): output_type required",
         "No valid Carbon Black Cloud instances provided"
     ]),
-    ("confs/invalid-http.conf", True, [
+    ("confs/invalid-http.toml", True, [
         "Section (general): output_format required",
         "Section (general): http_out required when output_type is http",
         "Section (general): https_ssl_verify not specified defaulting to TRUE",
         "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing custom_api_id",
         "No valid Carbon Black Cloud instances provided"
     ]),
-    ("confs/invalid-tcp.conf", True, [
+    ("confs/invalid-tcp.toml", True, [
         "Section (general): output_format required",
         "Section (general): tcp_out required when output_type is tcp or tcp+tls",
         "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing org_key",
         "No valid Carbon Black Cloud instances provided"
     ]),
-    ("confs/invalid-udp.conf", True, [
+    ("confs/invalid-udp.toml", True, [
         "Section (general): output_format required",
         "Section (general): udp_out required when output_type is udp",
         "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing custom_api_id",
@@ -68,7 +68,7 @@ def test_validate_invalid(file_path, valid, caplog, logs):
 
 
 @pytest.mark.parametrize("file_path, expected_params", [
-    ("confs/cef.conf",
+    ("confs/cef.toml",
         {
             "back_up_dir": "/Users/jdoe/Documents/",
             "format": "cef",
@@ -77,7 +77,7 @@ def test_validate_invalid(file_path, valid, caplog, logs):
             "host": "0.0.0.0",
             "port": "8886"
         }),
-    ("confs/json.conf",
+    ("confs/json.toml",
         {
             "back_up_dir": "/Users/avanbrunt/Desktop/backdir",
             "format": "json",
@@ -88,7 +88,7 @@ def test_validate_invalid(file_path, valid, caplog, logs):
             "http_headers": {"content-type": "application/json"},
             "tls_verify": False
         }),
-    ("confs/leef.conf",
+    ("confs/leef.toml",
         {
             "back_up_dir": "/Users/jdoe/Documents/",
             "ca_cert": "/etc/cb/integrations/cbc-syslog/ca.pem",
@@ -111,14 +111,14 @@ def test_output(file_path, expected_params):
 
 
 @pytest.mark.parametrize("file_path, expected_sources", [
-    ("confs/json.conf",
+    ("confs/json.toml",
         [{
             "custom_api_id": "RANDOM_ID",
             "custom_api_key": "RANDOM_SECRET",
             "org_key": "SOME_ORG",
             "server_url": "http://0.0.0.0:5001"
         }]),
-    ("confs/multi-tenant.conf",
+    ("confs/multi-tenant.toml",
         [{
             "custom_api_id": "RANDOM_ID",
             "custom_api_key": "RANDOM_SECRET",
