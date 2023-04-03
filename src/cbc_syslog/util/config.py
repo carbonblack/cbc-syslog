@@ -11,9 +11,13 @@
 
 """Config class"""
 
-import configparser
 import json
 import logging
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 log = logging.getLogger(__name__)
 
@@ -61,11 +65,9 @@ class Config:
         Args:
             file_path (str): File path to the config file to be parsed.
         """
-        self.config = configparser.ConfigParser()
-
         # Read config from file
-        self.config.read(file_path)
-        print(f"Sections: {self.config.sections()}")
+        with open(file_path, "rb") as f:
+            self.config = tomllib.load(f)
 
     def validate(self):
         """
@@ -76,90 +78,106 @@ class Config:
         """
         valid = True
 
-        if not self.config.has_option("general", "back_up_dir"):
+        general_section = self.config.get("general", {})
+        if "general" not in self.config:
+            log.error("Section (general): section missing")
+            valid = False
+
+        if "back_up_dir" not in general_section:
             log.error("Section (general): back_up_dir required to save output in case of a destination failure")
             valid = False
 
         # Verify output_format and their required properties
-        if not self.config.has_option("general", "output_format"):
+        if "output_format" not in general_section:
             log.error("Section (general): output_format required")
             valid = False
-        elif self.config.get("general", "output_format").lower() not in self.OUTPUT_FORMATS:
-            format = self.config.get("general", "output_format")
+        elif general_section.get("output_format").lower() not in self.OUTPUT_FORMATS:
+            format = general_section.get("output_format")
             log.error(f"Section (general): output_format {format} is not a supported format")
             valid = False
-        elif self.config.get("general", "output_format").lower() in self.TEMPLATE_SUPPORTED_FORMATS:
-            if not self.config.has_option("general", "template"):
-                format = self.config.get("general", "output_format").lower()
+        elif general_section.get("output_format").lower() in self.TEMPLATE_SUPPORTED_FORMATS:
+            if "template" not in general_section:
+                format = general_section.get("output_format").lower()
                 if format == "cef":
                     log.warning(f"Section (general): template missing using default {self.DEFAULT_CEF_TEMPLATE}")
                 elif format == "leef":
                     log.warning(f"Section (general): template missing using default {self.DEFAULT_LEEF_TEMPLATE}")
 
         # Verify output_type and their required properties
-        if not self.config.has_option("general", "output_type"):
+        if "output_type" not in general_section:
             log.error("Section (general): output_type required")
             valid = False
-        elif "tcp" in self.config.get("general", "output_type").lower():
-            if not self.config.has_option("general", "tcp_out"):
+        elif "tcp" in general_section.get("output_type").lower():
+            if "tcp_out" not in general_section:
                 log.error("Section (general): tcp_out required when output_type is tcp or tcp+tls")
                 valid = False
-            elif ":" not in self.config.get("general", "tcp_out"):
+            elif ":" not in general_section.get("tcp_out"):
                 log.error("Section (general): tcp_out must be of format <ip>:<port>")
                 valid = False
 
             # Verify TLS required properties
-            if "+tls" in self.config.get("general", "output_type").lower():
-                if not self.config.has_option("tls", "tls_verify"):
+            if "+tls" in general_section.get("output_type").lower():
+                # Get TLS section
+                tls_section = self.config.get("tls", {})
+                if "tls" not in self.config:
+                    log.error("Section (tls): section missing")
+                    valid = False
+
+                if "tls_verify" not in tls_section:
                     log.warning("Section (tls): tls_verify not specified defaulting to TRUE")
 
-                if not self.config.has_option("tls", "ca_cert"):
+                if "ca_cert" not in tls_section:
                     log.error("Section (tls): ca_cert required when output_type is tcp+tls")
                     valid = False
 
-                if self.config.has_option("tls", "cert") and not self.config.has_option("tls", "key"):
+                if "cert" in tls_section and "key" not in tls_section:
                     log.error("Section (tls): key must be specified when a cert is provided")
                     valid = False
 
-        elif "udp" == self.config.get("general", "output_type").lower():
-            if not self.config.has_option("general", "udp_out"):
+        elif "udp" == general_section.get("output_type").lower():
+            if "udp_out" not in general_section:
                 log.error("Section (general): udp_out required when output_type is udp")
                 valid = False
-            elif ":" not in self.config.get("general", "udp_out"):
+            elif ":" not in general_section.get("udp_out"):
                 log.error("Section (general): udp_out must be of format <ip>:<port>")
                 valid = False
 
-        elif "http" == self.config.get("general", "output_type").lower():
-            if not self.config.has_option("general", "http_out"):
+        elif "http" == general_section.get("output_type").lower():
+            if "http_out" not in general_section:
                 log.error("Section (general): http_out required when output_type is http")
                 valid = False
-            elif "://" not in self.config.get("general", "http_out"):
+            elif "://" not in general_section.get("http_out"):
                 log.warning("Section (general): http_out missing protocol default to https://")
 
-            if self.config.has_option("general", "http_headers"):
+            if "http_headers" in general_section:
                 try:
-                    json.loads(self.config.get("general", "http_headers"))
+                    json.loads(general_section.get("http_headers"))
                 except ValueError:
                     log.error("Section (general): http_headers is not valid json must follow format {'content-type': 'application/json'}")  # noqa 501
                     valid = False
-            if not self.config.has_option("general", "https_ssl_verify"):
+            if "https_ssl_verify" not in general_section:
                 log.warning("Section (general): https_ssl_verify not specified defaulting to TRUE")
 
         # Check for Carbon Black Cloud instances
         has_server = False
-        for section in self.config.sections():
-            if self.config.has_option(section, "server_url"):
+        for section_name in self.config.keys():
+            section = self.config.get(section_name, {})
+            # Skip properties at root level
+            if type(section) is not dict:
+                continue
+
+            if "server_url" in section:
                 # Verify the instance has the required credentials
-                if not self.config.has_option(section, "custom_api_id"):
-                    log.error(f"Carbon Black Cloud instance ({section}): Missing custom_api_id")
+                if "custom_api_id" not in section:
+                    log.error(f"Carbon Black Cloud instance ({section_name}): Missing custom_api_id")
                     valid = False
 
-                elif not self.config.has_option(section, "custom_api_key"):
-                    log.error(f"Carbon Black Cloud instance ({section}): Missing custom_api_key")
+                elif "custom_api_key" not in section:
+                    log.error(f"Carbon Black Cloud instance ({section_name}): Missing custom_api_key")
                     valid = False
 
-                elif not self.config.has_option(section, "org_key"):
-                    log.error(f"Carbon Black Cloud instance ({section}): Missing org_key")
+                elif "org_key" not in section:
+                    log.error(f"Carbon Black Cloud instance ({section_name}): Missing org_key")
                     valid = False
 
                 else:
@@ -178,11 +196,14 @@ class Config:
         Returns:
             (dict):  output configuration
         """
+        general_section = self.config.get("general", {})
+        tls_section = self.config.get("tls", {})
+
         params = {
-            "back_up_dir": self.config.get("general", "back_up_dir"),
-            "format": self.config.get("general", "output_format").lower(),
-            "template": self.config.get("general", "template", fallback=None),
-            "type": self.config.get("general", "output_type").lower(),
+            "back_up_dir": general_section.get("back_up_dir"),
+            "format": general_section.get("output_format").lower(),
+            "template": general_section.get("template", None),
+            "type": general_section.get("output_type").lower(),
             "host": None,
             "port": None
         }
@@ -194,25 +215,25 @@ class Config:
                 params["template"] = self.DEFAULT_LEEF_TEMPLATE
 
         if "tcp" in params["type"]:
-            params["host"], params["port"] = self.config.get("general", "tcp_out").split(":")
+            params["host"], params["port"] = general_section.get("tcp_out").split(":")
 
             if "+tls" in params["type"]:
-                params["ca_cert"] = self.config.get("tls", "ca_cert")
-                params["tls_verify"] = self.config.getboolean("tls", "tls_verify", fallback=True)
+                params["ca_cert"] = tls_section.get("ca_cert")
+                params["tls_verify"] = bool(tls_section.get("tls_verify", True))
 
-                params["cert"] = self.config.get("tls", "cert", fallback=None)
-                params["key"] = self.config.get("tls", "key", fallback=None)
-                params["key_password"] = self.config.get("tls", "key_password", fallback=None)
+                params["cert"] = tls_section.get("cert", None)
+                params["key"] = tls_section.get("key", None)
+                params["key_password"] = tls_section.get("key_password", None)
 
         elif "udp" in params["type"]:
-            params["host"], params["port"] = self.config.get("general", "udp_out").split(":")
+            params["host"], params["port"] = general_section.get("udp_out").split(":")
         elif "http" in params["type"]:
-            params["host"] = self.config.get("general", "http_out")
+            params["host"] = general_section.get("http_out")
             if "://" not in params["host"]:
                 params["host"] = "https://" + params["host"]
 
-            params["http_headers"] = json.loads(self.config.get("general", "http_headers"))
-            params["tls_verify"] = self.config.getboolean("general", "https_ssl_verify", fallback=True)
+            params["http_headers"] = json.loads(general_section.get("http_headers"))
+            params["tls_verify"] = bool(general_section.get("https_ssl_verify", True))
 
         return params
 
@@ -225,13 +246,18 @@ class Config:
         """
         sources = []
 
-        for section in self.config.sections():
-            if self.config.has_option(section, "server_url"):
+        for section_name in self.config.keys():
+            section = self.config.get(section_name, {})
+            # Skip properties at root level
+            if type(section) is not dict:
+                continue
+
+            if "server_url" in section:
                 sources.append({
-                    "custom_api_id": self.config.get(section, "custom_api_id"),
-                    "custom_api_key": self.config.get(section, "custom_api_key"),
-                    "org_key": self.config.get(section, "org_key"),
-                    "server_url": self.config.get(section, "server_url"),
+                    "custom_api_id": section.get("custom_api_id"),
+                    "custom_api_key": section.get("custom_api_key"),
+                    "org_key": section.get("org_key"),
+                    "server_url": section.get("server_url"),
                 })
 
         return sources

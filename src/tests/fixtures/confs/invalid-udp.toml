@@ -1,0 +1,6 @@
+[general]
+back_up_dir = "/Users/jdoe/Documents/"
+output_type = "udp"
+
+[CarbonBlackCloudServer]
+server_url = "http://0.0.0.0:5001"

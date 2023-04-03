@@ -8,7 +8,8 @@ import io
 install_requires = [
     "carbon-black-cloud-sdk",
     "Jinja2",
-    "psutil"
+    "psutil",
+    "tomli >= 1.1.0; python_version < '3.11'"
 ]
 
 extras_require = {

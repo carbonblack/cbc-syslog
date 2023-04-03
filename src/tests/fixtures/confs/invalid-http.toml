@@ -1,0 +1,7 @@
+[general]
+back_up_dir = "/Users/jdoe/Documents/"
+output_type = "http"
+
+[CarbonBlackCloudServer]
+org_key = "SOME_ORG"
+server_url = "http://0.0.0.0:5001"
