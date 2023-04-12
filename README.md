@@ -291,8 +291,9 @@ sudo docker container run -it <containerId> /bin/bash
 
     #
     # Carbon Black Cloud Server URL
-    # NOTE: this is not the url to the web ui, but to the API URL (for example, https://api-prod05.conferdeploy.net)
-    #
+    # You can find this by looking at the web address of your Carbon Black Cloud console.
+    # More information is on the Developer Network;
+    # https://developer.carbonblack.com/reference/carbon-black-cloud/authentication#build-the-base-urls#
     server_url = https://server1.yourcompany.com
 
     #
