@@ -12,6 +12,7 @@
 """Tests for the Config object."""
 
 import pytest
+import logging
 from cbc_syslog.util import CarbonBlackCloud
 from datetime import datetime, timedelta, timezone
 
@@ -27,15 +28,15 @@ def test_init():
         "server_url": "https://example.com",
         "audit_logs_enabled": True,
         "alerts_enabled": True,
-        "alert_criteria": {
-            "type": []
-        }
+        "alert_rules": [{
+            "type": ["CB_ANALYTICS"]
+        }]
     }
     cbcloud = CarbonBlackCloud([source])
     assert len(cbcloud.instances) == 1
     assert cbcloud.instances[0]["audit_logs_enabled"] == source["audit_logs_enabled"]
     assert cbcloud.instances[0]["alerts_enabled"] == source["alerts_enabled"]
-    assert cbcloud.instances[0]["alert_criteria"] == source["alert_criteria"]
+    assert cbcloud.instances[0]["alert_rules"] == source["alert_rules"]
 
     assert cbcloud.instances[0]["api"].credentials.url == source["server_url"]
     assert cbcloud.instances[0]["api"].credentials.org_key == source["org_key"]
@@ -51,9 +52,7 @@ def test_init_multiple_sources():
         "server_url": "https://example.com",
         "audit_logs_enabled": True,
         "alerts_enabled": True,
-        "alert_criteria": {
-            "type": []
-        }
+        "alert_rules": [{}]
     }
     source_b = {
         "custom_api_id": "CUSTOM_ID_B",
@@ -62,9 +61,9 @@ def test_init_multiple_sources():
         "server_url": "https://example.com",
         "audit_logs_enabled": True,
         "alerts_enabled": True,
-        "alert_criteria": {
-            "type": []
-        }
+        "alert_rules": [{
+            "type": ["WATCHLIST"]
+        }]
     }
     cbcloud = CarbonBlackCloud([source_a, source_b])
     assert len(cbcloud.instances) == 2
@@ -79,11 +78,11 @@ def test_fetch_alerts():
         "server_url": "https://0.0.0.0:5001",
         "audit_logs_enabled": True,
         "alerts_enabled": True,
-        "alert_criteria": {
+        "alert_rules": [{
             "type": ["CB_ANALYTICS"],
             "policy_id": [7113786],
             "minimum_severity": 3
-        }
+        }]
     }
 
     # Set Alert Response
@@ -98,9 +97,9 @@ def test_fetch_alerts():
     assert errors == []
 
     # Verify Alert Request
-    assert pytest.alert_search_request["criteria"]["type"] == source["alert_criteria"]["type"]
-    assert pytest.alert_search_request["criteria"]["policy_id"] == source["alert_criteria"]["policy_id"]
-    assert pytest.alert_search_request["criteria"]["minimum_severity"] == source["alert_criteria"]["minimum_severity"]
+    assert pytest.alert_search_request["criteria"]["type"] == source["alert_rules"][0]["type"]
+    assert pytest.alert_search_request["criteria"]["policy_id"] == source["alert_rules"][0]["policy_id"]
+    assert pytest.alert_search_request["criteria"]["minimum_severity"] == source["alert_rules"][0]["minimum_severity"]
 
 
 def test_fetch_alerts_overflow():
@@ -112,7 +111,7 @@ def test_fetch_alerts_overflow():
         "server_url": "https://0.0.0.0:5001",
         "audit_logs_enabled": True,
         "alerts_enabled": True,
-        "alert_criteria": {}
+        "alert_rules": [{}]
     }
 
     num_requests = 0
@@ -146,3 +145,86 @@ def test_fetch_alerts_overflow():
     alerts, errors = cbcloud.fetch_alerts(start, end)
     assert len(alerts) == 25000
     assert errors == []
+
+
+def test_fetch_alerts_multiple_rules():
+    """Test CarbonBlackCloud fetch alerts with multiple alert rules"""
+    source = {
+        "custom_api_id": "CUSTOM_ID",
+        "custom_api_key": "CUSTOM_KEY",
+        "org_key": "ORG_KEY",
+        "server_url": "https://0.0.0.0:5001",
+        "audit_logs_enabled": True,
+        "alerts_enabled": True,
+        "alert_rules": [{
+            "type": ["CB_ANALYTICS"],
+            "policy_id": [7113786],
+            "minimum_severity": 3
+        }, {
+            "type": ["WATCHLIST"],
+        }]
+    }
+
+    num_requests = 0
+
+    def alert_output(request):
+        """Alert output callable"""
+        nonlocal num_requests
+
+        # Remove last_update_time to enable easier comparison
+        del request["criteria"]["last_update_time"]
+
+        # First request for alert rule 0
+        if num_requests == 0:
+            if request["criteria"] != source["alert_rules"][0]:
+                pytest.fail(f"Received unexpected request for rule {source['alert_rules'][0]} != {request['criteria']}")
+            num_requests += 1
+            return GET_ALERTS_BULK(1, 1)
+        # Second request for alert rule 1
+        elif num_requests == 1:
+            if request["criteria"] != source["alert_rules"][1]:
+                pytest.fail(f"Received unexpected request for rule {source['alert_rules'][1]} != {request['criteria']}")
+            num_requests += 1
+            return GET_ALERTS_BULK(1, 1)
+        else:
+            pytest.fail(f"Received unexpected number of API requests: {num_requests}")
+
+    # Set Alert Response
+    pytest.alert_search_response = alert_output
+
+    end = datetime.now(timezone.utc) - timedelta(seconds=30)
+    start = end - timedelta(minutes=5)
+    cbcloud = CarbonBlackCloud([source])
+
+    alerts, errors = cbcloud.fetch_alerts(start, end)
+    assert len(alerts) == 2
+    assert errors == []
+
+
+def test_fetch_alerts_exception(caplog):
+    """Test CarbonBlackCloud fetch alerts with unexpected response"""
+    source = {
+        "custom_api_id": "CUSTOM_ID",
+        "custom_api_key": "CUSTOM_KEY",
+        "org_key": "ORG_KEY",
+        "server_url": "https://0.0.0.0:5001",
+        "audit_logs_enabled": True,
+        "alerts_enabled": True,
+        "alert_rules": [{
+            "type": ["WATCHLIST"],
+        }]
+    }
+
+    caplog.set_level(logging.ERROR)
+
+    def alert_output(request):
+        """Alert output callable"""
+        raise Exception
+
+    end = datetime.now(timezone.utc) - timedelta(seconds=30)
+    start = end - timedelta(minutes=5)
+    cbcloud = CarbonBlackCloud([source])
+
+    alerts, errors = cbcloud.fetch_alerts(start, end)
+    assert errors == ["ORG_KEY"]
+    assert "for org ORG_KEY with rule configuration {'type': ['WATCHLIST']}" in caplog.records[0].msg
