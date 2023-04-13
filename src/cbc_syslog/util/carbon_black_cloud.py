@@ -44,7 +44,7 @@ class CarbonBlackCloud:
                 "server_url": "",
                 "audit_logs_enabled": True,
                 "alerts_enabled": True,
-                "alert_criteria": {
+                "alert_rules": {
                     "type": [
                         "CB_ANALYTICS",
                         "WATCHLIST",
@@ -84,7 +84,7 @@ class CarbonBlackCloud:
                                   integration="cbc-syslog",
                                   ssl_verify=not SSL_VERIFY_TEST_MODE),
                 "alerts_enabled": source["alerts_enabled"],
-                "alert_criteria": source["alert_criteria"],
+                "alert_rules": source["alert_rules"],
                 "audit_logs_enabled": source["audit_logs_enabled"]
             }
             self.instances.append(instance)
@@ -107,7 +107,7 @@ class CarbonBlackCloud:
         time_field = "last_update_time"
         time_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
-        def build_query(cb, alert_criteria, start, end):
+        def build_query(cb, alert_rule, start, end):
             """Build CBC SDK Alert Query"""
             query = cb.select(BaseAlert) \
                       .set_time_range(time_field,
@@ -116,48 +116,54 @@ class CarbonBlackCloud:
                       .sort_by(time_field, "ASC")
 
             # Iterate criteria options
-            for key in alert_criteria.keys():
+            for key in alert_rule.keys():
 
                 # Check for custom criteria
                 if key == "minimum_severity":
-                    query.set_minimum_severity(alert_criteria[key])
+                    query.set_minimum_severity(alert_rule[key])
 
                 # Changes with UAE v7 alerts
                 # if key == "policy_applied":
-                #     query.set_policy_applied(alert_criteria[key])
+                #     query.set_policy_applied(alert_rule[key])
 
                 # Add standard list value criteria
                 else:
-                    query.add_criteria(key, alert_criteria[key])
+                    query.add_criteria(key, alert_rule[key])
 
             return query
 
         # Iterate saved instances to fetch alerts for each instance
         for instance in self.instances:
             cb = instance["api"]
-            org_alerts = []
 
-            try:
-                # Fetch initial Alert batch
-                org_alerts.extend(build_query(cb, instance["alert_criteria"], start, end)[0:10000])
+            # Perform alert fetch for each alert rule
+            for alert_rule in instance["alert_rules"]:
+                org_alerts = []
 
-                # Check if 10k limit was hit and iteratively fetch remaining alerts
-                #   by increasing start time to the last alert fetched
-                if len(org_alerts) >= 10000:
-                    last_alert = org_alerts[-1]
-                    while True:
-                        new_start = datetime.strptime(last_alert[time_field], time_format) + timedelta(milliseconds=1)
-                        overflow = build_query(cb, instance["alert_criteria"], new_start, end)
+                try:
+                    # Fetch initial Alert batch
+                    org_alerts.extend(build_query(cb, alert_rule, start, end)[0:10000])
 
-                        # Extend alert list with follow up alert batches
-                        org_alerts.extend(overflow[0:10000])
-                        if len(overflow) >= 10000:
-                            last_alert = org_alerts[-1]
-                        else:
-                            break
-                alerts.extend(org_alerts)
-            except:
-                log.exception(f"Failed to fetch alerts (start: {start} - end: {end}) for org {cb.credentials.org_key}")
-                failed_orgs.append(cb.credentials.org_key)
+                    # Check if 10k limit was hit and iteratively fetch remaining alerts
+                    #   by increasing start time to the last alert fetched
+                    if len(org_alerts) >= 10000:
+                        last_alert = org_alerts[-1]
+                        while True:
+                            new_start = datetime.strptime(last_alert[time_field], time_format) + timedelta(milliseconds=1)
+                            overflow = build_query(cb, alert_rule, new_start, end)
+
+                            # Extend alert list with follow up alert batches
+                            org_alerts.extend(overflow[0:10000])
+                            if len(overflow) >= 10000:
+                                last_alert = org_alerts[-1]
+                            else:
+                                break
+                    alerts.extend(org_alerts)
+                except:
+                    log.exception(f"Failed to fetch alerts (start: {start} - end: {end})"
+                                  f" for org {cb.credentials.org_key} with rule configuration {alert_rule}")
+                    # Only add failed org_key once
+                    if cb.credentials.org_key not in failed_orgs:
+                        failed_orgs.append(cb.credentials.org_key)
 
         return alerts, failed_orgs

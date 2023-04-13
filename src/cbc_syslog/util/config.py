@@ -273,6 +273,8 @@ class Config:
                     "custom_api_key": section.get("custom_api_key"),
                     "org_key": section.get("org_key"),
                     "server_url": section.get("server_url"),
+                    "alerts_enabled": section.get("alerts_enabled", False),
+                    "alert_rules": section.get("alert_rules", [{}]),
                 })
 
         return sources

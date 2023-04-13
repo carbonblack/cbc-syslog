@@ -17,3 +17,13 @@ custom_api_id = "RANDOM_ID"
 custom_api_key = "RANDOM_SECRET"
 org_key = "DIFFERENT_ORG"
 server_url = "http://0.0.0.0:5001"
+alerts_enabled = true
+
+[[Org2.alert_rules]]
+type = ["CB_ANALYTICS"]
+minimum_severity = 3
+policy_applied = true
+
+[[Org2.alert_rules]]
+type = ["WATCHLIST"]
+minimum_severity = 7

@@ -116,19 +116,32 @@ def test_output(file_path, expected_params):
             "custom_api_id": "RANDOM_ID",
             "custom_api_key": "RANDOM_SECRET",
             "org_key": "SOME_ORG",
-            "server_url": "http://0.0.0.0:5001"
+            "server_url": "http://0.0.0.0:5001",
+            "alerts_enabled": False,
+            "alert_rules": [{}]
         }]),
     ("confs/multi-tenant.toml",
         [{
             "custom_api_id": "RANDOM_ID",
             "custom_api_key": "RANDOM_SECRET",
-            "org_key": "SOME_ORG", "server_url":
-            "http://0.0.0.0:5001"
+            "org_key": "SOME_ORG",
+            "server_url": "http://0.0.0.0:5001",
+            "alerts_enabled": False,
+            "alert_rules": [{}]
         }, {
             "custom_api_id": "RANDOM_ID",
             "custom_api_key": "RANDOM_SECRET",
             "org_key": "DIFFERENT_ORG",
-            "server_url": "http://0.0.0.0:5001"
+            "server_url": "http://0.0.0.0:5001",
+            "alerts_enabled": True,
+            "alert_rules": [{
+                "type": ["CB_ANALYTICS"],
+                "minimum_severity": 3,
+                "policy_applied": True
+            }, {
+                "type": ["WATCHLIST"],
+                "minimum_severity": 7
+            }]
         }]),
 ])
 def test_sources(file_path, expected_sources):
