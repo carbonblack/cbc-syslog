@@ -15,15 +15,13 @@ import threading
 import socket
 # import ssl
 import traceback
-import json
-import pprint
 import logging
 import pytest
 
 from flask import Flask, request, jsonify
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -38,6 +36,9 @@ def pytest_configure():
     """Pytest Global Variables"""
     pytest.alert_search_request = None
     pytest.alert_search_response = None
+    pytest.tcp_recv_data = None
+    pytest.udp_recv_data = None
+    pytest.http_recv_data = None
 
 #
 # Carbon Black Cloud Mocked Endpoints
@@ -47,7 +48,7 @@ def pytest_configure():
 @app.route('/appservices/v6/orgs/<org_key>/alerts/_search', methods=['POST'])
 def alert_search(org_key):
     """alert_search"""
-    logger.info("Fetched Alerts")
+    log.info("Fetched Alerts")
 
     # Save the request for verification
     pytest.alert_search_request = request.get_json()
@@ -68,16 +69,14 @@ def alert_search(org_key):
 #
 # Syslog Output Mocked Servers
 #
-
-
 @app.route('/http_out', methods=['POST'])
 def http_out():
     """http_out"""
     try:
-        content = request.json
-        logger.info(content)
+        log.debug(f"New data length: {len(request.data)}")
+        pytest.http_recv_data = request.data
     except Exception:
-        logger.info(traceback.format_exc())
+        log.info(traceback.format_exc())
     return jsonify({})
 
 
@@ -85,14 +84,14 @@ def udp_server_func():
     """udp_server"""
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_address = ('0.0.0.0', udp_server_port)
-    print("udp_server is listening on port {}".format(udp_server_port))
+    log.info(f"udp_server is listening on port {udp_server_port}")
     sock.bind(server_address)
 
     while True:
-        data, address = sock.recvfrom(4096)
-        print(address)
-        print(len(data))
-        print(repr(data))
+        buffer, address = sock.recvfrom(4096)
+        log.debug(f"New client from {address}")
+        log.debug(f"Buffer length: {len(buffer)}")
+        pytest.udp_recv_data = buffer
 
 
 def tcp_server_func():
@@ -101,21 +100,20 @@ def tcp_server_func():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('0.0.0.0', tcp_server_port))
     server_socket.listen(1)
-    print("tcp_server is listening on port {}".format(tcp_server_port))
+    log.info(f"tcp_server is listening on port {tcp_server_port}")
 
     while True:
         new_client_socket, address = server_socket.accept()
 
         secured_client_socket = new_client_socket
 
-        print(new_client_socket, address)
+        log.debug(f"New client: {new_client_socket} from {address}")
         buffer = secured_client_socket.recv(4096)
-        print(len(buffer))
-        try:
-            pprint.pprint(json.loads(buffer))
-        except Exception:
-            print(buffer)
-            pass
+        log.debug(f"Buffer length: {len(buffer)}")
+
+        # Save contents for testing
+        pytest.tcp_recv_data = buffer
+
         secured_client_socket.close()
 
 
@@ -135,20 +133,20 @@ def tcp_server_func():
 #                                                 certfile=cert_file,
 #                                                 keyfile=key_file,
 #                                                 ssl_version=ssl.PROTOCOL_TLSv1)
-
-        print(new_client_socket, address)
-        buffer = secured_client_socket.recv()
-        print(len(buffer))
-        print(repr(buffer))
-        secured_client_socket.close()
+#
+#         print(new_client_socket, address)
+#         buffer = secured_client_socket.recv()
+#         print(len(buffer))
+#         print(repr(buffer))
+#         secured_client_socket.close()
 
 
 #
 # Create a listening server to test UDP, TCP and TCP/TLS
 #
-tcp_server = threading.Thread(target=lambda: tcp_server_func, daemon=True).start()
+tcp_server = threading.Thread(daemon=True, target=tcp_server_func).start()
 # tcp_tls_server = threading.Thread(target=lambda: tcp_tls_server, daemon=True).start()
-udp_server = threading.Thread(target=lambda: udp_server_func, daemon=True).start()
+udp_server = threading.Thread(daemon=True, target=udp_server_func).start()
 
 #
 # Default port is 5000
