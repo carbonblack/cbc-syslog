@@ -195,6 +195,21 @@ class Config:
 
         Returns:
             (dict):  output configuration
+
+            {
+                "back_up_dir": "",
+                "template": "",
+                "format": "",
+                "type": "",
+                "host": "",
+                "port": "",
+                "tls_verify": "",
+                "http_headers": "",
+                "ca_cert": "",
+                "cert": "",
+                "key": "",
+                "key_password": ""
+            }
         """
         general_section = self.config.get("general", {})
         tls_section = self.config.get("tls", {})
