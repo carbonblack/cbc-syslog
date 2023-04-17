@@ -11,22 +11,23 @@
 
 """Flask mocking app"""
 
-import threading
-import socket
-# import ssl
-import traceback
 import logging
+import pathlib
 import pytest
+import socket
+import ssl
+import threading
+import traceback
 
 from flask import Flask, request, jsonify
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
+CERTS_PATH = pathlib.Path(__file__).joinpath("../fixtures/certs").resolve()
+
 app = Flask(__name__)
 
-# cert_file = '../cert.pem'
-# key_file = '../cert.pem'
 tcp_tls_server_port = 8888
 tcp_server_port = 8887
 udp_server_port = 8886
@@ -37,14 +38,14 @@ def pytest_configure():
     pytest.alert_search_request = None
     pytest.alert_search_response = None
     pytest.tcp_recv_data = None
+    pytest.tcp_tls_recv_data = None
     pytest.udp_recv_data = None
     pytest.http_recv_data = None
+
 
 #
 # Carbon Black Cloud Mocked Endpoints
 #
-
-
 @app.route('/appservices/v6/orgs/<org_key>/alerts/_search', methods=['POST'])
 def alert_search(org_key):
     """alert_search"""
@@ -103,49 +104,48 @@ def tcp_server_func():
     log.info(f"tcp_server is listening on port {tcp_server_port}")
 
     while True:
-        new_client_socket, address = server_socket.accept()
+        unsecured_client_socket, address = server_socket.accept()
 
-        secured_client_socket = new_client_socket
-
-        log.debug(f"New client: {new_client_socket} from {address}")
-        buffer = secured_client_socket.recv(4096)
+        log.debug(f"New client: {unsecured_client_socket} from {address}")
+        buffer = unsecured_client_socket.recv(4096)
         log.debug(f"Buffer length: {len(buffer)}")
 
         # Save contents for testing
         pytest.tcp_recv_data = buffer
 
-        secured_client_socket.close()
 
+def tcp_tls_server_func():
+    """tcp_tls_server"""
+    # Create a TCP/IP socket
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('0.0.0.0', tcp_tls_server_port))
+    server_socket.listen(1)
+    log.info(f"tcp_tls_server is listening on port {tcp_tls_server_port}")
 
-# def tcp_tls_server_func():
-#     """tcp_tls_server"""
-#     # Create a TCP/IP socket
-#     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#     server_socket.bind(('0.0.0.0', tcp_tls_server_port))
-#     server_socket.listen(1)
-#     print("tcp_tls_server is listening on port {}".format(tcp_tls_server_port))
-#
-#     while True:
-#         new_client_socket, address = server_socket.accept()
-#
-#         secured_client_socket = ssl.wrap_socket(new_client_socket,
-#                                                 server_side=True,
-#                                                 certfile=cert_file,
-#                                                 keyfile=key_file,
-#                                                 ssl_version=ssl.PROTOCOL_TLSv1)
-#
-#         print(new_client_socket, address)
-#         buffer = secured_client_socket.recv()
-#         print(len(buffer))
-#         print(repr(buffer))
-#         secured_client_socket.close()
+    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    context.load_cert_chain(certfile=CERTS_PATH.joinpath("rootCACert.pem"),
+                            keyfile=CERTS_PATH.joinpath("rootCAKey.pem"))
+
+    while True:
+        new_client_socket, address = server_socket.accept()
+        try:
+            with context.wrap_socket(new_client_socket, server_side=True) as secured_client_socket:
+                log.debug(f"New client: {new_client_socket} from {address}")
+                buffer = secured_client_socket.recv(4096)
+                log.debug(f"Buffer length: {len(buffer)}")
+
+                # Save contents for testing
+                pytest.tcp_tls_recv_data = buffer
+
+        except Exception as e:
+            pytest.exception = e
 
 
 #
 # Create a listening server to test UDP, TCP and TCP/TLS
 #
 tcp_server = threading.Thread(daemon=True, target=tcp_server_func).start()
-# tcp_tls_server = threading.Thread(target=lambda: tcp_tls_server, daemon=True).start()
+tcp_tls_server = threading.Thread(daemon=True, target=tcp_tls_server_func).start()
 udp_server = threading.Thread(daemon=True, target=udp_server_func).start()
 
 #

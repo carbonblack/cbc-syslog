@@ -66,13 +66,15 @@ class Output:
             unsecured_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
                 if "tls" in type:
-                    context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=self.output_params["ca_cert"])
+                    context = ssl.create_default_context()
+                    context.load_verify_locations(self.output_params["ca_cert"])
+
                     if "cert" in self.output_params:
                         context.load_cert_chain(self.output_params["cert"],
                                                 keyfile=self.output_params["key"],
                                                 password=self.output_params["key_password"])
 
-                    if not self.output_params["tls_verify"]:
+                    if not self.output_params.get("tls_verify", True):
                         context.check_hostname = False
                         context.verify_mode = ssl.CERT_NONE
                     client_socket = context.wrap_socket(unsecured_client_socket, server_hostname=server_url)
