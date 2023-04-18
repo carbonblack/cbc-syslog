@@ -33,15 +33,15 @@ class Output:
 
         Example:
             {
-                "type": "",
-                "host": "",
-                "port": "",
-                "tls_verify": "",
-                "http_headers": "",
-                "ca_cert": "",
-                "cert": "",
-                "key": "",
-                "key_password": ""
+                "type": str,
+                "host": str,
+                "port": str,
+                "tls_verify": bool,
+                "http_headers": dict,
+                "ca_cert": str,
+                "cert": str,
+                "key": str,
+                "key_password": str
             }
         """
         self.output_params = output_params
