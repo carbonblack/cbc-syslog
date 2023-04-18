@@ -54,6 +54,9 @@ def test_send_tcp():
     })
     success = output.send("Hello World")
     assert success is True
+
+    # Add small delay to enable tcp transaction to complete
+    time.sleep(0.1)
     assert "Hello World".encode("utf-8") == pytest.tcp_recv_data
 
 
