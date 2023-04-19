@@ -1,0 +1,12 @@
+[general]
+template = "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}"
+back_up_dir = "/Users/jdoe/Documents/"
+output_format = "cef"
+output_type = "file"
+file_path = "/Users/jdoe/Documents/output/"
+
+[CarbonBlackCloudServer]
+custom_api_id = "RANDOM_ID"
+custom_api_key = "RANDOM_SECRET"
+org_key = "SOME_ORG"
+server_url = "http://0.0.0.0:5001"
