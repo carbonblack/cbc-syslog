@@ -33,7 +33,8 @@ tcp_server_port = 8887
 udp_server_port = 8886
 
 
-def pytest_configure():
+@pytest.fixture(scope="function", autouse=True)
+def test_globals():
     """Pytest Global Variables"""
     pytest.alert_search_request = None
     pytest.alert_search_response = None
