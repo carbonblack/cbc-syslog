@@ -97,3 +97,6 @@ ENV/
 .DS_Store
 
 env.decrypted
+
+src/tests/fixtures/tmp/*
+!src/tests/fixtures/tmp/KEEP_EMPTY.md

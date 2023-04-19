@@ -30,13 +30,14 @@ class Config:
         [general]
         template =
         back_up_dir =
-        output_format=
-        output_type=
-        tcp_out=
-        udp_out=
-        http_out=
-        http_headers=
-        https_ssl_verify=
+        output_format =
+        output_type =
+        tcp_out =
+        udp_out =
+        http_out =
+        http_headers =
+        https_ssl_verify =
+        file_path =
 
         [tls]
         ca_cert =
@@ -51,7 +52,7 @@ class Config:
         org_key =
         server_url =
     """
-    OUTPUT_TYPES = ["tcp", "udp", "tcp+tls", "http"]
+    OUTPUT_TYPES = ["tcp", "udp", "tcp+tls", "http", "file"]
 
     DEFAULT_CEF_TEMPLATE = "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}"  # noqa 501
     DEFAULT_LEEF_TEMPLATE = ""
@@ -158,6 +159,14 @@ class Config:
             if "https_ssl_verify" not in general_section:
                 log.warning("Section (general): https_ssl_verify not specified defaulting to TRUE")
 
+        elif "file" == general_section.get("output_type").lower():
+            if "file_path" not in general_section:
+                if "back_up_dir" in general_section:
+                    log.warning("Section (general): file_path not specified defaulting to back_up_dir")
+                else:
+                    log.error("Section (general): file_path not specified and back_up_dir missing no file destination specified")
+                    valid = False
+
         # Check for Carbon Black Cloud instances
         has_server = False
         for section_name in self.config.keys():
@@ -208,7 +217,8 @@ class Config:
                 "ca_cert": "",
                 "cert": "",
                 "key": "",
-                "key_password": ""
+                "key_password": "",
+                "file_path": ""
             }
         """
         general_section = self.config.get("general", {})
@@ -249,6 +259,13 @@ class Config:
 
             params["http_headers"] = json.loads(general_section.get("http_headers"))
             params["tls_verify"] = bool(general_section.get("https_ssl_verify", True))
+
+        elif "file" in params["type"]:
+            del params["host"]
+            del params["port"]
+
+            # Default back_up_dir if file_path missing
+            params["file_path"] = general_section.get("file_path", general_section.get("back_up_dir"))
 
         return params
 

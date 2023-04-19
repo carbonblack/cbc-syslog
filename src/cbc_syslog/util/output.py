@@ -13,10 +13,13 @@
 """Output class"""
 
 import logging
+import pathlib
 import requests
 import socket
 import ssl
 import traceback
+
+from datetime import datetime
 
 log = logging.getLogger(__name__)
 
@@ -111,6 +114,16 @@ class Output:
             except Exception:
                 log.error(traceback.format_exc())
                 success = False
+
+        elif type == "file":
+            try:
+                new_file_path = pathlib.Path(self.output_params.get("file_path")).joinpath(f"{datetime.now().isoformat()}.txt")
+                with open(new_file_path, "w") as new_file:
+                    new_file.write(data)
+            except Exception:
+                log.error(traceback.format_exc())
+                success = False
+
         else:
             log.error(f"type {type} not supported")
             success = False

@@ -16,6 +16,7 @@ import pathlib
 import pytest
 import socket
 import ssl
+import time
 import threading
 import traceback
 
@@ -25,6 +26,7 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 CERTS_PATH = pathlib.Path(__file__).joinpath("../fixtures/certs").resolve()
+TMP_PATH = pathlib.Path(__file__).joinpath("../fixtures/tmp").resolve()
 
 app = Flask(__name__)
 
@@ -42,6 +44,17 @@ def test_globals():
     pytest.tcp_tls_recv_data = None
     pytest.udp_recv_data = None
     pytest.http_recv_data = None
+
+
+@pytest.fixture(scope="function")
+def wipe_tmp():
+    """Wipe tmp fixtures before each test"""
+    for file_path in TMP_PATH.iterdir():
+        if file_path.name != "KEEP_EMPTY.md":
+            file_path.unlink(missing_ok=True)
+
+    # Add small delay to prevent race condition
+    time.sleep(0.1)
 
 
 #

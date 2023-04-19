@@ -55,6 +55,10 @@ def test_validate(file_path, valid):
         "Section (general): udp_out required when output_type is udp",
         "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing custom_api_id",
         "No valid Carbon Black Cloud instances provided"
+    ]),
+    ("confs/invalid-file.toml", True, [
+        "Section (general): back_up_dir required to save output in case of a destination failure",
+        "Section (general): file_path not specified and back_up_dir missing no file destination specified"
     ])
 ])
 def test_validate_invalid(file_path, valid, caplog, logs):
@@ -100,7 +104,14 @@ def test_validate_invalid(file_path, valid, caplog, logs):
             "port": "8888",
             "template": "",
             "tls_verify": True,
-            "type": "tcp+tls"})
+            "type": "tcp+tls"}),
+    ("confs/file_out.toml",
+        {
+            "back_up_dir": "/Users/jdoe/Documents/",
+            "format": "cef",
+            "template": "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}",  # noqa 501
+            "type": "file",
+            "file_path": "/Users/jdoe/Documents/output/"})
 ])
 def test_output(file_path, expected_params):
     """Verify output creates valid configuration dict"""

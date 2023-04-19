@@ -124,3 +124,34 @@ def test_send_udp_invalid():
     })
     success = output.send("Hello World")
     assert success is False
+
+
+def test_send_file(wipe_tmp):
+    """Test File output"""
+    tmp_dir = pathlib.Path(__file__).joinpath("../../fixtures/tmp").resolve()
+    output = Output({
+        "type": "file",
+        "file_path": tmp_dir
+    })
+    success = output.send("Hello World")
+    assert success is True
+
+    output_file_path = ""
+    for file_path in tmp_dir.iterdir():
+        if file_path.name != "KEEP_EMPTY.md":
+            output_file_path = file_path
+
+    # Read only file in tmp directory
+    with output_file_path.open() as file:
+        assert file.readline() == "Hello World"
+
+
+def test_send_file_invalid(caplog, wipe_tmp):
+    """Test File output with invalid directory"""
+    output = Output({
+        "type": "file",
+        "file_path": "INVALID"
+    })
+    success = output.send("Hello World")
+    assert success is False
+    assert "FileNotFoundError" in caplog.records[0].msg
