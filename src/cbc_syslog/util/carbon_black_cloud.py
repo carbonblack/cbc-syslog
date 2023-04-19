@@ -15,6 +15,7 @@
 from cbc_sdk import CBCloudAPI
 from cbc_sdk.platform import BaseAlert
 from datetime import datetime, timedelta
+
 import logging
 import sys
 
@@ -74,6 +75,8 @@ class CarbonBlackCloud:
                 }
             }
         """
+        from .. import __version__
+
         self.instances = []
 
         for source in sources:
@@ -81,7 +84,7 @@ class CarbonBlackCloud:
                 "api": CBCloudAPI(url=source["server_url"],
                                   org_key=source["org_key"],
                                   token=(source["custom_api_key"] + "/" + source["custom_api_id"]),
-                                  integration="cbc-syslog",
+                                  integration_name=f"CBC_SYSLOG/{__version__}",
                                   ssl_verify=not SSL_VERIFY_TEST_MODE),
                 "alerts_enabled": source["alerts_enabled"],
                 "alert_rules": source["alert_rules"],

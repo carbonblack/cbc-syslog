@@ -221,6 +221,9 @@ def test_fetch_alerts_exception(caplog):
         """Alert output callable"""
         raise Exception
 
+    # Set Alert Response
+    pytest.alert_search_response = alert_output
+
     end = datetime.now(timezone.utc) - timedelta(seconds=30)
     start = end - timedelta(minutes=5)
     cbcloud = CarbonBlackCloud([source])
