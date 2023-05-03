@@ -23,7 +23,7 @@ extras_require = {
         "flake8-colors==0.1.9",
         "flake8-docstrings==1.7.0",
         "pre-commit>=2.15.0",
-        "freezegun=1.2.2",
+        "freezegun==1.2.2",
     ]
 }
 
