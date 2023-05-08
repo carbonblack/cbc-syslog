@@ -28,36 +28,45 @@ class Config:
 
     Example:
         [general]
-        template =
-        back_up_dir =
-        output_format =
-        output_type =
-        tcp_out =
-        udp_out =
-        http_out =
-        http_headers =
-        https_ssl_verify =
-        file_path =
+        back_up_dir = str
+        output_format = str
+        output_type = str
+        tcp_out = str
+        udp_out = str
+        http_out = str
+        http_headers = dict
+        https_ssl_verify = bool
+        file_path = str
 
         [tls]
-        ca_cert =
-        cert =
-        key =
-        key_password =
-        tls_verify =
+        ca_cert = str
+        cert = str
+        key = str
+        key_password = str
+        tls_verify = bool
+
+        [alerts_template]
+        header = str
+        type_field = str
+        time_format = str
+        time_fields = list
+
+        [alerts_template.extension]
+        default = str
 
         [org1]
-        custom_api_id =
-        custom_api_key =
-        org_key =
-        server_url =
+        custom_api_id = str
+        custom_api_key = str
+        org_key = str
+        server_url = str
+        alerts_enabled = bool
+
+        [[or1.alert_rules]]
+        str = str
     """
     OUTPUT_TYPES = ["tcp", "udp", "tcp+tls", "http", "file"]
-
-    DEFAULT_CEF_TEMPLATE = "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}"  # noqa 501
-    DEFAULT_LEEF_TEMPLATE = ""
-    OUTPUT_FORMATS = ["cef", "leef", "json"]
-    TEMPLATE_SUPPORTED_FORMATS = ["cef", "leef"]
+    OUTPUT_FORMATS = ["json", "template"]
+    SUPPORTED_TEMPLATES = ["alerts_template"]
 
     def __init__(self, file_path):
         """
@@ -96,13 +105,29 @@ class Config:
             format = general_section.get("output_format")
             log.error(f"Section (general): output_format {format} is not a supported format")
             valid = False
-        elif general_section.get("output_format").lower() in self.TEMPLATE_SUPPORTED_FORMATS:
-            if "template" not in general_section:
-                format = general_section.get("output_format").lower()
-                if format == "cef":
-                    log.warning(f"Section (general): template missing using default {self.DEFAULT_CEF_TEMPLATE}")
-                elif format == "leef":
-                    log.warning(f"Section (general): template missing using default {self.DEFAULT_LEEF_TEMPLATE}")
+        elif general_section.get("output_format").lower() == "template":
+            at_least_one = False
+            for template in self.SUPPORTED_TEMPLATES:
+                if template in self.config:
+                    at_least_one = True
+                    template_section = self.config.get(template)
+                    if "header" not in template_section:
+                        log.error(f"Section ({template}): template missing header")
+                        valid = False
+                    elif "extension" in template_section.get("header"):
+                        if "extension" not in template_section:
+                            log.warning(f"Section ({template}): extension missing and referenced in header defaulting to empty string")
+                        else:
+                            if "default" not in template_section.get("extension", {}):
+                                log.warning(f"Section ({template}): default extension missing if type not found defaulting to empty string")
+                            elif "type_field" not in template_section:
+                                log.warning(f"Section ({template}): type_field missing extension will only use default")
+                    if "time_format" in template_section and len(template_section.get("time_fields", [])) < 1:
+                        log.warning(f"Section ({template}): time_format specified but no time_fields listed")
+
+            if not at_least_one:
+                log.error("Section (general): output_format is template but no templates provided")
+                valid = False
 
         # Verify output_type and their required properties
         if "output_type" not in general_section:
@@ -207,8 +232,6 @@ class Config:
 
             {
                 "back_up_dir": "",
-                "template": "",
-                "format": "",
                 "type": "",
                 "host": "",
                 "port": "",
@@ -226,18 +249,10 @@ class Config:
 
         params = {
             "back_up_dir": general_section.get("back_up_dir"),
-            "format": general_section.get("output_format").lower(),
-            "template": general_section.get("template", None),
             "type": general_section.get("output_type").lower(),
             "host": None,
             "port": None
         }
-
-        if params["template"] is None:
-            if params["format"] == "cef":
-                params["template"] = self.DEFAULT_CEF_TEMPLATE
-            elif params["format"] == "leef":
-                params["template"] = self.DEFAULT_LEEF_TEMPLATE
 
         if "tcp" in params["type"]:
             params["host"], params["port"] = general_section.get("tcp_out").split(":")
@@ -295,3 +310,24 @@ class Config:
                 })
 
         return sources
+
+    def transform(self, type):
+        """
+        Transform properties
+
+        Args:
+            type (str): The type of data to be transformed to correspond to the configuration
+
+        Returns:
+            (dict): transform configuration
+        """
+        general_section = self.config.get("general", {})
+        format = general_section.get("output_format").lower()
+        if format != "template":
+            return {
+                "format": format
+            }
+
+        template_section = self.config.get(type + "_template", {})
+        template_section["format"] = format
+        return template_section
