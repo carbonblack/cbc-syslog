@@ -15,55 +15,71 @@ import pytest
 import pathlib
 from cbc_syslog.util import Config
 
-FIXTURES_PATH = pathlib.Path(__file__).joinpath("../../fixtures").resolve()
+CONFS_PATH = pathlib.Path(__file__).joinpath("../../fixtures/confs").resolve()
 
 
 @pytest.mark.parametrize("file_path, valid", [
-    ("confs/cef.toml", True),
-    ("confs/json.toml", True),
-    ("confs/leef.toml", True)
+    ("file_out.toml", True),
+    ("json.toml", True),
+    ("multi-tenant.toml", True),
+    ("udp.toml", True),
+    ("template.toml", True),
+    ("tcp+tls.toml", True)
 ])
 def test_validate(file_path, valid):
     """Validate supported configuration files"""
-    resolved_path = str(FIXTURES_PATH.joinpath(file_path))
+    resolved_path = str(CONFS_PATH.joinpath(file_path))
     config = Config(resolved_path)
     assert config.validate()
 
 
-@pytest.mark.parametrize("file_path, valid, logs", [
-    ("confs/invalid.toml", True, [
+@pytest.mark.parametrize("file_path, logs", [
+    ("invalid.toml", [
         "Section (general): back_up_dir required to save output in case of a destination failure",
         "Section (general): output_format required",
         "Section (general): output_type required",
         "No valid Carbon Black Cloud instances provided"
     ]),
-    ("confs/invalid-http.toml", True, [
+    ("invalid-http.toml", [
         "Section (general): output_format required",
         "Section (general): http_out required when output_type is http",
         "Section (general): https_ssl_verify not specified defaulting to TRUE",
         "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing custom_api_id",
         "No valid Carbon Black Cloud instances provided"
     ]),
-    ("confs/invalid-tcp.toml", True, [
+    ("invalid-tcp.toml", [
         "Section (general): output_format required",
         "Section (general): tcp_out required when output_type is tcp or tcp+tls",
         "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing org_key",
         "No valid Carbon Black Cloud instances provided"
     ]),
-    ("confs/invalid-udp.toml", True, [
+    ("invalid-udp.toml", [
         "Section (general): output_format required",
         "Section (general): udp_out required when output_type is udp",
         "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing custom_api_id",
         "No valid Carbon Black Cloud instances provided"
     ]),
-    ("confs/invalid-file.toml", True, [
+    ("invalid-file.toml", [
         "Section (general): back_up_dir required to save output in case of a destination failure",
+        "Section (general): output_format required",
         "Section (general): file_path not specified and back_up_dir missing no file destination specified"
+    ]),
+    ("invalid-template.toml", [
+        "Section (general): output_format is template but no templates provided"
+    ]),
+    ("invalid-header.toml", [
+        "Section (alerts_template): template missing header"
+    ]),
+    ("invalid-extension.toml", [
+        "Section (alerts_template): extension missing and referenced in header defaulting to empty string",
+        "Section (alerts_template): time_format specified but no time_fields listed",
+        "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing custom_api_key",
+        "No valid Carbon Black Cloud instances provided"
     ])
 ])
-def test_validate_invalid(file_path, valid, caplog, logs):
+def test_validate_invalid(file_path, caplog, logs):
     """Test Validate with invalid configuration files"""
-    resolved_path = str(FIXTURES_PATH.joinpath(file_path))
+    resolved_path = str(CONFS_PATH.joinpath(file_path))
     config = Config(resolved_path)
     assert not config.validate()
 
@@ -72,57 +88,51 @@ def test_validate_invalid(file_path, valid, caplog, logs):
 
 
 @pytest.mark.parametrize("file_path, expected_params", [
-    ("confs/cef.toml",
+    ("file_out.toml",
         {
             "back_up_dir": "/Users/jdoe/Documents/",
-            "format": "cef",
-            "template": "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}",  # noqa 501
-            "type": "udp",
-            "host": "0.0.0.0",
-            "port": "8886"
+            "type": "file",
+            "file_path": "/Users/jdoe/Documents/output/"
         }),
-    ("confs/json.toml",
+    ("json.toml",
         {
             "back_up_dir": "/Users/avanbrunt/Desktop/backdir",
-            "format": "json",
-            "template": None,
             "type": "http",
             "host": "http://0.0.0.0:5001/http_out",
             "port": None,
             "http_headers": {"content-type": "application/json"},
             "tls_verify": False
         }),
-    ("confs/leef.toml",
+    ("udp.toml",
+        {
+            "back_up_dir": "/Users/jdoe/Documents/",
+            "type": "udp",
+            "host": "0.0.0.0",
+            "port": "8886"
+        }),
+    ("tcp+tls.toml",
         {
             "back_up_dir": "/Users/jdoe/Documents/",
             "ca_cert": "/etc/cb/integrations/cbc-syslog/ca.pem",
             "cert": "/etc/cb/integrations/cbc-syslog/cert.pem",
-            "format": "leef",
             "host": "0.0.0.0",
             "key": "/etc/cb/integrations/cbc-syslog/cert.key",
             "key_password": None,
             "port": "8888",
-            "template": "",
             "tls_verify": True,
-            "type": "tcp+tls"}),
-    ("confs/file_out.toml",
-        {
-            "back_up_dir": "/Users/jdoe/Documents/",
-            "format": "cef",
-            "template": "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}",  # noqa 501
-            "type": "file",
-            "file_path": "/Users/jdoe/Documents/output/"})
+            "type": "tcp+tls"
+        })
 ])
 def test_output(file_path, expected_params):
     """Verify output creates valid configuration dict"""
-    resolved_path = str(FIXTURES_PATH.joinpath(file_path))
+    resolved_path = str(CONFS_PATH.joinpath(file_path))
     config = Config(resolved_path)
     output_params = config.output()
     assert output_params == expected_params
 
 
 @pytest.mark.parametrize("file_path, expected_sources", [
-    ("confs/json.toml",
+    ("json.toml",
         [{
             "custom_api_id": "RANDOM_ID",
             "custom_api_key": "RANDOM_SECRET",
@@ -131,7 +141,7 @@ def test_output(file_path, expected_params):
             "alerts_enabled": False,
             "alert_rules": [{}]
         }]),
-    ("confs/multi-tenant.toml",
+    ("multi-tenant.toml",
         [{
             "custom_api_id": "RANDOM_ID",
             "custom_api_key": "RANDOM_SECRET",
@@ -157,7 +167,35 @@ def test_output(file_path, expected_params):
 ])
 def test_sources(file_path, expected_sources):
     """Verify output creates valid configuration dict"""
-    resolved_path = str(FIXTURES_PATH.joinpath(file_path))
+    resolved_path = str(CONFS_PATH.joinpath(file_path))
     config = Config(resolved_path)
     sources = config.sources()
     assert sources == expected_sources
+
+
+@pytest.mark.parametrize("file_path, expected_transform", [
+    ("template.toml",
+        {
+            "format": "template",
+            "header": "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|"
+                      "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}",
+            "type_field": "type",
+            "time_format": "%b %d %Y %H:%m:%S",
+            "time_fields": ["backend_timestamp"],
+            "extension": {
+                "default": "cat={{type}}\tact={{sensor_action}}\toutcome={{run_state}}",
+                "CB_ANALYTICS": "cat={{type}}\tact={{sensor_action}}\toutcome={{run_state}}\t"
+                                "frameworkName=MITRE_ATT&CK\tthreatAttackID={{attack_tactic}}:{{attack_technique}}"
+            }
+        }),
+    ("json.toml",
+        {
+            "format": "json"
+        })
+])
+def test_transform(file_path, expected_transform):
+    """Verify transform creates valid configuration dict"""
+    resolved_path = str(CONFS_PATH.joinpath(file_path))
+    config = Config(resolved_path)
+    transform = config.transform("alerts")
+    assert transform == expected_transform

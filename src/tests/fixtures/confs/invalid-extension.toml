@@ -1,0 +1,14 @@
+[general]
+back_up_dir = "/Users/jdoe/Documents/"
+output_format = "template"
+output_type = "udp"
+udp_out = "0.0.0.0:8886"
+
+[alerts_template]
+header = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|{{reason_code}}|{{reason}}|{{severity}}|{{extension}}"
+time_format = "%b %d %Y %H:%m:%S"
+
+[CarbonBlackCloudServer]
+custom_api_id = "RANDOM_ID"
+org_key = "SOME_ORG"
+server_url = "http://0.0.0.0:5001"

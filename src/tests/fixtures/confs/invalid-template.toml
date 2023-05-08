@@ -1,9 +1,10 @@
 [general]
-template = "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}"
 back_up_dir = "/Users/jdoe/Documents/"
-output_format = "cef"
+output_format = "template"
 output_type = "udp"
 udp_out = "0.0.0.0:8886"
+
+
 
 [CarbonBlackCloudServer]
 custom_api_id = "RANDOM_ID"

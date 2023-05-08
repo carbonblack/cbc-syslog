@@ -1,0 +1,31 @@
+[general]
+back_up_dir = "/Users/avanbrunt/Desktop/backdir"
+output_format = "template"
+output_type = "tcp"
+tcp_out = "0.0.0.0:8888"
+
+[alerts_template]
+header = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|{{reason_code}}|{{reason}}|{{severity}}|{{extension}}"
+type_field = "type"
+time_format = "%b %d %Y %H:%m:%S"
+time_fields = ["backend_timestamp"]
+
+[alerts_template.extension]
+default = "cat={{type}}\tact={{sensor_action}}\toutcome={{run_state}}"
+CB_ANALYTICS = "cat={{type}}\tact={{sensor_action}}\toutcome={{run_state}}\tframeworkName=MITRE_ATT&CK\tthreatAttackID={{attack_tactic}}:{{attack_technique}}"
+
+[Org2]
+custom_api_id = "RANDOM_ID"
+custom_api_key = "RANDOM_SECRET"
+org_key = "DIFFERENT_ORG"
+server_url = "http://0.0.0.0:5001"
+alerts_enabled = true
+
+[[Org2.alert_rules]]
+type = ["CB_ANALYTICS"]
+minimum_severity = 3
+policy_applied = true
+
+[[Org2.alert_rules]]
+type = ["WATCHLIST"]
+minimum_severity = 7

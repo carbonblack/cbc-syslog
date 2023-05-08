@@ -1,6 +1,4 @@
 [general]
-template = "{{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signature}}|{{name}}|{{severity}}|{{extension}}"
-output_format = "cef"
 output_type = "file"
 
 [CarbonBlackCloudServer]

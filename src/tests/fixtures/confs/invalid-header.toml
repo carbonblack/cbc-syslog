@@ -1,8 +1,12 @@
 [general]
 back_up_dir = "/Users/jdoe/Documents/"
-output_format = "json"
-output_type = "file"
-file_path = "/Users/jdoe/Documents/output/"
+output_format = "template"
+output_type = "udp"
+udp_out = "0.0.0.0:8886"
+
+[alerts_template]
+time_format = "%b %d %Y %H:%m:%S"
+time_fields = ["backend_timestamp"]
 
 [CarbonBlackCloudServer]
 custom_api_id = "RANDOM_ID"

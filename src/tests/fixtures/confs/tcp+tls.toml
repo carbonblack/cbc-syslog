@@ -1,6 +1,6 @@
 [general]
 back_up_dir = "/Users/jdoe/Documents/"
-output_format = "leef"
+output_format = "json"
 output_type = "tcp+tls"
 tcp_out = "0.0.0.0:8888"
 
