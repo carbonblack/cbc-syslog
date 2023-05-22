@@ -9,7 +9,7 @@ import io
 
 install_requires = [
     'Jinja2==2.11.3',
-    'requests==2.24.0',
+    'requests==2.31.0',
     'psutil==5.7.3',
     ]
 
