@@ -300,11 +300,18 @@ class Config:
                 continue
 
             if "server_url" in section:
+                # Check for missing https and extra backslash
+                url = section.get("server_url")
+                if "://" not in url:
+                    url = "https://" + url
+                if url[-1] == "/":
+                    url = url[:-1]
+
                 sources.append({
                     "custom_api_id": section.get("custom_api_id"),
                     "custom_api_key": section.get("custom_api_key"),
                     "org_key": section.get("org_key"),
-                    "server_url": section.get("server_url"),
+                    "server_url": url,
                     "alerts_enabled": section.get("alerts_enabled", False),
                     "alert_rules": section.get("alert_rules", [{}]),
                 })
