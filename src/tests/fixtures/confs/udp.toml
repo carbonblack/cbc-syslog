@@ -1,5 +1,5 @@
 [general]
-back_up_dir = "/Users/jdoe/Documents/"
+backup_dir = "/Users/jdoe/Documents/"
 output_format = "json"
 output_type = "udp"
 udp_out = "0.0.0.0:8886"

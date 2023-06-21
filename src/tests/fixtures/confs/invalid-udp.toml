@@ -1,5 +1,5 @@
 [general]
-back_up_dir = "/Users/jdoe/Documents/"
+backup_dir = "/Users/jdoe/Documents/"
 output_type = "udp"
 
 [CarbonBlackCloudServer]

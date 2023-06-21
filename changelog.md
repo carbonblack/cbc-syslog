@@ -43,7 +43,7 @@ in the case that the Connector fails to send the data to Syslog.
 
 Please see the following example:
 
-    back_up_dir = /Users/jdoe/Documents/
+    backup_dir = /Users/jdoe/Documents/
 
 > **Note**: These fields are not optional and must be present in the config file.
 
