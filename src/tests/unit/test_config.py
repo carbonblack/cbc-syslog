@@ -199,3 +199,11 @@ def test_transform(file_path, expected_transform):
     config = Config(resolved_path)
     transform = config.transform("alerts")
     assert transform == expected_transform
+
+
+def test_safe_source_handling():
+    """Verify source_url is correctly handled for missing https and extra backslash"""
+    resolved_path = str(CONFS_PATH.joinpath("backslash-domain.toml"))
+    config = Config(resolved_path)
+    sources = config.sources()
+    assert sources[0]["server_url"] == "https://defense.conferdeploy.net"
