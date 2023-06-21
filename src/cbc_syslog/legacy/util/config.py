@@ -72,15 +72,15 @@ def verify_config(config):
         logger.error('output_type is invalid.  Must be tcp, udp, http or tcp+tls')
         sys.exit(-1)
 
-    back_up_dir = config.get('general', 'back_up_dir')
+    backup_dir = config.get('general', 'backup_dir')
     # Add trailing slash
-    if back_up_dir[-1] != '/' and back_up_dir[-1] != '\\':
-        if back_up_dir.find('/') == -1:
-            output_params['back_up_dir'] = back_up_dir + '\\'
+    if backup_dir[-1] != '/' and backup_dir[-1] != '\\':
+        if backup_dir.find('/') == -1:
+            output_params['backup_dir'] = backup_dir + '\\'
         else:
-            output_params['back_up_dir'] = back_up_dir + '/'
+            output_params['backup_dir'] = backup_dir + '/'
     else:
-        output_params['back_up_dir'] = back_up_dir
+        output_params['backup_dir'] = backup_dir
 
     output_params['output_type'] = output_type
     output_params['output_format'] = output_format

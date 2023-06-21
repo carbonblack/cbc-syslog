@@ -28,7 +28,7 @@ class Config:
 
     Example:
         [general]
-        back_up_dir = str
+        backup_dir = str
         output_format = str
         output_type = str
         tcp_out = str
@@ -79,6 +79,16 @@ class Config:
         with open(file_path, "rb") as f:
             self.config = tomllib.load(f)
 
+    def get(self, key, default=None):
+        """
+        Get single parameter
+
+        Args:
+            key (str): The config key to fetch
+            default (*): The value to return in case key is not found
+        """
+        return self.config.get(key, default)
+
     def validate(self):
         """
         Validate configuration for required properties and supported values
@@ -93,8 +103,8 @@ class Config:
             log.error("Section (general): section missing")
             valid = False
 
-        if "back_up_dir" not in general_section:
-            log.error("Section (general): back_up_dir required to save output in case of a destination failure")
+        if "backup_dir" not in general_section:
+            log.error("Section (general): backup_dir required to save output in case of a destination failure")
             valid = False
 
         # Verify output_format and their required properties
@@ -186,10 +196,10 @@ class Config:
 
         elif "file" == general_section.get("output_type").lower():
             if "file_path" not in general_section:
-                if "back_up_dir" in general_section:
-                    log.warning("Section (general): file_path not specified defaulting to back_up_dir")
+                if "backup_dir" in general_section:
+                    log.warning("Section (general): file_path not specified defaulting to backup_dir")
                 else:
-                    log.error("Section (general): file_path not specified and back_up_dir missing no file destination specified")
+                    log.error("Section (general): file_path not specified and backup_dir missing no file destination specified")
                     valid = False
 
         # Check for Carbon Black Cloud instances
@@ -231,7 +241,7 @@ class Config:
             (dict):  output configuration
 
             {
-                "back_up_dir": "",
+                "backup_dir": "",
                 "type": "",
                 "host": "",
                 "port": "",
@@ -248,7 +258,7 @@ class Config:
         tls_section = self.config.get("tls", {})
 
         params = {
-            "back_up_dir": general_section.get("back_up_dir"),
+            "backup_dir": general_section.get("backup_dir"),
             "type": general_section.get("output_type").lower(),
             "host": None,
             "port": None
@@ -279,8 +289,8 @@ class Config:
             del params["host"]
             del params["port"]
 
-            # Default back_up_dir if file_path missing
-            params["file_path"] = general_section.get("file_path", general_section.get("back_up_dir"))
+            # Default backup_dir if file_path missing
+            params["file_path"] = general_section.get("file_path", general_section.get("backup_dir"))
 
         return params
 

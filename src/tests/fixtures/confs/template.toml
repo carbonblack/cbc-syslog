@@ -1,5 +1,5 @@
 [general]
-back_up_dir = "/Users/avanbrunt/Desktop/backdir"
+backup_dir = "/Users/avanbrunt/Desktop/backdir"
 output_format = "template"
 output_type = "tcp"
 tcp_out = "0.0.0.0:8888"

@@ -11,7 +11,7 @@ template = {{source}} {{version}}|{{vendor}}|{{product}}|{{dev_version}}|{{signa
 # Location of the Backup Directory
 # This will be the location of back up files in the event that results fail to send to Syslog
 #
-back_up_dir = /Users/jdoe/Documents/
+backup_dir = /Users/jdoe/Documents/
 
 #
 # Output format of the data sent. Currently support json or cef formats

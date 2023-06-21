@@ -35,7 +35,7 @@ def test_validate(file_path, valid):
 
 @pytest.mark.parametrize("file_path, logs", [
     ("invalid.toml", [
-        "Section (general): back_up_dir required to save output in case of a destination failure",
+        "Section (general): backup_dir required to save output in case of a destination failure",
         "Section (general): output_format required",
         "Section (general): output_type required",
         "No valid Carbon Black Cloud instances provided"
@@ -60,9 +60,9 @@ def test_validate(file_path, valid):
         "No valid Carbon Black Cloud instances provided"
     ]),
     ("invalid-file.toml", [
-        "Section (general): back_up_dir required to save output in case of a destination failure",
+        "Section (general): backup_dir required to save output in case of a destination failure",
         "Section (general): output_format required",
-        "Section (general): file_path not specified and back_up_dir missing no file destination specified"
+        "Section (general): file_path not specified and backup_dir missing no file destination specified"
     ]),
     ("invalid-template.toml", [
         "Section (general): output_format is template but no templates provided"
@@ -90,13 +90,13 @@ def test_validate_invalid(file_path, caplog, logs):
 @pytest.mark.parametrize("file_path, expected_params", [
     ("file_out.toml",
         {
-            "back_up_dir": "/Users/jdoe/Documents/",
+            "backup_dir": "/Users/jdoe/Documents/",
             "type": "file",
             "file_path": "/Users/jdoe/Documents/output/"
         }),
     ("json.toml",
         {
-            "back_up_dir": "/Users/avanbrunt/Desktop/backdir",
+            "backup_dir": "/Users/avanbrunt/Desktop/backdir",
             "type": "http",
             "host": "http://0.0.0.0:5001/http_out",
             "port": None,
@@ -105,14 +105,14 @@ def test_validate_invalid(file_path, caplog, logs):
         }),
     ("udp.toml",
         {
-            "back_up_dir": "/Users/jdoe/Documents/",
+            "backup_dir": "/Users/jdoe/Documents/",
             "type": "udp",
             "host": "0.0.0.0",
             "port": "8886"
         }),
     ("tcp+tls.toml",
         {
-            "back_up_dir": "/Users/jdoe/Documents/",
+            "backup_dir": "/Users/jdoe/Documents/",
             "ca_cert": "/etc/cb/integrations/cbc-syslog/ca.pem",
             "cert": "/etc/cb/integrations/cbc-syslog/cert.pem",
             "host": "0.0.0.0",
