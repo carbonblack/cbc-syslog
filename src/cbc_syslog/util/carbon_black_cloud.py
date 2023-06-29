@@ -30,12 +30,12 @@ if "pytest" in sys.modules:
 class CarbonBlackCloud:
     """Carbon Black Cloud manager"""
 
-    def __init__(self, sources):
+    def __init__(self, source):
         """
         Initialize the CarbonBlackCloud object.
 
         Args:
-            sources (list): List of Carbon Black Cloud intances to connect and fetch data from
+            source (dict): Carbon Black Cloud intance to connect and fetch data from
 
         Example:
             {
@@ -77,20 +77,16 @@ class CarbonBlackCloud:
         """
         from .. import __version__
 
-        self.instances = []
-
-        for source in sources:
-            instance = {
-                "api": CBCloudAPI(url=source["server_url"],
-                                  org_key=source["org_key"],
-                                  token=(source["custom_api_key"] + "/" + source["custom_api_id"]),
-                                  integration_name=f"CBC_SYSLOG/{__version__}",
-                                  ssl_verify=not SSL_VERIFY_TEST_MODE),
-                "alerts_enabled": source["alerts_enabled"],
-                "alert_rules": source["alert_rules"],
-                "audit_logs_enabled": source["audit_logs_enabled"]
-            }
-            self.instances.append(instance)
+        self.instance = {
+            "api": CBCloudAPI(url=source["server_url"],
+                              org_key=source["org_key"],
+                              token=(source["custom_api_key"] + "/" + source["custom_api_id"]),
+                              integration_name=f"CBC_SYSLOG/{__version__}",
+                              ssl_verify=not SSL_VERIFY_TEST_MODE),
+            "alerts_enabled": source["alerts_enabled"],
+            "alert_rules": source["alert_rules"],
+            "audit_logs_enabled": source["audit_logs_enabled"]
+        }
 
     def fetch_alerts(self, start, end):
         """
@@ -136,37 +132,36 @@ class CarbonBlackCloud:
             return query
 
         # Iterate saved instances to fetch alerts for each instance
-        for instance in self.instances:
-            cb = instance["api"]
+        cb = self.instance["api"]
 
-            # Perform alert fetch for each alert rule
-            for alert_rule in instance["alert_rules"]:
-                org_alerts = []
+        # Perform alert fetch for each alert rule
+        for alert_rule in self.instance["alert_rules"]:
+            org_alerts = []
 
-                try:
-                    # Fetch initial Alert batch
-                    org_alerts.extend(build_query(cb, alert_rule, start, end)[0:10000])
+            try:
+                # Fetch initial Alert batch
+                org_alerts.extend(build_query(cb, alert_rule, start, end)[0:10000])
 
-                    # Check if 10k limit was hit and iteratively fetch remaining alerts
-                    #   by increasing start time to the last alert fetched
-                    if len(org_alerts) >= 10000:
-                        last_alert = org_alerts[-1]
-                        while True:
-                            new_start = datetime.strptime(last_alert[time_field], time_format) + timedelta(milliseconds=1)
-                            overflow = build_query(cb, alert_rule, new_start, end)
+                # Check if 10k limit was hit and iteratively fetch remaining alerts
+                #   by increasing start time to the last alert fetched
+                if len(org_alerts) >= 10000:
+                    last_alert = org_alerts[-1]
+                    while True:
+                        new_start = datetime.strptime(last_alert[time_field], time_format) + timedelta(milliseconds=1)
+                        overflow = build_query(cb, alert_rule, new_start, end)
 
-                            # Extend alert list with follow up alert batches
-                            org_alerts.extend(overflow[0:10000])
-                            if len(overflow) >= 10000:
-                                last_alert = org_alerts[-1]
-                            else:
-                                break
-                    alerts.extend(org_alerts)
-                except:
-                    log.exception(f"Failed to fetch alerts (start: {start} - end: {end})"
-                                  f" for org {cb.credentials.org_key} with rule configuration {alert_rule}")
-                    # Only add failed org_key once
-                    if cb.credentials.org_key not in failed_orgs:
-                        failed_orgs.append(cb.credentials.org_key)
+                        # Extend alert list with follow up alert batches
+                        org_alerts.extend(overflow[0:10000])
+                        if len(overflow) >= 10000:
+                            last_alert = org_alerts[-1]
+                        else:
+                            break
+                alerts.extend(org_alerts)
+            except:
+                log.exception(f"Failed to fetch alerts (start: {start} - end: {end})"
+                              f" for org {cb.credentials.org_key} with rule configuration {alert_rule}")
+                # Only add failed org_key once
+                if cb.credentials.org_key not in failed_orgs:
+                    failed_orgs.append(cb.credentials.org_key)
 
         return alerts, failed_orgs

@@ -32,41 +32,14 @@ def test_init():
             "type": ["CB_ANALYTICS"]
         }]
     }
-    cbcloud = CarbonBlackCloud([source])
-    assert len(cbcloud.instances) == 1
-    assert cbcloud.instances[0]["audit_logs_enabled"] == source["audit_logs_enabled"]
-    assert cbcloud.instances[0]["alerts_enabled"] == source["alerts_enabled"]
-    assert cbcloud.instances[0]["alert_rules"] == source["alert_rules"]
+    cbcloud = CarbonBlackCloud(source)
+    assert cbcloud.instance["audit_logs_enabled"] == source["audit_logs_enabled"]
+    assert cbcloud.instance["alerts_enabled"] == source["alerts_enabled"]
+    assert cbcloud.instance["alert_rules"] == source["alert_rules"]
 
-    assert cbcloud.instances[0]["api"].credentials.url == source["server_url"]
-    assert cbcloud.instances[0]["api"].credentials.org_key == source["org_key"]
-    assert cbcloud.instances[0]["api"].credentials.token == (source["custom_api_key"] + "/" + source["custom_api_id"])
-
-
-def test_init_multiple_sources():
-    """Test CarbonBlackCloud multiple instance creation"""
-    source_a = {
-        "custom_api_id": "CUSTOM_ID",
-        "custom_api_key": "CUSTOM_KEY",
-        "org_key": "ORG_KEY",
-        "server_url": "https://example.com",
-        "audit_logs_enabled": True,
-        "alerts_enabled": True,
-        "alert_rules": [{}]
-    }
-    source_b = {
-        "custom_api_id": "CUSTOM_ID_B",
-        "custom_api_key": "CUSTOM_KEY_B",
-        "org_key": "ORG_KEY_B",
-        "server_url": "https://example.com",
-        "audit_logs_enabled": True,
-        "alerts_enabled": True,
-        "alert_rules": [{
-            "type": ["WATCHLIST"]
-        }]
-    }
-    cbcloud = CarbonBlackCloud([source_a, source_b])
-    assert len(cbcloud.instances) == 2
+    assert cbcloud.instance["api"].credentials.url == source["server_url"]
+    assert cbcloud.instance["api"].credentials.org_key == source["org_key"]
+    assert cbcloud.instance["api"].credentials.token == (source["custom_api_key"] + "/" + source["custom_api_id"])
 
 
 def test_fetch_alerts():
@@ -90,7 +63,7 @@ def test_fetch_alerts():
 
     end = datetime.now(timezone.utc) - timedelta(seconds=30)
     start = end - timedelta(minutes=5)
-    cbcloud = CarbonBlackCloud([source])
+    cbcloud = CarbonBlackCloud(source)
 
     alerts, errors = cbcloud.fetch_alerts(start, end)
     assert len(alerts) == 1
@@ -140,7 +113,7 @@ def test_fetch_alerts_overflow():
 
     end = datetime.now(timezone.utc) - timedelta(seconds=30)
     start = end - timedelta(minutes=5)
-    cbcloud = CarbonBlackCloud([source])
+    cbcloud = CarbonBlackCloud(source)
 
     alerts, errors = cbcloud.fetch_alerts(start, end)
     assert len(alerts) == 25000
@@ -194,7 +167,7 @@ def test_fetch_alerts_multiple_rules():
 
     end = datetime.now(timezone.utc) - timedelta(seconds=30)
     start = end - timedelta(minutes=5)
-    cbcloud = CarbonBlackCloud([source])
+    cbcloud = CarbonBlackCloud(source)
 
     alerts, errors = cbcloud.fetch_alerts(start, end)
     assert len(alerts) == 2
@@ -226,7 +199,7 @@ def test_fetch_alerts_exception(caplog):
 
     end = datetime.now(timezone.utc) - timedelta(seconds=30)
     start = end - timedelta(minutes=5)
-    cbcloud = CarbonBlackCloud([source])
+    cbcloud = CarbonBlackCloud(source)
 
     alerts, errors = cbcloud.fetch_alerts(start, end)
     assert errors == ["ORG_KEY"]
