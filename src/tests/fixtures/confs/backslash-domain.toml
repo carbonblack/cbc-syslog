@@ -1,0 +1,11 @@
+[general]
+backup_dir = "/Users/jdoe/Documents/"
+output_format = "json"
+output_type = "file"
+file_path = "/Users/jdoe/Documents/output/"
+
+[CarbonBlackCloudServer]
+custom_api_id = "RANDOM_ID"
+custom_api_key = "RANDOM_SECRET"
+org_key = "SOME_ORG"
+server_url = "defense.conferdeploy.net/"
