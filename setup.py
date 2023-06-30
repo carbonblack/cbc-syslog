@@ -4,7 +4,7 @@ from setuptools import setup
 import io
 
 packages = [
-    "cbc_syslog"
+    "cbc_syslog",
     "cbc_syslog.util"
 ]
 
