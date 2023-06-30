@@ -4,6 +4,7 @@ from setuptools import setup
 import io
 
 packages = [
+    "cbc_syslog"
     "cbc_syslog.util"
 ]
 
@@ -32,7 +33,7 @@ extras_require = {
 with io.open("README.md", "rt", encoding="utf8") as f:
     long_description = f.read()
 
-scripts = ["scripts/cbc_syslog.py"]
+scripts = ["scripts/cbc_syslog_forwarder.py"]
 
 setup(
     name="cbc_syslog",
