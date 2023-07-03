@@ -68,10 +68,10 @@ def test_validate(file_path, valid):
         "Section (general): output_format is template but no templates provided"
     ]),
     ("invalid-header.toml", [
-        "Section (alerts_template): template missing header"
+        "Section (alerts_template): missing template"
     ]),
     ("invalid-extension.toml", [
-        "Section (alerts_template): extension missing and referenced in header defaulting to empty string",
+        "Section (alerts_template): extension missing and referenced in template defaulting to empty string",
         "Section (alerts_template): time_format specified but no time_fields listed",
         "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing custom_api_key",
         "No valid Carbon Black Cloud instances provided"
@@ -177,8 +177,8 @@ def test_sources(file_path, expected_sources):
     ("template.toml",
         {
             "format": "template",
-            "header": "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|"
-                      "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}",
+            "template": "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|"
+                        "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}",
             "type_field": "type",
             "time_format": "%b %d %Y %H:%m:%S",
             "time_fields": ["backend_timestamp"],

@@ -12,96 +12,35 @@
 """CBC Syslog Forwarder main script"""
 
 import argparse
-import json
 import logging
 import logging.handlers
-import pathlib
 import psutil
 import sys
 
-from datetime import datetime, timedelta
-from cbc_syslog.util import Config, CarbonBlackCloud, Transform, Output
+from cbc_syslog import poll
+from cbc_syslog.util import Config
 
 log = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
-CBC_SYSLOG_STATE_FILE = "cbc_syslog_state.json"
-
-# CLI interface
-
-# Create core objects
-#   Config
-#   Carbon Black Cloud
-#   Transform
-#   Output
-
-# Check backup directory for cbc-{IS08601 Timestamp}.bck
-# Try to Read/Send backup files
-# Get previous state/time from backup directory (cbc_syslog_state.json)
-# Get new data from last_time to current time - 30s
-# Transform data
-# Output data and check for failed orgs
-# Update state based on failed orgs
-
 
 def main(args):
-    """Core CBC Syslog Logic"""
+    """Core CBC Syslog Forwarder Commands"""
     config = Config(args.config_file)
 
-    if not config.validate():
-        log.error("Unable to validate config. Exiting cbc syslog")
+    if args.command == "poll":
+        poll(config)
+    # elif args.command == "history":
+    # elif args.command == "convert":
+    # elif args.command == "setup":
+    else:
+        log.error("Command not recognized use --help for more information on supported commands")
         sys.exit(0)
-
-    cb = CarbonBlackCloud(config.sources())
-
-    # Fetch previous state
-    path = pathlib.Path(config.get("backup_dir")).joinpath(CBC_SYSLOG_STATE_FILE).resolve()
-    with open(path) as state_file:
-        previous_state = json.load(state_file)
-
-    # Use last end_time unless no state is available use 90s ago
-    start_time = previous_state.get("alerts", {}).get("end_time", datetime.now() - timedelta(seconds=90))
-    # Should stay behind 30s to ensure backend data is available
-    end_time = datetime.now() - timedelta(seconds=30)
-
-    if end_time < start_time:
-        log.error("Unable to fetch data please wait a minimum of 60s before next poll")
-        sys.exit(0)
-
-    alerts, failed_orgs = cb.fetch_alerts(start_time, end_time)
-
-    alert_config = config.transform("alerts")
-    transform_alerts = Transform(alert_config.header,
-                                 alert_config.extension,
-                                 alert_config.get("type_field"),
-                                 alert_config.get("time_format"),
-                                 alert_config.get("time_fields", []))
-    output = Output(config.output())
-
-    backup_file = f"cbc-{start_time.isoformat()}.bck"
-    with open(backup_file, "a") as backup:
-        success = True
-        for alert in alerts:
-            if alert_config["format"] == "json":
-                data = str(alert)
-            else:
-                data = transform_alerts.render(alert)
-
-            # Prevent repeating output if failure occurred
-            if not success:
-                success = output.send(data)
-            else:
-                backup.write(data + "\n")
-
-    # Catch up failed orgs if they have succeeded and update current state
-    # past_failed_orgs = previous_state.get("alerts", {}).get("failed_orgs", {})
-    # for org in past_failed_orgs.keys():
-    #     last_start_time = past_failed_orgs[org]
 
 
 if __name__ == "__main__":
-
     """
+    CLI interface
          --log-file
 
         poll

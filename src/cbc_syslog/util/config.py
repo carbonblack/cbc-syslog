@@ -46,7 +46,7 @@ class Config:
         tls_verify = bool
 
         [alerts_template]
-        header = str
+        template = str
         type_field = str
         time_format = str
         time_fields = list
@@ -121,12 +121,12 @@ class Config:
                 if template in self.config:
                     at_least_one = True
                     template_section = self.config.get(template)
-                    if "header" not in template_section:
-                        log.error(f"Section ({template}): template missing header")
+                    if "template" not in template_section:
+                        log.error(f"Section ({template}): missing template")
                         valid = False
-                    elif "extension" in template_section.get("header"):
+                    elif "extension" in template_section.get("template"):
                         if "extension" not in template_section:
-                            log.warning(f"Section ({template}): extension missing and referenced in header defaulting to empty string")
+                            log.warning(f"Section ({template}): extension missing and referenced in template defaulting to empty string")
                         else:
                             if "default" not in template_section.get("extension", {}):
                                 log.warning(f"Section ({template}): default extension missing if type not found defaulting to empty string")
