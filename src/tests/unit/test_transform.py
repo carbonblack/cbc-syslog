@@ -19,11 +19,13 @@ from tests.fixtures.mock_alerts import CB_ANALYTICS_ALERT
 
 @freeze_time("2023-05-01")
 def test_render_template():
-    """Test render with template and no extensions"""
-    template = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|" \
-               "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}"
+    """Test render with template and no extension"""
+    config = {
+        "template": "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|"
+                    "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}"
+    }
 
-    transform = Transform(template)
+    transform = Transform(**config)
     result = transform.render(CB_ANALYTICS_ALERT)
 
     expected_result = "2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|2.0.0|R_NET_SERVER|" \
@@ -34,20 +36,24 @@ def test_render_template():
 @freeze_time("2023-05-01")
 def test_render_custom_template():
     """Test render with custom template for CB Analytics alert"""
-    template = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|" \
-               "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}"
-    extensions = {
-        "CB_ANALYTICS": "cat={{type}}\tframeworkName=MITRE_ATT&CK\tthreatAttackID={{attack_tactic}}:{{attack_technique}}\t"
-                        "act={{sensor_action}}\texternalId={{id}}\trt={{backend_timestamp}}\tstart={{first_event_timestamp}}\t"
-                        "outcome={{run_state}}\tdeviceProcessId={{process_pid}}\tdeviceProcessName={{process_name}}\t"
-                        "fileHash={{process_sha256}}\tdeviceExternalId={{device_id}}\tdvc={{device_internal_ip}}\t"
-                        "duser={{device_username}}\tcs1={{threat_id}}\tcs1Label=Threat_ID\tcs2={{alert_url}}\tcs2Label=Link\t"
-                        "cs3={{device_name}}\tcs3Label=Device_Name\tcs4={{process_effective_reputation}}\t"
-                        "cs4Label=Process_Effective_Reputation\tcs5={{parent_name}}\tcs5Label=Parent_Name\tcs6={{parent_sha256}}\t"
-                        "cs6Label=Parent_Hash\tc6a1={{device_external_ip}}\tc6a1Label=External_Device_Address"
+    config = {
+        "template": "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|"
+                    "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}",
+        "extension": {
+            "CB_ANALYTICS": "cat={{type}}\tframeworkName=MITRE_ATT&CK\tthreatAttackID={{attack_tactic}}:{{attack_technique}}\t"
+                            "act={{sensor_action}}\texternalId={{id}}\trt={{backend_timestamp}}\tstart={{first_event_timestamp}}\t"
+                            "outcome={{run_state}}\tdeviceProcessId={{process_pid}}\tdeviceProcessName={{process_name}}\t"
+                            "fileHash={{process_sha256}}\tdeviceExternalId={{device_id}}\tdvc={{device_internal_ip}}\t"
+                            "duser={{device_username}}\tcs1={{threat_id}}\tcs1Label=Threat_ID\tcs2={{alert_url}}\tcs2Label=Link\t"
+                            "cs3={{device_name}}\tcs3Label=Device_Name\tcs4={{process_effective_reputation}}\t"
+                            "cs4Label=Process_Effective_Reputation\tcs5={{parent_name}}\tcs5Label=Parent_Name\tcs6={{parent_sha256}}\t"
+                            "cs6Label=Parent_Hash\tc6a1={{device_external_ip}}\tc6a1Label=External_Device_Address"
+        },
+        "type_field": "type",
+        "time_format": "%b %d %Y %H:%m:%S",
+        "time_fields": ["backend_timestamp", "first_event_timestamp"]
     }
-
-    transform = Transform(template, extensions, "type", "%b %d %Y %H:%m:%S", ["backend_timestamp", "first_event_timestamp"])
+    transform = Transform(**config)
     result = transform.render(CB_ANALYTICS_ALERT)
 
     expected_result = "2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|2.0.0|R_NET_SERVER|" \
@@ -68,11 +74,14 @@ def test_render_custom_template():
 
 @freeze_time("2023-05-01")
 def test_render_with_invalid_type():
-    """Test render with invalid type and no extensions"""
-    template = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|" \
-               "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}"
-
-    transform = Transform(template, {}, "invalid")
+    """Test render with invalid type and no extension"""
+    config = {
+        "template": "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|"
+                    "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}",
+        "extension": {},
+        "type_field": "invalid"
+    }
+    transform = Transform(**config)
     result = transform.render(CB_ANALYTICS_ALERT)
 
     expected_result = "2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|2.0.0|R_NET_SERVER|" \
@@ -82,15 +91,16 @@ def test_render_with_invalid_type():
 
 @freeze_time("2023-05-01")
 def test_render_with_default_fallback():
-    """Test render with invalid type and no extensions"""
-    template = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|" \
-               "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}"
-
-    extensions = {
-        "default": "cat={{type}}\tact={{sensor_action}}\toutcome={{run_state}}"
+    """Test render with invalid type and no extension"""
+    config = {
+        "template": "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|"
+                    "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}",
+        "extension": {
+            "default": "cat={{type}}\tact={{sensor_action}}\toutcome={{run_state}}"
+        },
+        "type_field": "invalid"
     }
-
-    transform = Transform(template, extensions, "invalid")
+    transform = Transform(**config)
     result = transform.render(CB_ANALYTICS_ALERT)
 
     expected_result = "2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|2.0.0|R_NET_SERVER|" \
@@ -101,14 +111,16 @@ def test_render_with_default_fallback():
 @freeze_time("2023-05-01")
 def test_render_with_invalid_time_format():
     """Test render with invalid time format"""
-    template = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|" \
-               "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}"
-
-    extensions = {
-        "default": "rt={{backend_timestamp}}\tstart={{first_event_timestamp}}"
+    config = {
+        "template": "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|"
+                    "{{reason_code}}|{{reason}}|{{severity}}|{{extension}}",
+        "extension": {
+            "default": "rt={{backend_timestamp}}\tstart={{first_event_timestamp}}"
+        },
+        "time_format": None,
+        "time_fields": ["backend_timestamp"]
     }
-
-    transform = Transform(template, extensions, time_format=None, time_fields=["backend_timestamp"])
+    transform = Transform(**config)
     result = transform.render(CB_ANALYTICS_ALERT)
 
     expected_result = "2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|2.0.0|R_NET_SERVER|" \

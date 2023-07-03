@@ -5,7 +5,7 @@ output_type = "udp"
 udp_out = "0.0.0.0:8886"
 
 [alerts_template]
-header = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|{{reason_code}}|{{reason}}|{{severity}}|{{extension}}"
+template = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|{{reason_code}}|{{reason}}|{{severity}}|{{extension}}"
 time_format = "%b %d %Y %H:%m:%S"
 
 [CarbonBlackCloudServer]

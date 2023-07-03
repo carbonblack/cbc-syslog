@@ -65,9 +65,8 @@ def test_fetch_alerts():
     start = end - timedelta(minutes=5)
     cbcloud = CarbonBlackCloud(source)
 
-    alerts, errors = cbcloud.fetch_alerts(start, end)
+    alerts = cbcloud.fetch_alerts(start, end)
     assert len(alerts) == 1
-    assert errors == []
 
     # Verify Alert Request
     assert pytest.alert_search_request["criteria"]["type"] == source["alert_rules"][0]["type"]
@@ -115,9 +114,8 @@ def test_fetch_alerts_overflow():
     start = end - timedelta(minutes=5)
     cbcloud = CarbonBlackCloud(source)
 
-    alerts, errors = cbcloud.fetch_alerts(start, end)
+    alerts = cbcloud.fetch_alerts(start, end)
     assert len(alerts) == 25000
-    assert errors == []
 
 
 def test_fetch_alerts_multiple_rules():
@@ -169,9 +167,8 @@ def test_fetch_alerts_multiple_rules():
     start = end - timedelta(minutes=5)
     cbcloud = CarbonBlackCloud(source)
 
-    alerts, errors = cbcloud.fetch_alerts(start, end)
+    alerts = cbcloud.fetch_alerts(start, end)
     assert len(alerts) == 2
-    assert errors == []
 
 
 def test_fetch_alerts_exception(caplog):
@@ -201,6 +198,6 @@ def test_fetch_alerts_exception(caplog):
     start = end - timedelta(minutes=5)
     cbcloud = CarbonBlackCloud(source)
 
-    alerts, errors = cbcloud.fetch_alerts(start, end)
-    assert errors == ["ORG_KEY"]
+    alerts = cbcloud.fetch_alerts(start, end)
+    assert alerts is None
     assert "for org ORG_KEY with rule configuration {'type': ['WATCHLIST']}" in caplog.records[0].msg

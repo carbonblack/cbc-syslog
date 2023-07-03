@@ -27,27 +27,22 @@ log = logging.getLogger(__name__)
 class Output:
     """Output mechanisms to send data to local or external destination"""
 
-    def __init__(self, output_params):
+    def __init__(self, **kwargs):
         """
         Initialize the Output object.
 
         Args:
-            output_params (dict): The output configuration
-
-        Example:
-            {
-                "type": str,
-                "host": str,
-                "port": str,
-                "tls_verify": bool,
-                "http_headers": dict,
-                "ca_cert": str,
-                "cert": str,
-                "key": str,
-                "key_password": str
-            }
+            **type (str): The mechanism to send the output. Supports: tcp, tcp+tls, udp, http and file
+            **host (str): The host of the destination.
+            **port (str): The port of the destination.
+            **tls_verify (bool): Whether to verify TLS.
+            **http_headers (dict): Dictionary of header names and values to append to http request.
+            **ca_cert (str): The CA_CERT to verify location
+            **cert (str): The CERT to add the cert chain
+            **key (str): The key use to protect the cert
+            **key_password (str): The password for the key
         """
-        self.output_params = output_params
+        self.output_params = kwargs
 
     def send(self, data):
         """

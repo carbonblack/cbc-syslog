@@ -23,7 +23,7 @@ CERTS_PATH = pathlib.Path(__file__).joinpath("../../fixtures/certs").resolve()
 @pytest.mark.filterwarnings("ignore:Unverified HTTPS request.*")
 def test_send_http():
     """Test HTTP transmission"""
-    output = Output({
+    output = Output(**{
         "type": "http",
         "host": "https://0.0.0.0:5001/http_out",
         "tls_verify": False
@@ -36,7 +36,7 @@ def test_send_http():
 @pytest.mark.filterwarnings("ignore:Unverified HTTPS request.*")
 def test_send_http_invalid():
     """Test HTTP transmission with invalid port"""
-    output = Output({
+    output = Output(**{
         "type": "http",
         "host": "https://0.0.0.0:1234/http_out",
         "tls_verify": False
@@ -47,7 +47,7 @@ def test_send_http_invalid():
 
 def test_send_tcp():
     """Test TCP transmission"""
-    output = Output({
+    output = Output(**{
         "type": "tcp",
         "host": "0.0.0.0",
         "port": "8887"
@@ -62,7 +62,7 @@ def test_send_tcp():
 
 def test_send_tcp_invalid():
     """Test TCP transmission with invalid port"""
-    output = Output({
+    output = Output(**{
         "type": "tcp",
         "host": "0.0.0.0",
         "port": "1234"
@@ -73,7 +73,7 @@ def test_send_tcp_invalid():
 
 def test_send_tcp_tls():
     """Test TCP + TLS transmission"""
-    output = Output({
+    output = Output(**{
         "type": "tcp+tls",
         "host": "localhost",
         "port": "8888",
@@ -89,7 +89,7 @@ def test_send_tcp_tls():
 
 def test_send_tcp_tls_mismatch_host(caplog):
     """Test TCP + TLS transmission with mismatch host to CA cert"""
-    output = Output({
+    output = Output(**{
         "type": "tcp+tls",
         "host": "0.0.0.0",
         "port": "8888",
@@ -102,7 +102,7 @@ def test_send_tcp_tls_mismatch_host(caplog):
 
 def test_send_udp():
     """Test UDP transmission"""
-    output = Output({
+    output = Output(**{
         "type": "udp",
         "host": "0.0.0.0",
         "port": "8886"
@@ -117,7 +117,7 @@ def test_send_udp():
 
 def test_send_udp_invalid():
     """Test UDP transmission with invalid ip"""
-    output = Output({
+    output = Output(**{
         "type": "udp",
         "host": "bad",
         "port": "1234"
@@ -129,7 +129,7 @@ def test_send_udp_invalid():
 def test_send_file(wipe_tmp):
     """Test File output"""
     tmp_dir = pathlib.Path(__file__).joinpath("../../fixtures/tmp").resolve()
-    output = Output({
+    output = Output(**{
         "type": "file",
         "file_path": tmp_dir
     })
@@ -148,7 +148,7 @@ def test_send_file(wipe_tmp):
 
 def test_send_file_invalid(caplog, wipe_tmp):
     """Test File output with invalid directory"""
-    output = Output({
+    output = Output(**{
         "type": "file",
         "file_path": "INVALID"
     })

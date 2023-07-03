@@ -46,25 +46,26 @@ class Transform:
     from .. import __version__
     product_version = __version__
 
-    def __init__(self, template, extensions={}, type_field=None, time_format=None, time_fields=[]):
+    def __init__(self, **kwargs):
         """
         Initialize the Transform object.
 
         Args:
-            template (str): Template for data to be transformed
-            extensions (dict): Lookup table for custom extensions by type
-            type_field (str): Field name in the data to be render which indicates the type for customizing the extension
-            time_format (str): Custom timestamp format for timestamp fields
-            time_fields (list): List of strings representing the timestamp fields to be converted
+            **template (str): Template for data to be transformed
+            **extension (dict): Lookup table for custom extension by type
+            **type_field (str): Field name in the data to be render which indicates the type for customizing the extension
+            **time_format (str): Custom timestamp format for timestamp fields
+            **time_fields (list): List of strings representing the timestamp fields to be converted
         """
-        self.template = Template(template)
-        self.type_field = type_field
-        self.time_format = time_format
-        self.time_fields = time_fields
+        self.template = Template(kwargs["template"])
+        self.type_field = kwargs.get("type_field", None)
+        self.time_format = kwargs.get("time_format", None)
+        self.time_fields = kwargs.get("time_fields", [])
 
         self.extension_templates = {}
-        for key in extensions:
-            self.extension_templates[key] = Template(extensions[key])
+        extension = kwargs.get("extension", {})
+        for key in extension:
+            self.extension_templates[key] = Template(extension[key])
 
     def render(self, data):
         """
@@ -74,7 +75,7 @@ class Transform:
             data (dict): JSON formatted data to be transformed
 
         Returns:
-            (str): Rendered syslog message based on the template and extensions configured
+            (str): Rendered syslog message based on the template and extension configured
         """
         now = datetime.utcnow()
 
