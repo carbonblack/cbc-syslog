@@ -13,6 +13,7 @@
 
 import json
 import logging
+import os
 import pathlib
 import sys
 
@@ -20,6 +21,8 @@ from datetime import datetime, timedelta
 from cbc_syslog.util import CarbonBlackCloud, Transform, Output
 
 log = logging.getLogger(__name__)
+
+TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 CBC_SYSLOG_STATE_FILE = "cbc_syslog_state.json"
 
@@ -36,12 +39,19 @@ def poll(config):
         sys.exit(0)
 
     # Fetch previous state
-    path = pathlib.Path(config.get("backup_dir")).joinpath(CBC_SYSLOG_STATE_FILE).resolve()
-    with open(path) as state_file:
-        previous_state = json.load(state_file)
+    path = pathlib.Path(config.get("general.backup_dir")).joinpath(CBC_SYSLOG_STATE_FILE).resolve()
+    try:
+        with open(path, "r") as state_file:
+            previous_state = json.load(state_file)
+    except (FileNotFoundError, json.decoder.JSONDecodeError):
+        log.warning(f"Previous state file ({CBC_SYSLOG_STATE_FILE}) not found or corrupted. "
+                    f"Creating fresh state file using previous poll time 90s from current time")
+        previous_state = {}
 
     # Use last end_time unless no state is available use 90s ago
-    new_start_time = previous_state.get("end_time", datetime.now() - timedelta(seconds=90))
+    new_start_time_str = previous_state.get("end_time", (datetime.now() - timedelta(seconds=90)).strftime(TIME_FORMAT))
+    new_start_time = datetime.strptime(new_start_time_str, TIME_FORMAT)
+
     # Should stay behind 30s to ensure backend data is available
     end_time = datetime.now() - timedelta(seconds=30)
 
@@ -78,16 +88,22 @@ def poll(config):
         if alerts is None:
             failed_org["alerts"] = start_time
         else:
-            del past_failed_orgs[source["org_key"]]
+            # Clear last_end_time on success
+            if last_end_time:
+                del failed_org["alerts"]
+                if not failed_org:
+                    del past_failed_orgs[source["org_key"]]
 
-            backup_file = f"cbc-{start_time.isoformat()}.bck"
+            backup_filename = f"cbc-{start_time.isoformat()}.bck"
+            backup_file = pathlib.Path(config.get("general.backup_dir")).joinpath(backup_filename).resolve()
+            success = True
+
             with open(backup_file, "a") as backup:
-                success = True
                 for alert in alerts:
                     if transforms["alerts"] == "json":
                         data = str(alert)
                     else:
-                        data = transforms["alerts"].render(alert)
+                        data = transforms["alerts"].render(alert._info)
 
                     # Prevent repeating output if failure occurred
                     if success:
@@ -96,8 +112,12 @@ def poll(config):
                     if not success:
                         backup.write(data + "\n")
 
-    # Save new state
-    previous_state["end_time"] = end_time
+            # Clear Empty file
+            if success and os.path.getsize(backup_file) == 0:
+                os.remove(backup_file)
 
-    with open(path) as state_file:
+    # Save new state
+    previous_state["end_time"] = end_time.strftime(TIME_FORMAT)
+
+    with open(path, "w") as state_file:
         state_file.write(json.dumps(previous_state, indent=4))

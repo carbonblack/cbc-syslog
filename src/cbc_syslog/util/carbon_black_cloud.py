@@ -45,34 +45,36 @@ class CarbonBlackCloud:
                 "server_url": "",
                 "audit_logs_enabled": True,
                 "alerts_enabled": True,
-                "alert_rules": {
-                    "type": [
-                        "CB_ANALYTICS",
-                        "WATCHLIST",
-                        "DEVICE_CONTROL",
-                        "CONTAINER_RUNTIME",
-                        "HOST_BASED_FIREWALL",
-                        "IDS",
-                        "NTA"
-                    ],
-                    "minimum_severity": 1-10,
-                    "policy_id": [],
+                "alert_rules": [
+                    {
+                        "type": [
+                            "CB_ANALYTICS",
+                            "WATCHLIST",
+                            "DEVICE_CONTROL",
+                            "CONTAINER_RUNTIME",
+                            "HOST_BASED_FIREWALL",
+                            "IDS",
+                            "NTA"
+                        ],
+                        "minimum_severity": 1-10,
+                        "policy_id": [],
 
-                    # Watchlist Alerts
-                    "watchlist_id": [],
+                        # Watchlist Alerts
+                        "watchlist_id": [],
 
-                    # CB Analytics
-                    "policy_applied": True/False,
-                    "ttps": [],
+                        # CB Analytics
+                        "policy_applied": True/False,
+                        "ttps": [],
 
-                    # Not Recommended OBSERVED only applies to CB_ANALYTICS
-                    "category": ["THREAT", "OBSERVED"]
+                        # Not Recommended OBSERVED only applies to CB_ANALYTICS
+                        "category": ["THREAT", "OBSERVED"]
 
-                    # Support any property with key and list of values
-                    "key": ["values"]
+                        # Support any property with key and list of values
+                        "key": ["values"]
 
-                    e.g. "device_os": ["WINDOWS", "MAC"]
-                }
+                        e.g. "device_os": ["WINDOWS", "MAC"]
+                    }
+                ]
             }
         """
         from .. import __version__
@@ -83,9 +85,9 @@ class CarbonBlackCloud:
                               token=(source["custom_api_key"] + "/" + source["custom_api_id"]),
                               integration_name=f"CBC_SYSLOG/{__version__}",
                               ssl_verify=not SSL_VERIFY_TEST_MODE),
-            "alerts_enabled": source["alerts_enabled"],
-            "alert_rules": source["alert_rules"],
-            "audit_logs_enabled": source["audit_logs_enabled"]
+            "alerts_enabled": source.get("alerts_enabled", False),
+            "alert_rules": source.get("alert_rules", []),
+            "audit_logs_enabled": source.get("audit_logs_enabled", False)
         }
 
     def fetch_alerts(self, start, end):
@@ -115,14 +117,14 @@ class CarbonBlackCloud:
 
             # Iterate criteria options
             for key in alert_rule.keys():
-
                 # Check for custom criteria
                 if key == "minimum_severity":
                     query.set_minimum_severity(alert_rule[key])
 
                 # Changes with UAE v7 alerts
-                # if key == "policy_applied":
-                #     query.set_policy_applied(alert_rule[key])
+                elif key == "policy_applied":
+                    continue
+                    # TODO: query.set_policy_applied(alert_rule[key])
 
                 # Add standard list value criteria
                 else:

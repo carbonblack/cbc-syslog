@@ -81,13 +81,29 @@ class Config:
 
     def get(self, key, default=None):
         """
-        Get single parameter
+        Get single parameter with support for dot notation nested navigation
 
         Args:
             key (str): The config key to fetch
             default (*): The value to return in case key is not found
         """
-        return self.config.get(key, default)
+        if "." in key:
+            keys = key.split(".")
+        else:
+            keys = list(key)
+
+        try:
+            new_dict = self.config
+            for step in keys:
+                new_dict = new_dict.get(step, None)
+                if new_dict is None:
+                    return default
+                elif not isinstance(new_dict, dict):
+                    return new_dict
+        except:
+            return default
+
+        return new_dict
 
     def validate(self):
         """
