@@ -2,7 +2,7 @@
 backup_dir = "/Users/avanbrunt/Desktop/backdir"
 output_format = "template"
 output_type = "tcp"
-tcp_out = "0.0.0.0:8888"
+tcp_out = "0.0.0.0:8887"
 
 [alerts_template]
 template = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|{{reason_code}}|{{reason}}|{{severity}}|{{extension}}"
@@ -18,7 +18,7 @@ CB_ANALYTICS = "cat={{type}}\tact={{sensor_action}}\toutcome={{run_state}}\tfram
 custom_api_id = "RANDOM_ID"
 custom_api_key = "RANDOM_SECRET"
 org_key = "DIFFERENT_ORG"
-server_url = "http://0.0.0.0:5001"
+server_url = "https://0.0.0.0:5001"
 alerts_enabled = true
 
 [[Org2.alert_rules]]

@@ -44,6 +44,7 @@ def test_globals():
     pytest.tcp_tls_recv_data = None
     pytest.udp_recv_data = None
     pytest.http_recv_data = None
+    pytest.recv_history = []
 
 
 @pytest.fixture(scope="function")
@@ -90,6 +91,7 @@ def http_out():
     try:
         log.debug(f"New data length: {len(request.data)}")
         pytest.http_recv_data = request.data
+        pytest.recv_history.append(request.data)
     except Exception:
         log.info(traceback.format_exc())
     return jsonify({})
@@ -107,6 +109,7 @@ def udp_server_func():
         log.debug(f"New client from {address}")
         log.debug(f"Buffer length: {len(buffer)}")
         pytest.udp_recv_data = buffer
+        pytest.recv_history.append(buffer)
 
 
 def tcp_server_func():
@@ -126,6 +129,7 @@ def tcp_server_func():
 
         # Save contents for testing
         pytest.tcp_recv_data = buffer
+        pytest.recv_history.append(buffer)
 
 
 def tcp_tls_server_func():
@@ -150,6 +154,7 @@ def tcp_tls_server_func():
 
                 # Save contents for testing
                 pytest.tcp_tls_recv_data = buffer
+                pytest.recv_history.append(buffer)
 
         except Exception as e:
             pytest.exception = e
