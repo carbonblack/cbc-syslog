@@ -59,7 +59,7 @@ def poll(config):
         log.error("Unable to fetch data please wait a minimum of 60s before next poll")
         sys.exit(0)
 
-    past_failed_orgs = previous_state.get("failed_orgs", {})
+    past_failed_orgs = previous_state.setdefault("failed_orgs", {})
 
     # Create Supported Input Transforms
     SUPPORTED_INPUTS = ["alerts"]
@@ -80,13 +80,15 @@ def poll(config):
         last_end_time = failed_org.get("alerts", None)
 
         # Use last_start_time if failed previously
-        start_time = last_end_time if last_end_time else new_start_time
+        start_time = datetime.strptime(last_end_time, TIME_FORMAT) if last_end_time else new_start_time
 
         alerts = cb.fetch_alerts(start_time, end_time)
 
         # Check for failure and save start_time if failed
         if alerts is None:
-            failed_org["alerts"] = start_time
+            failed_org["alerts"] = start_time.strftime(TIME_FORMAT)
+            if source["org_key"] not in past_failed_orgs:
+                past_failed_orgs[source["org_key"]] = failed_org
         else:
             # Clear last_end_time on success
             if last_end_time:
@@ -94,14 +96,14 @@ def poll(config):
                 if not failed_org:
                     del past_failed_orgs[source["org_key"]]
 
-            backup_filename = f"cbc-{start_time.isoformat()}.bck"
+            backup_filename = f"cbc-{start_time.strftime(TIME_FORMAT)}.bck"
             backup_file = pathlib.Path(config.get("general.backup_dir")).joinpath(backup_filename).resolve()
             success = True
 
             with open(backup_file, "a") as backup:
                 for alert in alerts:
                     if transforms["alerts"] == "json":
-                        data = str(alert)
+                        data = json.dumps(alert._info)
                     else:
                         data = transforms["alerts"].render(alert._info)
 
