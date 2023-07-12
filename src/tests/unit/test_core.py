@@ -169,3 +169,55 @@ def test_poll_backup(wipe_tmp):
     with open(TMP_PATH.joinpath("cbc-2023-07-04T23:59:30.000000Z.bck").resolve(), "r") as backup_file:
         json_string = backup_file.readline()
         assert json.loads(json_string) == GET_ALERTS_BULK(1, 1)["results"][0]
+
+
+@freeze_time("2023-07-05 00:01:00")
+@pytest.mark.filterwarnings("ignore:Unverified HTTPS request.*")
+def test_poll_retry_output_backup(wipe_tmp):
+    """Test poll cycle with retry on backup files"""
+    config = Config(str(CONFS_PATH.joinpath("single-tenant.toml")))
+
+    # Overwrite backup_dir to tmp folder
+    config.config["general"]["backup_dir"] = TMP_PATH
+
+    pytest.alert_search_response = GET_ALERTS_BULK(1, 1)
+
+    BACKUP_FILEPATH = TMP_PATH.joinpath("cbc-2023-07-04T23:59:30.000000Z.bck").resolve()
+
+    with open(BACKUP_FILEPATH, "w") as backup_file:
+        backup_file.write(json.dumps(GET_ALERTS_BULK(1, 1)["results"][0]))
+
+    poll(config)
+
+    # Check backup was successfully received
+    assert len(pytest.recv_history) == 2
+    assert json.loads(pytest.recv_history[0].decode("utf-8")) == GET_ALERTS_BULK(1, 1)["results"][0]
+
+    assert BACKUP_FILEPATH.exists() is False
+
+
+@freeze_time("2023-07-05 00:01:00")
+def test_poll_retry_output_backup_failure(wipe_tmp):
+    """Test poll cycle with retry on backup files but output fails again"""
+    config = Config(str(CONFS_PATH.joinpath("bad-output.toml")))
+
+    # Overwrite backup_dir to tmp folder
+    config.config["general"]["backup_dir"] = TMP_PATH
+
+    pytest.alert_search_response = GET_ALERTS_BULK(1, 1)
+
+    BACKUP_FILEPATH = TMP_PATH.joinpath("cbc-2023-07-04T23:58:30.000000Z.bck").resolve()
+
+    with open(BACKUP_FILEPATH, "w") as backup_file:
+        backup_file.write(json.dumps(GET_ALERTS_BULK(1, 1)["results"][0]))
+
+    poll(config)
+
+    # Check of previous backup file and new backup file are created
+    with open(BACKUP_FILEPATH, "r") as backup_file:
+        json_string = backup_file.readline()
+        assert json.loads(json_string) == GET_ALERTS_BULK(1, 1)["results"][0]
+
+    with open(TMP_PATH.joinpath("cbc-2023-07-04T23:59:30.000000Z.bck").resolve(), "r") as backup_file:
+        json_string = backup_file.readline()
+        assert json.loads(json_string) == GET_ALERTS_BULK(1, 1)["results"][0]

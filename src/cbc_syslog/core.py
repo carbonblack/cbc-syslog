@@ -13,7 +13,6 @@
 
 import json
 import logging
-import os
 import pathlib
 
 from datetime import datetime, timedelta
@@ -75,6 +74,28 @@ def poll(config):
 
     output = Output(**config.output())
 
+    # Check backup directory for previously failed message and try to resend
+    output_success = True
+    for filepath in pathlib.Path(config.get("general.backup_dir")).iterdir():
+        filename = filepath.name
+        if filename.startswith("cbc-") and filename.endswith(".bck"):
+            count = 0
+            with open(filepath, "r") as backup_file:
+                lines = backup_file.readlines()
+                for line in lines:
+                    output_success = output.send(line)
+                    if output_success:
+                        count += 1
+                    else:
+                        break
+
+            if output_success:
+                log.info(f"Successfully sent {count} messages from {filename}")
+                filepath.unlink()
+            else:
+                # If failed to output abort backup retry
+                break
+
     for source in config.sources():
         if not source["alerts_enabled"]:
             continue
@@ -103,7 +124,6 @@ def poll(config):
 
             backup_filename = f"cbc-{start_time.strftime(TIME_FORMAT)}.bck"
             backup_file = pathlib.Path(config.get("general.backup_dir")).joinpath(backup_filename).resolve()
-            success = True
 
             with open(backup_file, "a") as backup:
                 for alert in alerts:
@@ -113,15 +133,15 @@ def poll(config):
                         data = transforms["alerts"].render(alert._info)
 
                     # Prevent repeating output if failure occurred
-                    if success:
-                        success = output.send(data)
+                    if output_success:
+                        output_success = output.send(data)
 
-                    if not success:
+                    if not output_success:
                         backup.write(data + "\n")
 
             # Clear Empty file
-            if success and os.path.getsize(backup_file) == 0:
-                os.remove(backup_file)
+            if output_success and backup_file.stat().st_size == 0:
+                backup_file.unlink()
 
     # Save new state
     previous_state["end_time"] = end_time.strftime(TIME_FORMAT)
