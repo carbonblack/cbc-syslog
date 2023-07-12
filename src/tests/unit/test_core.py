@@ -225,8 +225,8 @@ def test_poll_retry_output_backup_failure(wipe_tmp):
 
 @freeze_time("2023-07-05 00:01:00")
 def test_poll_backup_dir_invalid(wipe_tmp):
-    """Test poll cycle with retry on backup files but output fails again"""
-    config = Config(str(CONFS_PATH.joinpath("bad-output.toml")))
+    """Test poll cycle with invalid backup directory"""
+    config = Config(str(CONFS_PATH.joinpath("single-tenant.toml")))
 
     # Overwrite backup_dir to tmp folder
     config.config["general"]["backup_dir"] = "/invalid"
