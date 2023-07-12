@@ -36,11 +36,12 @@ def poll(config):
         bool: Indicates short exit based on failure to execute
     """
     if not config.validate():
-        log.error("Unable to validate config. Exiting cbc syslog")
+        log.error("Unable to validate config")
         return False
 
     # Fetch previous state
-    path = pathlib.Path(config.get("general.backup_dir")).joinpath(CBC_SYSLOG_STATE_FILE).resolve()
+    backup_dir = pathlib.Path(config.get("general.backup_dir"))
+    path = backup_dir.joinpath(CBC_SYSLOG_STATE_FILE).resolve()
     try:
         with open(path, "r") as state_file:
             previous_state = json.load(state_file)
@@ -76,25 +77,29 @@ def poll(config):
 
     # Check backup directory for previously failed message and try to resend
     output_success = True
-    for filepath in pathlib.Path(config.get("general.backup_dir")).iterdir():
-        filename = filepath.name
-        if filename.startswith("cbc-") and filename.endswith(".bck"):
-            count = 0
-            with open(filepath, "r") as backup_file:
-                lines = backup_file.readlines()
-                for line in lines:
-                    output_success = output.send(line)
-                    if output_success:
-                        count += 1
-                    else:
-                        break
+    try:
+        for filepath in backup_dir.iterdir():
+            filename = filepath.name
+            if filename.startswith("cbc-") and filename.endswith(".bck"):
+                count = 0
+                with open(filepath, "r") as backup_file:
+                    lines = backup_file.readlines()
+                    for line in lines:
+                        output_success = output.send(line)
+                        if output_success:
+                            count += 1
+                        else:
+                            break
 
-            if output_success:
-                log.info(f"Successfully sent {count} messages from {filename}")
-                filepath.unlink()
-            else:
-                # If failed to output abort backup retry
-                break
+                if output_success:
+                    log.info(f"Successfully sent {count} messages from {filename}")
+                    filepath.unlink()
+                else:
+                    # If failed to output abort backup retry
+                    break
+    except FileNotFoundError:
+        log.error(f"Backup directory {backup_dir} is not a valid directory")
+        return False
 
     for source in config.sources():
         if not source["alerts_enabled"]:
