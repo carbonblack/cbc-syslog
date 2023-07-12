@@ -15,7 +15,6 @@ import json
 import logging
 import os
 import pathlib
-import sys
 
 from datetime import datetime, timedelta
 from cbc_syslog.util import CarbonBlackCloud, Transform, Output
@@ -33,10 +32,13 @@ def poll(config):
 
     Args:
         config (Config): Populated Config Object
+
+    Returns:
+        bool: Indicates short exit based on failure to execute
     """
     if not config.validate():
         log.error("Unable to validate config. Exiting cbc syslog")
-        sys.exit(0)
+        return False
 
     # Fetch previous state
     path = pathlib.Path(config.get("general.backup_dir")).joinpath(CBC_SYSLOG_STATE_FILE).resolve()
@@ -57,7 +59,7 @@ def poll(config):
 
     if end_time < new_start_time:
         log.error("Unable to fetch data please wait a minimum of 60s before next poll")
-        sys.exit(0)
+        return False
 
     past_failed_orgs = previous_state.setdefault("failed_orgs", {})
 
@@ -74,6 +76,9 @@ def poll(config):
     output = Output(**config.output())
 
     for source in config.sources():
+        if not source["alerts_enabled"]:
+            continue
+
         cb = CarbonBlackCloud(source)
         # Attempt to catch up failed org
         failed_org = past_failed_orgs.get(source["org_key"], {})
@@ -123,3 +128,5 @@ def poll(config):
 
     with open(path, "w") as state_file:
         state_file.write(json.dumps(previous_state, indent=4))
+
+    return True
