@@ -29,12 +29,16 @@ def main(args):
     config = Config(args.config_file)
 
     if args.command == "poll":
-        poll(config)
+        succeeded = poll(config)
+
     # elif args.command == "history":
     # elif args.command == "convert":
     # elif args.command == "setup":
     else:
         log.error("Command not recognized use --help for more information on supported commands")
+        sys.exit(0)
+
+    if not succeeded:
         sys.exit(0)
 
 
