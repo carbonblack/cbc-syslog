@@ -13,7 +13,7 @@
 """Carbon Black Cloud class"""
 
 from cbc_sdk import CBCloudAPI
-from cbc_sdk.platform import BaseAlert
+from cbc_sdk.platform import BaseAlert, AuditLog
 from datetime import datetime, timedelta
 
 import logging
@@ -132,7 +132,7 @@ class CarbonBlackCloud:
 
             return query
 
-        # Iterate saved instances to fetch alerts for each instance
+        # Get CBCloudAPI object for instance
         cb = self.instance["api"]
 
         # Perform alert fetch for each alert rule
@@ -166,3 +166,27 @@ class CarbonBlackCloud:
         if failed:
             all_alerts = None
         return all_alerts
+
+    def fetch_audit_logs(self, batches):
+        """
+        Fetch the next batch of audit logs
+
+        Args:
+            batches (int): The number of batches to fetch. Limit to prevent memory issues
+
+        Returns:
+            audit_logs (list): List of audit_logs or None if exception raised
+        """
+        cb = self.instance["api"]
+
+        audit_logs = []
+        try:
+            for i in range(batches):
+                new_logs = AuditLog.get_auditlogs(cb)
+                audit_logs.extend(new_logs)
+                if len(new_logs) < 2500:
+                    break
+        except:
+            log.exception(f"Failed to fetch audit logs for org {cb.credentials.org_key}")
+            return None
+        return audit_logs
