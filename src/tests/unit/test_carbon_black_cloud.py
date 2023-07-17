@@ -17,6 +17,7 @@ from cbc_syslog.util import CarbonBlackCloud
 from datetime import datetime, timedelta, timezone
 
 from tests.fixtures.mock_alerts import GET_ALERTS_SINGLE, GET_ALERTS_BULK
+from tests.fixtures.mock_audit_logs import GET_AUDIT_LOGS_BULK
 
 
 def test_init():
@@ -201,3 +202,95 @@ def test_fetch_alerts_exception(caplog):
     alerts = cbcloud.fetch_alerts(start, end)
     assert alerts is None
     assert "for org ORG_KEY with rule configuration {'type': ['WATCHLIST']}" in caplog.records[0].msg
+
+
+def test_fetch_audit_logs():
+    """Test CarbonBlackCloud fetch audit logs"""
+    source = {
+        "custom_api_id": "CUSTOM_ID",
+        "custom_api_key": "CUSTOM_KEY",
+        "org_key": "ORG_KEY",
+        "server_url": "https://0.0.0.0:5001",
+        "audit_logs_enabled": True
+    }
+
+    # Set Alert Response
+    pytest.audit_log_response = GET_AUDIT_LOGS_BULK(1)
+
+    cbcloud = CarbonBlackCloud(source)
+
+    audit_logs = cbcloud.fetch_audit_logs(1)
+    assert len(audit_logs) == 1
+    assert audit_logs[0] == GET_AUDIT_LOGS_BULK(1)["notifications"][0]
+
+
+def test_fetch_audit_logs_exception():
+    """Test CarbonBlackCloud fetch audit logs with failed response"""
+    source = {
+        "custom_api_id": "CUSTOM_ID",
+        "custom_api_key": "CUSTOM_KEY",
+        "org_key": "ORG_KEY",
+        "server_url": "https://0.0.0.0:5001",
+        "audit_logs_enabled": True
+    }
+
+    def audit_log():
+        """Audit Log output callable"""
+        raise Exception
+
+    # Set Alert Response
+    pytest.audit_log_response = audit_log
+
+    cbcloud = CarbonBlackCloud(source)
+
+    assert cbcloud.fetch_audit_logs(1) is None
+
+
+def test_fetch_audit_logs_multiple_batches():
+    """Test CarbonBlackCloud fetch audit logs"""
+    source = {
+        "custom_api_id": "CUSTOM_ID",
+        "custom_api_key": "CUSTOM_KEY",
+        "org_key": "ORG_KEY",
+        "server_url": "https://0.0.0.0:5001",
+        "audit_logs_enabled": True
+    }
+
+    # Set Alert Response
+    pytest.audit_log_response = GET_AUDIT_LOGS_BULK(2500)
+
+    cbcloud = CarbonBlackCloud(source)
+
+    audit_logs = cbcloud.fetch_audit_logs(5)
+    assert len(audit_logs) == 12500
+
+
+def test_fetch_audit_logs_multiple_batches_short_circuit():
+    """Test CarbonBlackCloud fetch audit logs"""
+    source = {
+        "custom_api_id": "CUSTOM_ID",
+        "custom_api_key": "CUSTOM_KEY",
+        "org_key": "ORG_KEY",
+        "server_url": "https://0.0.0.0:5001",
+        "audit_logs_enabled": True
+    }
+
+    num_requests = 0
+
+    def audit_log():
+        """Audit Log output callable"""
+        nonlocal num_requests
+
+        num_requests += 1
+        if num_requests == 1:
+            return GET_AUDIT_LOGS_BULK(1)
+        else:
+            pytest.fail(f"Received unexpected number of API requests: {num_requests}")
+
+    # Set Alert Response
+    pytest.audit_log_response = audit_log
+
+    cbcloud = CarbonBlackCloud(source)
+
+    audit_logs = cbcloud.fetch_audit_logs(5)
+    assert len(audit_logs) == 1

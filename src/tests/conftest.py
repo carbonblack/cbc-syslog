@@ -40,6 +40,7 @@ def test_globals():
     """Pytest Global Variables"""
     pytest.alert_search_request = None
     pytest.alert_search_response = None
+    pytest.audit_log_response = None
     pytest.tcp_recv_data = None
     pytest.tcp_tls_recv_data = None
     pytest.udp_recv_data = None
@@ -79,6 +80,17 @@ def alert_search(org_key):
     else:
         output = pytest.alert_search_response
 
+    return jsonify(output)
+
+
+@app.route('/integrationServices/v3/auditlogs', methods=['GET'])
+def audit_log():
+    """alert_search"""
+    log.info("Fetched Audit Logs")
+    if callable(pytest.audit_log_response):
+        output = pytest.audit_log_response()
+    else:
+        output = pytest.audit_log_response
     return jsonify(output)
 
 
