@@ -1,0 +1,22 @@
+[general]
+backup_dir = "/Users/avanbrunt/Desktop/backdir"
+output_format = "template"
+output_type = "http"
+http_out = "https://0.0.0.0:5001/http_out"
+http_headers = "{ \"content-type\": \"application/json\" }"
+https_ssl_verify = false
+
+[Org1]
+custom_api_id = "RANDOM_ID"
+custom_api_key = "RANDOM_SECRET"
+org_key = "SOME_ORG"
+server_url = "https://0.0.0.0:5001"
+audit_logs_enabled = true
+
+[audit_logs_template]
+template = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|Audit Logs|{{description}}|1|{{extension}}"
+time_format = "%b %d %Y %H:%m:%S"
+time_fields = ["eventTime"]
+
+[audit_logs_template.extension]
+default = "rt={{eventTime}}\tdvchost={{orgName}}\tduser={{loginName}}\tdvc={{clientIp}}\tcs4Label=Event_ID\tcs4={{eventId}}"

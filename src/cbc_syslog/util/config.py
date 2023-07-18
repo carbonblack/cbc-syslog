@@ -54,19 +54,29 @@ class Config:
         [alerts_template.extension]
         default = str
 
+        [audit_logs_template]
+        template = str
+        type_field = str
+        time_format = str
+        time_fields = list
+
+        [audit_logs_template.extension]
+        default = str
+
         [org1]
         custom_api_id = str
         custom_api_key = str
         org_key = str
         server_url = str
         alerts_enabled = bool
+        audit_logs_enabled = bool
 
         [[or1.alert_rules]]
         str = str
     """
     OUTPUT_TYPES = ["tcp", "udp", "tcp+tls", "http", "file"]
     OUTPUT_FORMATS = ["json", "template"]
-    SUPPORTED_TEMPLATES = ["alerts_template"]
+    SUPPORTED_TEMPLATES = ["alerts_template", "audit_logs_template"]
 
     def __init__(self, file_path):
         """
@@ -340,6 +350,7 @@ class Config:
                     "server_url": url,
                     "alerts_enabled": section.get("alerts_enabled", False),
                     "alert_rules": section.get("alert_rules", [{}]),
+                    "audit_logs_enabled": section.get("audit_logs_enabled", False),
                 })
 
         return sources
@@ -360,7 +371,6 @@ class Config:
             return {
                 "format": format
             }
-
         template_section = self.config.get(type + "_template", {})
         template_section["format"] = format
         return template_section
