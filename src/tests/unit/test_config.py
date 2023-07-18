@@ -139,7 +139,8 @@ def test_output(file_path, expected_params):
             "org_key": "SOME_ORG",
             "server_url": "http://0.0.0.0:5001",
             "alerts_enabled": False,
-            "alert_rules": [{}]
+            "alert_rules": [{}],
+            'audit_logs_enabled': False
         }]),
     ("multi-tenant.toml",
         [{
@@ -148,7 +149,8 @@ def test_output(file_path, expected_params):
             "org_key": "SOME_ORG",
             "server_url": "http://0.0.0.0:5001",
             "alerts_enabled": False,
-            "alert_rules": [{}]
+            "alert_rules": [{}],
+            'audit_logs_enabled': False
         }, {
             "custom_api_id": "RANDOM_ID",
             "custom_api_key": "RANDOM_SECRET",
@@ -162,7 +164,8 @@ def test_output(file_path, expected_params):
             }, {
                 "type": ["WATCHLIST"],
                 "minimum_severity": 7
-            }]
+            }],
+            'audit_logs_enabled': False
         }]),
 ])
 def test_sources(file_path, expected_sources):
