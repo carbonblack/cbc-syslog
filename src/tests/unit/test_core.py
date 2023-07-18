@@ -14,6 +14,7 @@
 import json
 import pathlib
 import pytest
+import time
 
 from freezegun import freeze_time
 from tests.fixtures.mock_alerts import GET_ALERTS_BULK
@@ -38,6 +39,9 @@ def test_poll(wipe_tmp):
     pytest.alert_search_response = GET_ALERTS_BULK(1, 1)
 
     poll(config)
+
+    # Add small sleep to wait for TCP response
+    time.sleep(0.1)
 
     assert pytest.alert_search_request["criteria"]["last_update_time"] == {
         "end": "2023-07-04T23:59:30.000000Z",
