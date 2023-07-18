@@ -18,6 +18,7 @@ import time
 
 from freezegun import freeze_time
 from tests.fixtures.mock_alerts import GET_ALERTS_BULK
+from tests.fixtures.mock_audit_logs import GET_AUDIT_LOGS_BULK
 
 from cbc_syslog import poll
 from cbc_syslog.util import Config
@@ -236,3 +237,62 @@ def test_poll_backup_dir_invalid(wipe_tmp):
     config.config["general"]["backup_dir"] = "/invalid"
 
     assert poll(config) is False
+
+
+@freeze_time("2023-07-05 00:01:00")
+def test_poll_audit_logs(wipe_tmp):
+    """Test poll cycle with only audit_logs"""
+    config = Config(str(CONFS_PATH.joinpath("audit-logs-only.toml")))
+
+    # Overwrite backup_dir to tmp folder
+    config.config["general"]["backup_dir"] = TMP_PATH
+
+    # Set Audit Log Response
+    pytest.audit_log_response = GET_AUDIT_LOGS_BULK(1)
+
+    poll(config)
+
+    assert pytest.http_recv_data.decode("utf-8") == "2023-07-05T00:01:00.000000Z localhost " \
+        "CEF:1|CarbonBlack|CBCSyslog|2.0.0|Audit Logs|Logged in successfully|1|rt=1529332687006" \
+        "\tdvchost=example.org\tduser=bs@carbonblack.com\tdvc=192.0.2.3\tcs4Label=Event_ID\tcs4=37075c01730511e89504c9ba022c3fbf"
+
+
+@freeze_time("2023-07-05 00:01:00")
+def test_poll_alerts_and_audit_logs(wipe_tmp):
+    """Test poll cycle with alerts and audit_logs"""
+    config = Config(str(CONFS_PATH.joinpath("alerts-and-audit-logs.toml")))
+
+    # Overwrite backup_dir to tmp folder
+    config.config["general"]["backup_dir"] = TMP_PATH
+
+    # Set Audit Log Response
+    pytest.audit_log_response = GET_AUDIT_LOGS_BULK(1)
+    pytest.alert_search_response = GET_ALERTS_BULK(1, 1)
+
+    poll(config)
+
+    assert json.loads(pytest.recv_history[0].decode("utf-8")) == GET_ALERTS_BULK(1, 1)["results"][0]
+    assert json.loads(pytest.recv_history[1].decode("utf-8")) == GET_AUDIT_LOGS_BULK(1)["notifications"][0]
+
+
+@freeze_time("2023-07-05 00:01:00")
+def test_poll_audit_logs_exception(wipe_tmp):
+    """Test poll cycle with audit_logs failure"""
+    config = Config(str(CONFS_PATH.joinpath("audit-logs-only.toml")))
+
+    # Overwrite backup_dir to tmp folder
+    config.config["general"]["backup_dir"] = TMP_PATH
+
+    def audit_log():
+        """Audit Log output callable"""
+        raise Exception
+
+    # Set Audit Log Response
+    pytest.audit_log_response = audit_log
+
+    poll(config)
+
+    with open(STATE_FILEPATH, "r") as state_file:
+        previous_state = json.load(state_file)
+        assert previous_state["end_time"] == "2023-07-05T00:00:30.000000Z"
+        assert previous_state["failed_orgs"] == {"SOME_ORG": {"audit_logs": "2023-07-04T23:59:30.000000Z"}}
