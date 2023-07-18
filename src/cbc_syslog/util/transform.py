@@ -57,7 +57,7 @@ class Transform:
             **time_format (str): Custom timestamp format for timestamp fields
             **time_fields (list): List of strings representing the timestamp fields to be converted
         """
-        self.template = Template(kwargs["template"])
+        self.template = Template(kwargs.get("template", ""))
         self.type_field = kwargs.get("type_field", None)
         self.time_format = kwargs.get("time_format", None)
         self.time_fields = kwargs.get("time_fields", [])
@@ -93,7 +93,12 @@ class Transform:
             if field not in data:
                 continue
             try:
-                timestamp = datetime.strptime(data[field], "%Y-%m-%dT%H:%M:%S.%fZ")
+                if isinstance(data[field], str):
+                    timestamp = datetime.strptime(data[field], "%Y-%m-%dT%H:%M:%S.%fZ")
+                elif isinstance(data[field], int):
+                    timestamp = datetime.fromtimestamp(data[field])
+                else:
+                    continue
                 defaulted_data[field] = timestamp.strftime(self.time_format)
             except:
                 continue

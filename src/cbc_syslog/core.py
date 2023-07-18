@@ -24,6 +24,8 @@ TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 CBC_SYSLOG_STATE_FILE = "cbc_syslog_state.json"
 
+AUDIT_LOG_BATCHES = 10
+
 
 def poll(config):
     """
@@ -64,7 +66,7 @@ def poll(config):
     past_failed_orgs = previous_state.setdefault("failed_orgs", {})
 
     # Create Supported Input Transforms
-    SUPPORTED_INPUTS = ["alerts"]
+    SUPPORTED_INPUTS = ["alerts", "audit_logs"]
     transforms = {}
     for input in SUPPORTED_INPUTS:
         transform_config = config.transform(input)
@@ -102,51 +104,56 @@ def poll(config):
         return False
 
     for source in config.sources():
-        if not source["alerts_enabled"]:
-            continue
+        for input in SUPPORTED_INPUTS:
+            if not source[input + "_enabled"]:
+                continue
 
-        cb = CarbonBlackCloud(source)
-        # Attempt to catch up failed org
-        failed_org = past_failed_orgs.get(source["org_key"], {})
-        last_end_time = failed_org.get("alerts", None)
+            cb = CarbonBlackCloud(source)
+            # Attempt to catch up failed org
+            failed_org = past_failed_orgs.get(source["org_key"], {})
+            last_end_time = failed_org.get(input, None)
 
-        # Use last_start_time if failed previously
-        start_time = datetime.strptime(last_end_time, TIME_FORMAT) if last_end_time else new_start_time
+            # Use last_start_time if failed previously
+            start_time = datetime.strptime(last_end_time, TIME_FORMAT) if last_end_time else new_start_time
 
-        alerts = cb.fetch_alerts(start_time, end_time)
+            data = None
+            if input == "alerts":
+                data = cb.fetch_alerts(start_time, end_time)
+            elif input == "audit_logs":
+                data = cb.fetch_audit_logs(AUDIT_LOG_BATCHES)
 
-        # Check for failure and save start_time if failed
-        if alerts is None:
-            failed_org["alerts"] = start_time.strftime(TIME_FORMAT)
-            if source["org_key"] not in past_failed_orgs:
-                past_failed_orgs[source["org_key"]] = failed_org
-        else:
-            # Clear last_end_time on success
-            if last_end_time:
-                del failed_org["alerts"]
-                if not failed_org:
-                    del past_failed_orgs[source["org_key"]]
+            # Check for failure and save start_time if failed
+            if data is None:
+                failed_org[input] = start_time.strftime(TIME_FORMAT)
+                if source["org_key"] not in past_failed_orgs:
+                    past_failed_orgs[source["org_key"]] = failed_org
+            else:
+                # Clear last_end_time on success
+                if last_end_time:
+                    del failed_org[input]
+                    if not failed_org:
+                        del past_failed_orgs[source["org_key"]]
 
-            backup_filename = f"cbc-{start_time.strftime(TIME_FORMAT)}.bck"
-            backup_file = pathlib.Path(config.get("general.backup_dir")).joinpath(backup_filename).resolve()
+                backup_filename = f"cbc-{start_time.strftime(TIME_FORMAT)}.bck"
+                backup_file = pathlib.Path(config.get("general.backup_dir")).joinpath(backup_filename).resolve()
 
-            with open(backup_file, "a") as backup:
-                for alert in alerts:
-                    if transforms["alerts"] == "json":
-                        data = json.dumps(alert._info)
-                    else:
-                        data = transforms["alerts"].render(alert._info)
+                with open(backup_file, "a") as backup:
+                    for item in data:
+                        if transforms[input] == "json":
+                            data_str = json.dumps(item if isinstance(item, dict) else item._info)
+                        else:
+                            data_str = transforms[input].render(item if isinstance(item, dict) else item._info)
 
-                    # Prevent repeating output if failure occurred
-                    if output_success:
-                        output_success = output.send(data)
+                        # Prevent repeating output if failure occurred
+                        if output_success:
+                            output_success = output.send(data_str)
 
-                    if not output_success:
-                        backup.write(data + "\n")
+                        if not output_success:
+                            backup.write(data_str + "\n")
 
-            # Clear Empty file
-            if output_success and backup_file.stat().st_size == 0:
-                backup_file.unlink()
+                # Clear Empty file
+                if output_success and backup_file.stat().st_size == 0:
+                    backup_file.unlink()
 
     # Save new state
     previous_state["end_time"] = end_time.strftime(TIME_FORMAT)
