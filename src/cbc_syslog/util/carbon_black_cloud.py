@@ -13,7 +13,7 @@
 """Carbon Black Cloud class"""
 
 from cbc_sdk import CBCloudAPI
-from cbc_sdk.platform import BaseAlert, AuditLog
+from cbc_sdk.platform import BaseAlert  # Re-add when CBC SDK is released AuditLog
 from datetime import datetime, timedelta
 
 import logging
@@ -182,7 +182,8 @@ class CarbonBlackCloud:
         audit_logs = []
         try:
             for i in range(batches):
-                new_logs = AuditLog.get_auditlogs(cb)
+                # new_logs = AuditLog.get_auditlogs(cb)
+                new_logs = cb.get_auditlogs()
                 audit_logs.extend(new_logs)
                 if len(new_logs) < 2500:
                     break
