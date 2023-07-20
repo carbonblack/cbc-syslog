@@ -17,7 +17,7 @@ import logging.handlers
 import psutil
 import sys
 
-from cbc_syslog import poll
+from cbc_syslog import poll, check
 from cbc_syslog.util import Config
 
 log = logging.getLogger(__name__)
@@ -31,6 +31,8 @@ def main(args):
     if args.command == "poll":
         succeeded = poll(config)
 
+    elif args.command == "check":
+        succeeded = check(config, args.force)
     # elif args.command == "history":
     # elif args.command == "convert":
     # elif args.command == "setup":
@@ -48,17 +50,20 @@ if __name__ == "__main__":
          --log-file
 
         poll
-            config-file
+            config_file
         history
-            config-file
+            config_file
             source
             start
             end
         convert
-            config-file
+            config_file
             --output
         setup
             --output
+        check
+            config_file
+            --force
     """
 
     argparser = argparse.ArgumentParser()
@@ -79,21 +84,25 @@ if __name__ == "__main__":
 
     pollparser = subparser.add_parser("poll", help="Fetches data from configured sources and "
                                                    "forwards to configured output since last poll attempt")
-    pollparser.add_argument("config-file", help="Absolute path to configuration file")
+    pollparser.add_argument("config_file", help="Absolute path to configuration file")
 
     historyparser = subparser.add_parser("history", help="Fetches data from specified source for "
                                                          "specified time range and forwards to configured output")
-    historyparser.add_argument("config-file", help="Absolute path to configuration file")
+    historyparser.add_argument("config_file", help="Absolute path to configuration file")
     historyparser.add_argument("source", help="Carbon Black Cloud instance to fetch historical data")
     historyparser.add_argument("start", help="The start time in ISO 8601")
     historyparser.add_argument("end", help="The end time in ISO 8601")
 
     convertparser = subparser.add_parser("convert", help="Convert CBC Syslog 1.0 conf to new 2.0 toml")
-    convertparser.add_argument("config-file", help="Absolute path to CBC Syslog 1.0 configuration file")
+    convertparser.add_argument("config_file", help="Absolute path to CBC Syslog 1.0 configuration file")
     convertparser.add_argument("--output", "-o", help="Output file location", default=".")
 
     setupparser = subparser.add_parser("setup", help="Setup wizard to walkthrough configuration")
     setupparser.add_argument("--output", "-o", help="Output file location", default=".")
+
+    checkparser = subparser.add_parser("check", help="Check config for valid API keys with correct permissions")
+    checkparser.add_argument("config_file", help="Absolute path to configuration file")
+    checkparser.add_argument("--force", action="store_true", help="Whether to force test which may cause data loss e.g. Audit Logs")
 
     args = argparser.parse_args()
 
