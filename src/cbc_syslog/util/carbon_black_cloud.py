@@ -14,6 +14,7 @@
 
 from cbc_sdk import CBCloudAPI
 from cbc_sdk.platform import BaseAlert  # Re-add when CBC SDK is released AuditLog
+from cbc_sdk.errors import ClientError, UnauthorizedError
 from datetime import datetime, timedelta
 
 import logging
@@ -89,6 +90,62 @@ class CarbonBlackCloud:
             "alert_rules": source.get("alert_rules", []),
             "audit_logs_enabled": source.get("audit_logs_enabled", False)
         }
+
+    def test_key(self, force=False):
+        """
+        Test key for permissions based on enabled data
+
+        Args:
+            force (bool): Whether to test impacting data sources e.g. Audit Logs queue
+
+        Returns
+            bool: Whether the keys succeeded
+        """
+        cb = self.instance["api"]
+        org_key = cb.credentials.org_key
+
+        success = True
+
+        if self.instance["alerts_enabled"]:
+            try:
+                cb.select(BaseAlert).where("").first()
+                log.info(f"Valid alerts permission detected for {org_key}")
+            except ClientError as e:
+                if e.error_code == 403:
+                    log.error(f"Unable to fetch alerts for {org_key} missing permission: org.alerts READ")
+                else:
+                    log.error(f"Unable to fetch alerts for {org_key} due to exception: {e}")
+                success = False
+            except UnauthorizedError:
+                log.error(f"Unable to fetch alerts for {org_key} API key invalid")
+                success = False
+            except Exception as e:
+                log.error(f"Unable to fetch alerts for {org_key} due to exception: {e}")
+                success = False
+
+        if self.instance["audit_logs_enabled"]:
+            if not force:
+                log.info("Audit logs skipped to avoid data loss use --force to test")
+            else:
+                try:
+                    # logs = AuditLog.get_auditlogs(cb)
+                    logs = cb.get_auditlogs()
+                    log.info(f"Valid audit logs permission detected for {org_key}")
+                    log.warning(f"{len(logs)} audit log(s) dropped for {org_key}")
+                except ClientError as e:
+                    if e.error_code == 403:
+                        log.error(f"Unable to fetch audit logs for {org_key} missing permission: org.audits READ")
+                    else:
+                        log.error(f"Unable to fetch audit logs for {org_key} due to exception: {e}")
+                    success = False
+                except UnauthorizedError:
+                    log.error(f"Unable to fetch audit logs for {org_key} API key invalid")
+                    success = False
+                except Exception as e:
+                    log.error(f"Unable to fetch audit logs for {org_key} due to exception: {e}")
+                    success = False
+
+        return success
 
     def fetch_alerts(self, start, end):
         """

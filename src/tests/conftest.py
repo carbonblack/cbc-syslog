@@ -20,7 +20,7 @@ import time
 import threading
 import traceback
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -77,6 +77,8 @@ def alert_search(org_key):
     }
     if callable(pytest.alert_search_response):
         output = pytest.alert_search_response(pytest.alert_search_request)
+    elif isinstance(pytest.alert_search_response, int):
+        abort(pytest.alert_search_response)
     else:
         output = pytest.alert_search_response
 
@@ -89,6 +91,8 @@ def audit_log():
     log.info("Fetched Audit Logs")
     if callable(pytest.audit_log_response):
         output = pytest.audit_log_response()
+    elif isinstance(pytest.audit_log_response, int):
+        abort(pytest.audit_log_response)
     else:
         output = pytest.audit_log_response
     return jsonify(output)

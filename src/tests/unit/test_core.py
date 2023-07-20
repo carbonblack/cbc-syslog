@@ -12,6 +12,7 @@
 """Tests for the Output object."""
 
 import json
+import logging
 import pathlib
 import pytest
 import time
@@ -20,9 +21,8 @@ from freezegun import freeze_time
 from tests.fixtures.mock_alerts import GET_ALERTS_BULK
 from tests.fixtures.mock_audit_logs import GET_AUDIT_LOGS_BULK
 
-from cbc_syslog import poll
+from cbc_syslog import poll, check
 from cbc_syslog.util import Config
-
 
 CONFS_PATH = pathlib.Path(__file__).joinpath("../../fixtures/confs").resolve()
 TMP_PATH = pathlib.Path(__file__).joinpath("../../fixtures/tmp").resolve()
@@ -265,7 +265,7 @@ def test_poll_alerts_and_audit_logs(wipe_tmp):
     # Overwrite backup_dir to tmp folder
     config.config["general"]["backup_dir"] = TMP_PATH
 
-    # Set Audit Log Response
+    # Set Responses
     pytest.audit_log_response = GET_AUDIT_LOGS_BULK(1)
     pytest.alert_search_response = GET_ALERTS_BULK(1, 1)
 
@@ -296,3 +296,78 @@ def test_poll_audit_logs_exception(wipe_tmp):
         previous_state = json.load(state_file)
         assert previous_state["end_time"] == "2023-07-05T00:00:30.000000Z"
         assert previous_state["failed_orgs"] == {"SOME_ORG": {"audit_logs": "2023-07-04T23:59:30.000000Z"}}
+
+
+@pytest.mark.parametrize("toml, force, logs", [
+    ("alerts-and-audit-logs.toml", True, [
+        "Valid alerts permission detected for SOME_ORG",
+        "Valid audit logs permission detected for SOME_ORG",
+        "1 audit log(s) dropped for SOME_ORG"
+    ]),
+    ("alerts-and-audit-logs.toml", False, [
+        "Valid alerts permission detected for SOME_ORG",
+        "Audit logs skipped to avoid data loss use --force to test"
+    ]),
+    ("template.toml", False, [
+        "Valid alerts permission detected for DIFFERENT_ORG"
+    ]),
+    ("audit-logs-only.toml", True, [
+        "Section (audit_logs_template): type_field missing extension will only use default",
+        "Valid audit logs permission detected for SOME_ORG",
+        "1 audit log(s) dropped for SOME_ORG"
+    ])
+])
+def test_check(toml, force, logs, caplog):
+    """Test check function"""
+    config = Config(str(CONFS_PATH.joinpath(toml)))
+
+    pytest.alert_search_response = GET_ALERTS_BULK(1, 1)
+    pytest.audit_log_response = GET_AUDIT_LOGS_BULK(1)
+
+    caplog.set_level(logging.INFO)
+
+    assert check(config, force=force)
+
+    syslog_index = 0
+    for record in caplog.records:
+        if "cbc_syslog" not in record.name:
+            continue
+        assert record.msg == logs[syslog_index]
+        syslog_index += 1
+
+
+@pytest.mark.parametrize("error_code, logs", [
+    (401, [
+        "Unable to fetch alerts for SOME_ORG API key invalid",
+        "Unable to fetch audit logs for SOME_ORG API key invalid"
+    ]),
+    (403, [
+        "Unable to fetch alerts for SOME_ORG missing permission: org.alerts READ",
+        "Unable to fetch audit logs for SOME_ORG missing permission: org.audits READ"
+    ]),
+    (404, [
+        "Unable to fetch alerts for SOME_ORG due to exception: Received 404 (Object Not Found)",
+        "Unable to fetch audit logs for SOME_ORG due to exception: Received 404 (Object Not Found)"
+    ]),
+    (500, [
+        "Unable to fetch alerts for SOME_ORG due to exception: Received error code 500 from API",
+        "Unable to fetch audit logs for SOME_ORG due to exception: Received error code 500 from API"
+    ])
+])
+def test_check_errors(error_code, logs, caplog):
+    """Test test function"""
+    config = Config(str(CONFS_PATH.joinpath("alerts-and-audit-logs.toml")))
+
+    pytest.alert_search_response = error_code
+    pytest.audit_log_response = error_code
+
+    caplog.set_level(logging.INFO)
+
+    assert not check(config, force=True)
+
+    syslog_index = 0
+    for record in caplog.records:
+        if "cbc_syslog" not in record.name:
+            continue
+        assert record.msg.startswith(logs[syslog_index]) or record.msg == logs[syslog_index]
+        syslog_index += 1

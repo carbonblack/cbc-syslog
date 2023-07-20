@@ -162,3 +162,27 @@ def poll(config):
         state_file.write(json.dumps(previous_state, indent=4))
 
     return True
+
+
+def check(config, force=False):
+    """
+    Check API keys for enabled data and validate config
+
+    Args:
+        config (Config): Populated Config Object
+        force (bool): Whether to test impacting data sources e.g. Audit Logs queue
+
+    Returns
+        bool: Whether the config is valid and API keys have necessary permissions
+    """
+    if not config.validate():
+        log.error("Unable to validate config")
+        return False
+
+    success = True
+    for source in config.sources():
+        cb = CarbonBlackCloud(source)
+        if not cb.test_key(force):
+            success = False
+
+    return success
