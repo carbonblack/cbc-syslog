@@ -17,7 +17,7 @@ import logging.handlers
 import psutil
 import sys
 
-from cbc_syslog import poll, check
+from cbc_syslog import poll, check, history
 from cbc_syslog.util import Config
 
 log = logging.getLogger(__name__)
@@ -33,7 +33,9 @@ def main(args):
 
     elif args.command == "check":
         succeeded = check(config, args.force)
-    # elif args.command == "history":
+
+    elif args.command == "history":
+        succeeded = history(config, args.start, args.end, args.get("source"))
     # elif args.command == "convert":
     # elif args.command == "setup":
     else:
@@ -53,9 +55,9 @@ if __name__ == "__main__":
             config_file
         history
             config_file
-            source
             start
             end
+            --source
         convert
             config_file
             --output
@@ -89,9 +91,9 @@ if __name__ == "__main__":
     historyparser = subparser.add_parser("history", help="Fetches data from specified source for "
                                                          "specified time range and forwards to configured output")
     historyparser.add_argument("config_file", help="Absolute path to configuration file")
-    historyparser.add_argument("source", help="Carbon Black Cloud instance to fetch historical data")
     historyparser.add_argument("start", help="The start time in ISO 8601")
     historyparser.add_argument("end", help="The end time in ISO 8601")
+    historyparser.add_argument("--source", help="Carbon Black Cloud instance to fetch historical data")
 
     convertparser = subparser.add_parser("convert", help="Convert CBC Syslog 1.0 conf to new 2.0 toml")
     convertparser.add_argument("config_file", help="Absolute path to CBC Syslog 1.0 configuration file")
