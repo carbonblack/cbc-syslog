@@ -137,6 +137,7 @@ def poll(config):
                 backup_filename = f"cbc-{start_time.strftime(TIME_FORMAT)}.bck"
                 backup_file = pathlib.Path(config.get("general.backup_dir")).joinpath(backup_filename).resolve()
 
+                log.info(f"Sending {len(data)} {input} for {source.get('org_key')}")
                 with open(backup_file, "a") as backup:
                     for item in data:
                         if transforms[input] == "json":
@@ -154,6 +155,8 @@ def poll(config):
                 # Clear Empty file
                 if output_success and backup_file.stat().st_size == 0:
                     backup_file.unlink()
+                else:
+                    log.warning(f"Failed to send data writing to backup file {backup_file.name}")
 
     # Save new state
     previous_state["end_time"] = end_time.strftime(TIME_FORMAT)
@@ -186,3 +189,80 @@ def check(config, force=False):
             success = False
 
     return success
+
+
+def history(config, start, end, org_key=None):
+    """
+    History Command
+
+    Args:
+        config (Config): Populated Config Object
+        start (str): ISO8601 Datetime string
+        end (str): ISO8601 Datetime string
+        org_key (str): Optional a singular org to fetch otherwise all sources fetched
+
+    Returns:
+        bool: Indicates short exit based on failure to execute
+    """
+    if not config.validate():
+        log.error("Unable to validate config")
+        return False
+
+    start_time = datetime.strptime(start, TIME_FORMAT)
+    end_time = datetime.strptime(end, TIME_FORMAT)
+
+    if end_time < start_time:
+        log.error("Unable to fetch history as end is before start")
+        return False
+
+    # Create Supported Input Transforms
+    SUPPORTED_HISTORY_INPUTS = ["alerts"]
+    transforms = {}
+    for input in SUPPORTED_HISTORY_INPUTS:
+        transform_config = config.transform(input)
+        if transform_config["format"] == "json":
+            transforms[input] = "json"
+        else:
+            transforms[input] = Transform(**transform_config)
+
+    success = True
+
+    output = Output(**config.output())
+    output_success = True
+
+    for source in config.sources():
+        # If org_key specified skip until source matches org_key
+        if org_key and source.get("org_key") != org_key:
+            continue
+
+        for input in SUPPORTED_HISTORY_INPUTS:
+            if not source[input + "_enabled"]:
+                continue
+
+            cb = CarbonBlackCloud(source)
+
+            data = None
+            if input == "alerts":
+                data = cb.fetch_alerts(start_time, end_time)
+
+            # Check for failure
+            if data is None:
+                success = False
+                continue
+
+            log.info(f"Sending {len(data)} {input} for {source.get('org_key')}")
+            for item in data:
+                if transforms[input] == "json":
+                    data_str = json.dumps(item if isinstance(item, dict) else item._info)
+                else:
+                    data_str = transforms[input].render(item if isinstance(item, dict) else item._info)
+
+                # Prevent repeating output if failure occurred
+                if output_success:
+                    output_success = output.send(data_str)
+
+                if not output_success:
+                    log.error(f"Unable to send history for {source.get('org_key')} from start: {start_time} to end: {end_time}")
+                    break
+
+    return success and output_success

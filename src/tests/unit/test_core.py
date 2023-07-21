@@ -21,7 +21,7 @@ from freezegun import freeze_time
 from tests.fixtures.mock_alerts import GET_ALERTS_BULK
 from tests.fixtures.mock_audit_logs import GET_AUDIT_LOGS_BULK
 
-from cbc_syslog import poll, check
+from cbc_syslog import poll, check, history
 from cbc_syslog.util import Config
 
 CONFS_PATH = pathlib.Path(__file__).joinpath("../../fixtures/confs").resolve()
@@ -371,3 +371,87 @@ def test_check_errors(error_code, logs, caplog):
             continue
         assert record.msg.startswith(logs[syslog_index]) or record.msg == logs[syslog_index]
         syslog_index += 1
+
+
+def test_history():
+    """Test history"""
+    config = Config(str(CONFS_PATH.joinpath("single-tenant.toml")))
+
+    def alert_output(request):
+        """Alert output callable"""
+        if request.get("criteria", {}).get("last_update_time", {}) != {
+            "end": "2023-07-05T00:00:00.000000Z",
+            "start": "2023-07-01T00:00:00.000000Z"
+        }:
+            pytest.fail("Request time range did not match expected start and end time")
+
+        return GET_ALERTS_BULK(50, 50)
+
+    pytest.alert_search_response = alert_output
+
+    assert history(config, "2023-07-01T00:00:00.000Z", "2023-07-05T00:00:00.000Z")
+
+    assert len(pytest.recv_history) == 50
+
+
+def test_history_no_data_enabled():
+    """Test history with no data enabled"""
+    config = Config(str(CONFS_PATH.joinpath("json.toml")))
+
+    def alert_output(request):
+        """Alert output callable expected to not be called"""
+        assert False
+
+    pytest.alert_search_response = alert_output
+
+    assert history(config, "2023-07-01T00:00:00.000Z", "2023-07-05T00:00:00.000Z")
+
+    assert len(pytest.recv_history) == 0
+
+
+def test_history_org_key():
+    """Test history with specific org_key"""
+    config = Config(str(CONFS_PATH.joinpath("template.toml")))
+
+    pytest.alert_search_response = GET_ALERTS_BULK(1, 1)
+
+    assert history(config, "2023-07-01T00:00:00.000Z", "2023-07-05T00:00:00.000Z", "DIFFERENT_ORG")
+
+    assert len(pytest.recv_history) == 2
+
+
+def test_history_invalid_org_key():
+    """Test history with invalid org_key"""
+    config = Config(str(CONFS_PATH.joinpath("template.toml")))
+
+    def alert_output(request):
+        """Alert output callable expected to not be called"""
+        assert False
+
+    pytest.alert_search_response = alert_output
+
+    assert history(config, "2023-07-01T00:00:00.000Z", "2023-07-05T00:00:00.000Z", "INVALID")
+
+    assert len(pytest.recv_history) == 0
+
+
+def test_history_exception():
+    """Test history with exception from Carbon Black Cloud"""
+    config = Config(str(CONFS_PATH.joinpath("single-tenant.toml")))
+
+    pytest.alert_search_response = 401
+
+    assert not history(config, "2023-07-01T00:00:00.000Z", "2023-07-05T00:00:00.000Z")
+
+    assert len(pytest.recv_history) == 0
+
+
+def test_history_bad_output():
+    """Test history with bad output destination"""
+    config = Config(str(CONFS_PATH.joinpath("bad-output.toml")))
+
+    pytest.alert_search_response = GET_ALERTS_BULK(1, 1)
+
+    assert not history(config, "2023-07-01T00:00:00.000Z", "2023-07-05T00:00:00.000Z")
+
+    assert len(pytest.recv_history) == 0
