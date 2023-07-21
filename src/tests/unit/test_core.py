@@ -455,3 +455,33 @@ def test_history_bad_output():
     assert not history(config, "2023-07-01T00:00:00.000Z", "2023-07-05T00:00:00.000Z")
 
     assert len(pytest.recv_history) == 0
+
+
+def test_history_bad_start_time():
+    """Test history with bad start_time"""
+    config = Config(str(CONFS_PATH.joinpath("template.toml")))
+
+    def alert_output(request):
+        """Alert output callable expected to not be called"""
+        assert False
+
+    pytest.alert_search_response = alert_output
+
+    assert not history(config, "2023-07-05T00:00:00.000Z", "2023-07-01T00:00:00.000Z")
+
+    assert len(pytest.recv_history) == 0
+
+
+def test_history_invalid_config():
+    """Test history with bad config"""
+    config = Config(str(CONFS_PATH.joinpath("invalid.toml")))
+
+    def alert_output(request):
+        """Alert output callable expected to not be called"""
+        assert False
+
+    pytest.alert_search_response = alert_output
+
+    assert not history(config, "2023-07-05T00:00:00.000Z", "2023-07-01T00:00:00.000Z")
+
+    assert len(pytest.recv_history) == 0
