@@ -415,10 +415,10 @@ def test_history_org_key():
 
     pytest.alert_search_response = GET_ALERTS_BULK(1, 1)
 
+    assert history(config, "2023-07-01T00:00:00.000Z", "2023-07-05T00:00:00.000Z", "DIFFERENT_ORG")
+
     # Add small sleep to wait for TCP response
     time.sleep(0.1)
-
-    assert history(config, "2023-07-01T00:00:00.000Z", "2023-07-05T00:00:00.000Z", "DIFFERENT_ORG")
 
     assert len(pytest.recv_history) == 2
 
