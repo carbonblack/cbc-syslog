@@ -1,0 +1,169 @@
+[general]
+#
+# Absolute path to the Backup Directory
+# This will be the location of back up files in the event that results fail to send to destination
+#
+# backup_dir =
+
+#
+# Output format of the data sent. Currently support json or template formats
+# Warning: if using json output_format, we recommend NOT using UDP output_type
+#
+# output_format =
+
+#
+# Configure the output transport mechanism.
+# Valid options are: 'udp', 'tcp', 'tcp+tls', 'http', 'file'
+#
+#  udp     - Have the events sent over a UDP socket
+#  tcp     - Have the events sent over a TCP socket
+#  tcp+tls - Have the events sent over a TLS+TCP socket
+#  http    - Have the events sent over a HTTP connection
+#  file    - Have the events saved localy to a file
+#
+# output_type =
+
+# Only specify one of the following based on the output selected in output_type
+
+#
+# file_path=Absolute file path - ie /Users/jdoe/Documents/
+#
+# file_path =
+
+#
+# udpout = IP:port - ie 1.2.3.5:514
+#
+# udp_out =
+
+#
+# http_out = http/https endpoint - ie https://server.company.com/endpoint
+# http_headers = JSON string representation of the headers "{\"key1\": \"value1\", \"key2\": \"value2\"}" - ie "{ \"content-type\": \"application/json\" }"
+# https_ssl_verify = true or false
+#
+# http_out =
+# http_headers = {'content-type': 'application/json'}
+# https_ssl_verify = true
+
+#
+# tcpout=IP:port - ie 1.2.3.5:514
+#
+# tcp_out=
+
+#
+# The TLS section is only necessary if you specified tcp+tls for output_type
+#
+# ca_cert = Absolute path to PEM-encoded CA certificates - ie /etc/certs/myca.pem
+#
+# Optional TLS verification properties
+# If cert is specified, key is a required parameter
+#
+# tls_verify = Set to true if you want to enabled cert validation - ie true
+#
+# cert = Absolute path to PEM-encoded client certificate - ie /etc/certs/mycert.pem
+#
+# key = Absolute path to PEM-encoded private key - ie /etc/certs/mycert.key
+#
+# key_password = Optional password to decrypt the given private key - ie p@ssw0rd1
+#
+# [tls]
+# ca_cert =
+# cert =
+# key =
+# key_password =
+# tls_verify =
+
+#
+# Transform configuration for Alerts when output_format is type template use jinja2 templates
+# Consists of the following properties
+#
+# template = Base jinja2 template string with support for extensions - ie {{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|{{reason_code}}|{{reason}}|{{severity}}|{{extension}}
+#
+# type_field = the field to key the extensions for customized properties - ie "type" for Alerts
+#
+# time_format = A python strftime representation of how the timestamps should be formatted - ie "%b %d %Y %H:%m:%S"
+# Python time format codes https://strftime.org/
+#
+# time_fields = List of fields in the alert to modify to the new string format - ie ["backend_timestamp"]
+#
+# [alerts_template]
+# template =
+# type_field =
+# time_format =
+# time_fields =
+
+#
+# Alert Template extension based on possible values for the field specified in type_field
+# default is used if a type value is not present
+# Exact string case is necessary to ensure match
+#
+# [alerts_template.extension]
+# default =
+
+#
+# Transform configuration for Audit Logs when output_format is type template use jinja2 templates
+# Consists of the following properties
+#
+# template = Base jinja2 template string with support for extensions - ie {{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|Audit Logs|{{description}}|1|{{extension}}
+#
+# type_field = the field to key the extensions for customized properties - no recommended property at this point
+#
+# time_format = A python strftime representation of how the timestamps should be formatted - ie "%b %d %Y %H:%m:%S"
+# Python time format codes https://strftime.org/
+#
+# [audit_logs_template]
+# template =
+# type_field =
+# time_format =
+# time_fields =
+
+#
+# Audit Log Template extension based on possible values for the field specified in type_field
+# default is used if a type value is not present
+# Exact string case is necessary to ensure match
+#
+# [audit_logs_template.extension]
+# default = str
+
+#
+# Carbon Black Cloud organization and configuration
+#
+# server_url = The Carbon Clack Cloud hostname - ie defense.conferdeploy.net
+#
+# org_key = The org key for the organization on the specified server_url - ie 8DEKN1GE
+#
+# custom_api_id = The API id of a CUSTOM API key - ie BDKLQ5PL0G
+#
+# custom_api_key = The API secret key of a CUSTOM API key - ie LBAHPM1263LPSA4MNG10W7MW
+#
+# alerts_enabled = Whether you want to forward Alerts - ie true
+#
+# audit_logs_enabled = Whether you want to forward Audit logs - ie true
+#
+# [OrgName1]
+# server_url =
+# org_key =
+# custom_api_id =
+# custom_api_key =
+# alerts_enabled =
+# audit_logs_enabled =
+
+#
+# At least one alert_rules is needed to match alerts multiple groups of rules can be added
+#
+# The key is a searchable alert field and the value is a list of values to match
+# Note: A few fields are single value such as minimum_severity
+# See https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/
+#
+# Example:
+#
+# [[OrgName1.alert_rules]]
+# type = [ "WATCHLIST" ]
+# minimum_severity = 7
+#
+# [[OrgName1.alert_rules]]
+# type = [ "CB_ANALYTICS" ]
+# minimum_severity = 3
+#
+#
+# [[OrgName1.alert_rules]]
+# str = [ "str" ]
