@@ -33,7 +33,7 @@ extras_require = {
 with io.open("README.md", "rt", encoding="utf8") as f:
     long_description = f.read()
 
-scripts = ["scripts/cbc_syslog_forwarder.py"]
+scripts = ["scripts/cbc_syslog_forwarder"]
 
 setup(
     name="cbc_syslog",
@@ -50,14 +50,10 @@ setup(
     license="MIT",
     author="Carbon Black Developer Network",
     author_email="cb-developer-network@vmware.com",
-    description="Syslog Connector for the Carbon Black Cloud",
+    description="Syslog Connector for Carbon Black Cloud",
     classifiers=[
-        # Indicate who your project is intended for
         "Intended Audience :: Developers",
-
-        # Pick your license as you wish (should match "license" above)
         "License :: OSI Approved :: MIT License",
-
         "Programming Language :: Python :: 3",
     ],
     keywords="carbonblack"

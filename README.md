@@ -6,7 +6,7 @@ The syslog connector lets administrators forward alert notifications and audit l
 
 * Generates pipe-delimited syslog messages with alert metadata identified by the streaming prevention system
 * Aggregates data from one or more Carbon Black Cloud organizations into a single syslog stream
-* Can be configured to use UDP, TCP, or encrypted (TCP over TLS) syslog protocols
+* Can be configured to use HTTP, TCP, encrypted (TCP over TLS), or UDP transport protocols
 
 ### Customer Support
 
