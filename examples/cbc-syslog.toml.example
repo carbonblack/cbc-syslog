@@ -41,8 +41,8 @@
 # https_ssl_verify = true or false
 #
 # http_out =
-# http_headers = {'content-type': 'application/json'}
-# https_ssl_verify = true
+# http_headers =
+# https_ssl_verify =
 
 #
 # tcpout=IP:port - ie 1.2.3.5:514

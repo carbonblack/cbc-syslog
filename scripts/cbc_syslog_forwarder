@@ -95,12 +95,12 @@ if __name__ == "__main__":
     historyparser.add_argument("end", help="The end time in ISO 8601")
     historyparser.add_argument("--source", help="Carbon Black Cloud instance to fetch historical data")
 
-    convertparser = subparser.add_parser("convert", help="Convert CBC Syslog 1.0 conf to new 2.0 toml")
-    convertparser.add_argument("config_file", help="Absolute path to CBC Syslog 1.0 configuration file")
-    convertparser.add_argument("--output", "-o", help="Output file location", default=".")
+    # convertparser = subparser.add_parser("convert", help="Convert CBC Syslog 1.0 conf to new 2.0 toml")
+    # convertparser.add_argument("config_file", help="Absolute path to CBC Syslog 1.0 configuration file")
+    # convertparser.add_argument("--output", "-o", help="Output file location", default=".")
 
-    setupparser = subparser.add_parser("setup", help="Setup wizard to walkthrough configuration")
-    setupparser.add_argument("--output", "-o", help="Output file location", default=".")
+    # setupparser = subparser.add_parser("setup", help="Setup wizard to walkthrough configuration")
+    # setupparser.add_argument("--output", "-o", help="Output file location", default=".")
 
     checkparser = subparser.add_parser("check", help="Check config for valid API keys with correct permissions")
     checkparser.add_argument("config_file", help="Absolute path to configuration file")
