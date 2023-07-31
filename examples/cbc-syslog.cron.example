@@ -17,4 +17,4 @@
 #
 # Uncomment to enable the cbc-connector with cron
 #
-#  0  *  *  *  * root /usr/share/cb/integrations/cbc-syslog/cbc-syslog --config-file /etc/cb/integrations/cbc-syslog/cbc-syslog.conf --log-file /var/log/cb/integrations/cbc-syslog/cbc-syslog.log
+#  5  *  *  *  * root cbc_syslog_forwarer --log-file /some/path/cbc-syslog.log poll /some/path/my-config.toml
