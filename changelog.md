@@ -3,6 +3,33 @@ All notable changes to this project will be documented in this file.
 
 ## Version 2.0.0
 
+**NEW:**
+* Added increased message templating support for any syslog format
+    * Supports customizable extensions based on a configurable type field
+    * Supports customizable timestamp format
+* Audit logs are no longer attached required with Alerts and can be enabled separately
+* Added new cbc_syslog_forwarder script which is installed into OS bin directory
+* New CBC Syslog commands to support config validation, polling, and historical fetch for alerts
+* All current and future alert types are supported by default
+* Built in notification rule style support using alert_rules to configure specific filters that reduce noise and alert fatigue
+* Only one API key required to fetch all Carbon Black Cloud data
+* Improved configuration validation and logging
+
+**Breaking Changes:**
+* New configuration file format from conf to toml
+* Moved from Carbon Black Cloud notifications to Alerts v7 schema
+* Removed CEF and LEEF support for better message templating to customize to any syslog format
+* back_up_dir renamed to backup_dir
+* api_connector_id/api_key and siem_connector_id/siem_key renamed to custom_api_id/custom_api_key
+* Removed requests_ca_cert
+* Changed CLI parameters to increase functionality
+* Removed dead cacert.pem
+* Changed how cbc-syslog is executed to support better python practices
+
+**Bug fixes:**
+* Improved Backup Directory support to only process cbc syslog .bck files
+* Improved handling for Carbon Black Cloud server_url supports hostname with https or without and removes trailing backslash
+
 ## Version 1.3.1
 
 **General:**
