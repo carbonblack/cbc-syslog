@@ -52,28 +52,55 @@ pip install cbc-syslog
 
 ### Create a Config file
 
-**Coming Soon:** _Wizard setup command to walk through creating a config file from skratch_
+**Coming Soon:** _Wizard setup command to walk through creating a config file from scratch_
 
 1. Create a CUSTOM API key in at least one Carbon Black Cloud instance with the following permissions `org.alerts READ` and `org.audits READ`
 
     For more information on creating a CUSTOM API key see the [Carbon Black Cloud User Guide](https://docs.vmware.com/en/VMware-Carbon-Black-Cloud/services/carbon-black-cloud-user-guide/GUID-F3816FB5-969F-4113-80FC-03981C65F969.html)
 
-2. Create a toml file - ie my-config.toml
+2. Create a toml file - e.g. my-config.toml
+
+    For a detailed breakdown of all the supported configurations see exampples/cbc-syslog.toml.example
 
 3. Create the general section
 
         [general]
         backup_dir = "/some/dir"
-        output_format = "json/template"
         output_type = "file/http/tcp/tcp+tls/udp"
+        output_format = "json/template"
 
     a. Specify an absolute path in `backup_dir` to a directory where unsent messages and previous state can be saved in the case of failure
 
-    b. Decide your `output_format` from  `json` or `template`
+    b. Decide how you would like to send the messages in `output_type` from `file`, `http`, `tcp`, `tcp+tls` or `udp`
 
-    c. Decide how you would like to send the messages in `output_type` from `file`, `http`, `tcp`, `tcp+tls` or `udp`
+    c. Decide your `output_format` from  `json` or `template`
 
-4. If you choose `json` for `output_format` skip to step 5 otherwise see 4a
+
+4. Based on the `output_type` you have choosen you'll need to configure one of the following output destinations
+
+    Examples outputs
+
+        file_path = "/some/dir"
+
+        http_out = "https://example.com"
+        http_headers =  "{ \"content-type\": \"application/json\" }"
+        https_ssl_verify = true
+
+        tcp_out = "1.2.3.5:514"
+
+        udp_out = "1.2.3.5:514"
+
+
+    a.  If you selected `tcp+tls` you'll need to configure the `tls` section based on your destination's expected certs
+
+        [tls]
+        ca_cert =
+        cert =
+        key =
+        key_password =
+        tls_verify =
+
+5. If you choose `json` for `output_format` skip to step 6 otherwise see 4a
 
     Example CEF template
 
@@ -108,30 +135,6 @@ pip install cbc-syslog
     For more information on strftime formats see https://strftime.org/
 
     d. See [Search Fields - Alert](https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/) for the full list of Alert fields
-
-5. Based on the `output_type` you have choosen you'll need to configure one of the following output destinations
-
-    Examples outputs
-
-        file_path = "/some/dir"
-
-        http_out = https://example.com
-        http_headers =  "{ \"content-type\": \"application/json\" }"
-        https_ssl_verify = true
-
-        tcp_out = 1.2.3.5:514
-
-        udp_out = 1.2.3.5:514
-
-
-    a.  If you selected `tcp+tls` you'll need to configure the `tls` section based on your destination's expected certs
-
-        [tls]
-        ca_cert =
-        cert =
-        key =
-        key_password =
-        tls_verify =
 
 6. Configure one or more Carbon Black Cloud Organizations
 
@@ -169,6 +172,10 @@ pip install cbc-syslog
 
     The key is the alert field you want to filter by and the value is a list of values you want to filter except `minimum_severity` which is a single integer. Each value is OR'd for a key and values are AND'd across keys e.g. `type:( WATCHLIST OR DEVICE_CONTROL) AND minimum_severity: 7`
 
+    If you want to fetch `ALL` alerts then use the following `alert_rules`
+        [[OrgName1.alert_rules]]
+        minimum_severity = 1
+
 
 ### Running cbc_syslog_forwarder
 
@@ -202,4 +209,8 @@ The `cbc_syslog_forwarder` poll command is designed to be executed in a cronjob 
 
 ### Customer Support
 
-Use the [Developer Community Forum](https://community.carbonblack.com/t5/user/userloginpage?redirectreason=permissiondenied&dest_url=https%3A%2F%2Fcommunity.carbonblack.com%2Ft5%2FDeveloper-Relations%2Fbd-p%2Fdeveloper-relations) to report bugs, request changes, and discuss with other API developers in the Carbon Black Community.
+If you want to report an issue or request a new feature please open an issue on [GitHub](https://github.com/carbonblack/cbc-syslog/issues)
+
+If you are struggling to setup the tool and your an existing Carbon Black Cloud customer reach out to [Support](https://www.vmware.com/support/services.html) from your product console or your sales contact. Support tickets can also be submitted through our [User Exchange community](https://community.carbonblack.com/community/resources/developer-relations).
+
+For other helpful resources check out our contact us page https://developer.carbonblack.com/contact
