@@ -253,6 +253,14 @@ class Config:
                 else:
                     has_server = True
 
+                if section.get("alerts_enabled", False) and "alert_rules" not in section:
+                    log.warning(f"Carbon Black Cloud instance ({section_name}): Alerts enabled without"
+                                f" alert_rules will result in no alerts")
+
+                if not section.get("alerts_enabled", False) and not section.get("audit_logs_enabled", False):
+                    log.error(f"Carbon Black Cloud instance ({section_name}): Has neither Alerts nor Audit logs enabled")
+                    has_server = False
+
         if not has_server:
             log.error("No valid Carbon Black Cloud instances provided")
             return False
