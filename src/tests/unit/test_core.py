@@ -119,26 +119,6 @@ def test_poll_retry_failed_org(wipe_tmp):
 
 
 @freeze_time("2023-07-05 00:01:00")
-def test_poll_no_data_enabled(wipe_tmp):
-    """Test poll cycle with config with no enabled data"""
-    config = Config(str(CONFS_PATH.joinpath("json.toml")))
-
-    # Overwrite backup_dir to tmp folder
-    config.config["general"]["backup_dir"] = TMP_PATH
-
-    pytest.alert_search_response = GET_ALERTS_BULK(1, 1)
-
-    poll(config)
-
-    assert pytest.alert_search_request is None
-    assert pytest.http_recv_data is None
-
-    with open(STATE_FILEPATH, "r") as state_file:
-        previous_state = json.load(state_file)
-        assert previous_state["end_time"] == "2023-07-05T00:00:30.000000Z"
-
-
-@freeze_time("2023-07-05 00:01:00")
 def test_poll_retry_before_30s(wipe_tmp):
     """Test retry poll cycle before 30s minimum"""
     config = Config(str(CONFS_PATH.joinpath("single-tenant.toml")))

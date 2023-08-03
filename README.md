@@ -60,7 +60,7 @@ pip install cbc-syslog
 
 2. Create a toml file - e.g. my-config.toml
 
-    For a detailed breakdown of all the supported configurations see exampples/cbc-syslog.toml.example
+    For a detailed breakdown of all the supported configurations see examples/cbc-syslog.toml.example
 
 3. Create the general section
 
@@ -173,6 +173,7 @@ pip install cbc-syslog
     The key is the alert field you want to filter by and the value is a list of values you want to filter except `minimum_severity` which is a single integer. Each value is OR'd for a key and values are AND'd across keys e.g. `type:( WATCHLIST OR DEVICE_CONTROL) AND minimum_severity: 7`
 
     If you want to fetch `ALL` alerts then use the following `alert_rules`
+
         [[OrgName1.alert_rules]]
         minimum_severity = 1
 

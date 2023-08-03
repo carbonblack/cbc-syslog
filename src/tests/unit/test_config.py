@@ -45,24 +45,28 @@ def test_validate(file_path, valid):
         "Section (general): http_out required when output_type is http",
         "Section (general): https_ssl_verify not specified defaulting to TRUE",
         "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing custom_api_id",
+        "Carbon Black Cloud instance (CarbonBlackCloudServer): Has neither Alerts nor Audit logs enabled",
         "No valid Carbon Black Cloud instances provided"
     ]),
     ("invalid-tcp.toml", [
         "Section (general): output_format required",
         "Section (general): tcp_out required when output_type is tcp or tcp+tls",
         "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing org_key",
+        "Carbon Black Cloud instance (CarbonBlackCloudServer): Has neither Alerts nor Audit logs enabled",
         "No valid Carbon Black Cloud instances provided"
     ]),
     ("invalid-udp.toml", [
         "Section (general): output_format required",
         "Section (general): udp_out required when output_type is udp",
         "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing custom_api_id",
+        "Carbon Black Cloud instance (CarbonBlackCloudServer): Has neither Alerts nor Audit logs enabled",
         "No valid Carbon Black Cloud instances provided"
     ]),
     ("invalid-file.toml", [
         "Section (general): backup_dir required to save output in case of a destination failure",
         "Section (general): output_format required",
-        "Section (general): file_path not specified and backup_dir missing no file destination specified"
+        "Section (general): file_path not specified and backup_dir missing no file destination specified",
+        "Carbon Black Cloud instance (CarbonBlackCloudServer): Alerts enabled without alert_rules will result in no alerts"
     ]),
     ("invalid-template.toml", [
         "Section (general): output_format is template but no templates provided"
@@ -74,6 +78,7 @@ def test_validate(file_path, valid):
         "Section (alerts_template): extension missing and referenced in template defaulting to empty string",
         "Section (alerts_template): time_format specified but no time_fields listed",
         "Carbon Black Cloud instance (CarbonBlackCloudServer): Missing custom_api_key",
+        "Carbon Black Cloud instance (CarbonBlackCloudServer): Has neither Alerts nor Audit logs enabled",
         "No valid Carbon Black Cloud instances provided"
     ])
 ])
@@ -140,7 +145,7 @@ def test_output(file_path, expected_params):
             "server_url": "http://0.0.0.0:5001",
             "alerts_enabled": False,
             "alert_rules": [{}],
-            'audit_logs_enabled': False
+            'audit_logs_enabled': True
         }]),
     ("multi-tenant.toml",
         [{
