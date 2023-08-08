@@ -17,7 +17,7 @@ The following python packages are required to use CBC Syslog
 * carbon-black-cloud-sdk
 * Jinja2
 * psutil
-* tomli >= 1.1.0; python_version < 3.11
+* tomli >= 1.1.0; python_version < '3.11'
 
 **Note:** _`tomli` is only required for python versions before 3.11 as tomlib has been included in the standard python library_
 
