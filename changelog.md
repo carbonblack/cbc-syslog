@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 ## Version 2.0.0
 
+The CBC Syslog tool has been rewritten from the ground up to provide increased customization and improved Alert data with support the latest Carbon Black Cloud alert types
+
 **NEW:**
 * Added increased message templating support for any syslog format
     * Supports customizable extensions based on a configurable type field

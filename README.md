@@ -1,8 +1,12 @@
-# Carbon Black Cloud Syslog Connector
+# Carbon Black Cloud Syslog Connector 2.x
 
 ## Introduction
 
 The Carbon Black Cloud Syslog connector lets administrators forward alerts and audit logs from their Carbon Black Cloud instance to local, on-premise systems or other cloud applications.
+
+Still need CBC Syslog 1.x? Checkout the `legacy` branch
+
+If you are looking to migrate from CBC Syslog 1.x to 2.x take a look at the [migration doc](MIGRATION.md).
 
 ## Features
 
