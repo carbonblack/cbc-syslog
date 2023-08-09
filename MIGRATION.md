@@ -9,7 +9,7 @@ CBC Syslog 2.0 Features:
 * Complete syslog message templating support
 * Improved install experience
 * Single API key per organization
-* Support for all Carbon Black Cloud alerts
+* Support for all Carbon Black Cloud alert types
 * Improved error handling
 
 ## Config File
@@ -35,7 +35,7 @@ For more information on the `toml` specification see https://toml.io/en/
 
 ### Template
 
-The changes to templating has increased the ability to customize what syslog message you want to generate for more information see [Creating a custom message with templates](README.md#creating-a-custom-message-with-templates).
+The changes to templating has increased the ability to customize what syslog message you want to generate. For more information see [Creating a custom message with templates](README.md#creating-a-custom-message-with-templates).
 
 If you want to see examples of predefined templates see the sections below
 
@@ -63,4 +63,4 @@ For more information on LEEF check out the [LEEF Mapping Specification](https://
 
 Previously CBC Syslog was executed from the python site-packages which can be a challenge to find based on your installation or operating system. With CBC Syslog 2.0, we have moved the exectuable to be installed to your operating system bin directory so that it can be executed from wherever you'd prefer.
 
-See [Running cbc_syslog_forwarder][README.md#running-cbc_syslog_forwarder] for more information
+See [Running cbc_syslog_forwarder](README.md#running-cbc_syslog_forwarder) for more information
