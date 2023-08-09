@@ -13,7 +13,7 @@
 """Carbon Black Cloud class"""
 
 from cbc_sdk import CBCloudAPI
-from cbc_sdk.platform import BaseAlert  # Re-add when CBC SDK is released AuditLog
+from cbc_sdk.platform import Alert, AuditLog
 from cbc_sdk.errors import ClientError, UnauthorizedError
 from datetime import datetime, timedelta
 
@@ -108,7 +108,7 @@ class CarbonBlackCloud:
 
         if self.instance["alerts_enabled"]:
             try:
-                cb.select(BaseAlert).where("").first()
+                cb.select(Alert).where("").first()
                 log.info(f"Valid alerts permission detected for {org_key}")
             except ClientError as e:
                 if e.error_code == 403:
@@ -128,8 +128,7 @@ class CarbonBlackCloud:
                 log.info("Audit logs skipped to avoid data loss use --force to test")
             else:
                 try:
-                    # logs = AuditLog.get_auditlogs(cb)
-                    logs = cb.get_auditlogs()
+                    logs = AuditLog.get_auditlogs(cb)
                     log.info(f"Valid audit logs permission detected for {org_key}")
                     log.warning(f"{len(logs)} audit log(s) dropped for {org_key}")
                 except ClientError as e:
@@ -166,11 +165,12 @@ class CarbonBlackCloud:
 
         def build_query(cb, alert_rule, start, end):
             """Build CBC SDK Alert Query"""
-            query = cb.select(BaseAlert) \
+            query = cb.select(Alert) \
                       .set_time_range(time_field,
                                       start=start.strftime(time_format),
                                       end=end.strftime(time_format)) \
-                      .sort_by(time_field, "ASC")
+                      .sort_by(time_field, "ASC") \
+                      .set_rows(10000)
 
             # Iterate criteria options
             for key in alert_rule.keys():
@@ -198,7 +198,7 @@ class CarbonBlackCloud:
 
             try:
                 # Fetch initial Alert batch
-                rule_alerts.extend(build_query(cb, alert_rule, start, end)[0:10000])
+                rule_alerts.extend(build_query(cb, alert_rule, start, end))
 
                 # Check if 10k limit was hit and iteratively fetch remaining alerts
                 #   by increasing start time to the last alert fetched
@@ -209,7 +209,7 @@ class CarbonBlackCloud:
                         overflow = build_query(cb, alert_rule, new_start, end)
 
                         # Extend alert list with follow up alert batches
-                        rule_alerts.extend(overflow[0:10000])
+                        rule_alerts.extend(overflow)
                         if len(overflow) >= 10000:
                             last_alert = rule_alerts[-1]
                         else:
@@ -239,8 +239,7 @@ class CarbonBlackCloud:
         audit_logs = []
         try:
             for i in range(batches):
-                # new_logs = AuditLog.get_auditlogs(cb)
-                new_logs = cb.get_auditlogs()
+                new_logs = AuditLog.get_auditlogs(cb)
                 audit_logs.extend(new_logs)
                 if len(new_logs) < 2500:
                     break
