@@ -33,11 +33,23 @@ For more information on the `toml` specification see https://toml.io/en/
 
 **Coming Soon:** `convert` command in `cbc_syslog_forwarder` to more easily migrate to the latest `toml` file structure
 
-### CEF
+### Template
+
+The changes to templating has increased the ability to customize what syslog message you want to generate for more information see [Creating a custom message with templates](README.md#creating-a-custom-message-with-templates).
+
+If you want to see examples of predefined templates see the sections below
+
+#### CEF
+
+The move from notifications to alerts has increased the number of fields which can be mapped to CEF. Given each alert type has a variety of different properties we can utilize the new customizable extensions to map the unique fields for each alert type.
+
+Take a look at the new CEF mappings in [cef.toml.example](/examples/cef.toml.example).
+
+**Note:** If you don't need as much data or have message size limitions then modify the templates to your desired size or adjust the mapped properties.
 
 For more information on CEF check out the [CEF Mappings Specification](https://www.microfocus.com/documentation/arcsight/arcsight-smartconnectors-8.3/cef-implementation-standard/#CEF/Chapter%202%20ArcSight%20Extension.htm?TocPath=_____3)
 
-### LEEF
+#### LEEF
 
 **NOT RECOMMENDED:** The `leef` format is not recommended instead checkout out our latest [IBM QRadar App](https://developer.carbonblack.com/reference/carbon-black-cloud/integrations/qradar-app)
 
@@ -48,3 +60,7 @@ For more information on LEEF check out the [LEEF Mapping Specification](https://
 
 
 ## CBC Syslog Script
+
+Previously CBC Syslog was executed from the python site-packages which can be a challenge to find based on your installation or operating system. With CBC Syslog 2.0, we have moved the exectuable to be installed to your operating system bin directory so that it can be executed from wherever you'd prefer.
+
+See [Running cbc_syslog_forwarder][README.md#running-cbc_syslog_forwarder] for more information

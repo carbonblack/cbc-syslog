@@ -50,6 +50,37 @@ pip install cbc-syslog
 
         pip install .
 
+
+### Running cbc_syslog_forwarder
+
+The script `cbc_syslog_forwarder` is installed into the OS bin directory for easy access from any directory
+
+```
+>>> cbc_syslog_forwarder --help
+usage: cbc_syslog_forwarder [-h] [--log-file LOG_FILE] [-d] [-v] {poll,history,check} ...
+
+positional arguments:
+  {poll,history,check}  The action to be taken
+    poll                Fetches data from configured sources and forwards to configured output since last poll
+                        attempt
+    history             Fetches data from source(s) for specified time range and forwards to configured
+                        output
+    check               Check config for valid API keys with correct permissions
+
+options:
+  -h, --help            show this help message and exit
+  --log-file LOG_FILE, -l LOG_FILE
+                        Log file location
+  -d, --debug           Set log level to debug
+  -v, --verbose         Set log level to info
+```
+
+The `cbc_syslog_forwarder` poll command is designed to be executed in a cronjob for continual syslog forwarding
+
+```
+5  *  *  *  * root cbc_syslog_forwarer --log-file /some/path/cbc-syslog.log poll /some/path/my-config.toml
+```
+
 ### Create a Config file
 
 **Coming Soon:** _Wizard setup command to walk through creating a config file from scratch_
@@ -178,35 +209,57 @@ pip install cbc-syslog
         minimum_severity = 1
 
 
-### Running cbc_syslog_forwarder
+### Creating a custom message with templates
 
-The script `cbc_syslog_forwarder` is installed into the OS bin directory for easy access from any directory
+The configuration file provides the ability to define a template for each data type as well as the ability to create a custom extension which can be defined based on a configurable field to make a unique message for a data's sub type
 
+The templates use jinja2 for rendering customizable messages. You can provide the text to be included as well as variable data by wrapping the field name in double curly braces e.g. `{{field_name}}`.
+
+#### Template Configuration Properties
+
+* `template` defines the base syslog header which will be included for all messages of the data type
+
+    **Note:** _Make sure to include `{{extension}}` inside the `template` value in order for the extension template to be rendered as part of the message_
+
+* `type_field` defines the field in the data that should be used to define which extension should be rendered. The value in the extensions are case sensistive
+
+* `time_format` and `time_fields` provides you the ability to customize the way the timestamps are formatte and which fields to modify. This utilizes python strftime formatting, for more information on strftime formats see https://strftime.org/
+
+Example:
 ```
->>> cbc_syslog_forwarder --help
-usage: cbc_syslog_forwarder [-h] [--log-file LOG_FILE] [-d] [-v] {poll,history,check} ...
-
-positional arguments:
-  {poll,history,check}  The action to be taken
-    poll                Fetches data from configured sources and forwards to configured output since last poll
-                        attempt
-    history             Fetches data from source(s) for specified time range and forwards to configured
-                        output
-    check               Check config for valid API keys with correct permissions
-
-options:
-  -h, --help            show this help message and exit
-  --log-file LOG_FILE, -l LOG_FILE
-                        Log file location
-  -d, --debug           Set log level to debug
-  -v, --verbose         Set log level to info
+[alerts_template]
+template = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|{{reason_code}}|{{reason}}|{{severity}}|{{extension}}"
+type_field = "type"
+time_format = "%b %d %Y %H:%m:%S"
+time_fields = ["backend_timestamp"]
 ```
 
-The `cbc_syslog_forwarder` poll command is designed to be executed in a cronjob for continual syslog forwarding
+#### Extension
 
+* `default` defines the extension which will be utilized if no field is specified for `type_field` or a value was not specified in the extension
+* Any other key in the extension dictionary will be interpretted as a possible value to be matched for the `type_field`. The values are case sensistive
+
+Example:
 ```
-5  *  *  *  * root cbc_syslog_forwarer --log-file /some/path/cbc-syslog.log poll /some/path/my-config.toml
+[alerts_template.extension]
+default = "cat={{type}}\tact={{sensor_action}}\toutcome={{run_state}}"
+CB_ANALYTICS = "cat={{type}}\tact={{sensor_action}}\toutcome={{run_state}}\tframeworkName=MITRE_ATT&CK\tthreatAttackID={{attack_tactic}}:{{attack_technique}}"
 ```
+
+#### Fields
+
+The following fields are available for building the Syslog header
+
+* `{{datetime_utc}}` - Uses current time with format e.g. 1985-04-12T23:20:50.52Z
+* `{{datetime_legacy}}` - Uses current time with format e.g. Jan 18 11:07:53
+* `{{vendor}}` - CarbonBlack
+* `{{product}}` - CBCSyslog
+* `{{product_version}}` - Current CBC Syslog version e.g. 2.0.0
+
+
+For the available Alert fields see [Search Fields - Alerts](https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields)
+
+For the available Audit Log fields see [Audit Log Events](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-defense/latest/rest-api#audit-log-events)
 
 ### Customer Support
 
