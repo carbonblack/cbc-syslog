@@ -3,13 +3,13 @@ All notable changes to this project will be documented in this file.
 
 ## Version 2.0.0
 
-The CBC Syslog tool has been rewritten from the ground up to provide increased customization and improved Alert data with support the latest Carbon Black Cloud alert types
+The CBC Syslog tool has been rewritten from the ground up to provide increased customization and improved Alert data with support for the latest Carbon Black Cloud alert types
 
 **NEW:**
 * Added increased message templating support for any syslog format
     * Supports customizable extensions based on a configurable type field
     * Supports customizable timestamp format
-* Audit logs are no longer attached required with Alerts and can be enabled separately
+* Audit logs and Alerts can be enabled independently
 * Added new cbc_syslog_forwarder script which is installed into OS bin directory
 * New CBC Syslog commands to support config validation, polling, and historical fetch for alerts
 * All current and future alert types are supported by default
