@@ -6,4 +6,4 @@ __license__ = 'MIT'
 __copyright__ = 'Copyright 2018-2023 VMware Carbon Black'
 __version__ = '2.0.0'
 
-from .core import poll, check, history
+from .core import poll, check, history, wizard
