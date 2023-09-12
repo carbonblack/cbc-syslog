@@ -17,6 +17,10 @@ import pathlib
 
 from datetime import datetime, timedelta
 from cbc_syslog.util import CarbonBlackCloud, Transform, Output
+from cbc_syslog.util.example import (EXAMPLE_ALERT_CEF_TEMPLATE,
+                                     EXAMPLE_ALERT_LEEF_TEMPLATE,
+                                     EXAMPLE_AUDIT_CEF_TEMPLATE,
+                                     EXAMPLE_AUDIT_LEEF_TEMPLATE)
 
 log = logging.getLogger(__name__)
 
@@ -266,3 +270,185 @@ def history(config, start, end, org_key=None):
                     break
 
     return success and output_success
+
+
+def wizard(output_file):
+    """
+    Setup Wizard Command
+
+    Args:
+        output_file (str): Output destination
+
+    Returns:
+        bool: Indicates short exit based on failure to execute
+    """
+
+    def valid_input(prompt, func, error_message=None):
+        """
+        Verify input and re-request if invalid.
+
+        Args:
+            prompt (str): The prompt to request input
+            func (lambda): The function to validate the response
+            error_message (str): The message to return in the case of failure
+        """
+        response = input(prompt)
+
+        if not func(response):
+            if error_message:
+                print(error_message + "\n")
+            else:
+                print("Invalid Input\n")
+            valid_input(prompt, func, error_message)
+        return response
+
+    with pathlib.Path(output_file).open("w+") as output_file:
+
+        backup_dir = valid_input("Provide an absolute path to an existing backup directory: ",
+                                 lambda resp: pathlib.Path(resp).exists(),
+                                 "Directory not found")
+        output_file.write(f"backup_dir = \"{backup_dir}\"\n")
+
+        output_format = valid_input("What format would you like the data to be sent json or template: ",
+                                    lambda resp: resp.lower() in ["json", "template"]).lower()
+        output_file.write(f"output_format = \"{output_format}\"\n")
+
+        output_type = valid_input("How would you like to data to be sent (udp / tcp / tcp+tls / http / file): ",
+                                  lambda resp: resp.lower() in ["udp", "tcp", "tcp+tls", "http", "file"]).lower()
+        output_file.write(f"output_type = \"{output_type}\"\n")
+
+        if output_type == "file":
+            file_path = valid_input("Provide an absolute path to where you want the files to be output: ",
+                                    lambda resp: pathlib.Path(resp).exists(),
+                                    "Directory not found")
+            output_file.write(f"file_path = \"{file_path}\"\n")
+
+        elif output_type == "http":
+            http_out = input("Provide an http/https endpoint e.g.(https://server.company.com/endpoint): ")
+            output_file.write(f"http_out = \"{http_out}\"\n")
+
+            headers = {}
+            while (input("Would you like to include a header (y or n): ").lower() == "y"):
+                http_header_key = input("Provide header key: ")
+                http_header_value = input("Provide header value: ")
+                headers[http_header_key] = http_header_value
+
+            if headers:
+                output_file.write(f"http_headers = {json.dumps(json.dumps(headers))}\n")
+
+            https_ssl_verify = input("Would you like to enable ssl verification (y or n): ").lower() == "y"
+            output_file.write(f"https_ssl_verify = {'true' if https_ssl_verify else 'false'}\n")
+        elif "tcp" in output_type:
+            host = input("Provide the destination ip address: ")
+            port = input("Provide the destination port: ")
+            output_file.write(f"tcp_out = \"{host}:{port}\"\n")
+
+            if "tls" in output_type:
+                ca_cert = valid_input("Provide an absolute path to the ca cert: ",
+                                      lambda resp: pathlib.Path(resp).exists(),
+                                      "File not found")
+                output_file.write(f"ca_cert = \"{ca_cert}\"\n")
+
+                tls_verify = input("Would you like to enable tls verification (y or n): ").lower() == "y"
+                output_file.write(f"tls_verify = {'true' if tls_verify else 'false'}\n")
+
+                if tls_verify:
+                    cert = valid_input("Provide an absolute path to the cert: ",
+                                       lambda resp: pathlib.Path(resp).exists(),
+                                       "File not found")
+                    output_file.write(f"cert = \"{cert}\"\n")
+
+                    key = valid_input("Provide an absolute path to the key: ",
+                                      lambda resp: pathlib.Path(resp).exists(),
+                                      "File not found")
+                    output_file.write(f"key = \"{key}\"\n")
+
+                    key_password = input("Provide key password if set otherwise leave empty: ")
+                    output_file.write(f"key_password = \"{key_password}\"\n")
+
+        elif output_type == "udp":
+            host = input("Provide the destination ip address: ")
+            port = input("Provide the destination port: ")
+            output_file.write(f"udp_out = \"{host}:{port}\"\n")
+
+        if output_format == "template":
+            if input("Do you want to add an alert template (y or n): ").lower() == "y":
+                if input("Do you want to use the example CEF template (y or n): ").lower() == "y":
+                    output_file.write(EXAMPLE_ALERT_CEF_TEMPLATE)
+                elif input("Do you want to use the example LEEF template (y or n): ").lower() == "y":
+                    print("If you are using QRadar checkout out our native app instead "
+                          "https://developer.carbonblack.com/reference/carbon-black-cloud/integrations/qradar-app\n")
+                    output_file.write(EXAMPLE_ALERT_LEEF_TEMPLATE)
+                else:
+                    print("Template properties added. See "
+                          "https://github.com/carbonblack/cbc-syslog/tree/main#creating-a-custom-message-with-templates")
+                    output_file.write("""
+                    [alerts_template]
+                    template =
+                    type_field =
+                    time_format =
+                    time_fields =
+
+                    [alerts_template.extension]
+                    default =
+                    \n""")
+
+            if input("Do you want to add an audit log template (y or n): ").lower() == "y":
+                if input("Do you want to use the example CEF template (y or n): ").lower() == "y":
+                    output_file.write(EXAMPLE_AUDIT_CEF_TEMPLATE)
+                elif input("Do you want to use the example LEEF template (y or n): ").lower() == "y":
+                    print("If you are using QRadar checkout out our native app instead "
+                          "https://developer.carbonblack.com/reference/carbon-black-cloud/integrations/qradar-app\n")
+                    output_file.write(EXAMPLE_AUDIT_LEEF_TEMPLATE)
+                else:
+                    print("Template properties added. See "
+                          "https://github.com/carbonblack/cbc-syslog/tree/main#creating-a-custom-message-with-templates")
+                    output_file.write("""
+                    [audit_logs_template]
+                    template =
+                    type_field =
+                    time_format =
+                    time_fields =
+
+                    [audit_logs_template.extension]
+                    default =
+                    \n""")
+
+        while True:
+            org_name = input("Provide an org name (letters and numbers only): ").replace(" ", "")
+            output_file.write(f"[{org_name}]\n")
+
+            server_url = input("Provide the HOSTNAME for the Carbon Black Cloud instance: ")
+            output_file.write(f"server_url = \"{server_url}\"\n")
+
+            org_key = input("Provide the ORG KEY for the Carbon Black Cloud organization: ")
+            output_file.write(f"org_key = \"{org_key}\"\n")
+
+            custom_api_id = input("Provide the ID for the custom API key: ")
+            output_file.write(f"custom_api_id = \"{custom_api_id}\"\n")
+
+            custom_api_secret = input("Provide the SECRET for the custom API key: ")
+            output_file.write(f"custom_api_secret = \"{custom_api_secret}\"\n")
+
+            audit_logs_enabled = input("Do you want to enable Audit Logs (y or n): ").lower() == "y"
+            output_file.write(f"audit_logs_enabled = {'true' if audit_logs_enabled else 'false'}\n")
+
+            alerts_enabled = input("Do you want to enable Alerts (y or n): ").lower() == "y"
+            output_file.write(f"alerts_enabled = {'true' if alerts_enabled else 'false'}\n")
+
+            if alerts_enabled:
+                output_file.write(f"\n[[{org_name}.alert_rules]]\n")
+
+                minimum_severity = valid_input("Provide a minimum severity between 1 and 10: ",
+                                               lambda x: int(x) > 0 and int(x) <= 10)
+                output_file.write(f"minimum_severity = {minimum_severity}\n")
+
+                print("If you want to provide more rules or add additional filters check out the README for more information\n")
+
+            if input("Do you want to add another organization (y or n): ").lower() == "n":
+                break
+    print(f"""To test your configuration use:
+cbc_syslog_forwarer --log-file /some/path/cbc-syslog.log check {output_file}
+
+To run the syslog forwarder use:
+cbc_syslog_forwarer --log-file /some/path/cbc-syslog.log poll {output_file}""")
