@@ -69,6 +69,7 @@ positional arguments:
                         attempt
     history             Fetches data from source(s) for specified time range and forwards to configured
                         output
+    setup               Setup wizard to walkthrough configuration
     check               Check config for valid API keys with correct permissions
 
 options:
