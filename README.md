@@ -176,7 +176,7 @@ The `cbc_syslog_forwarder` poll command is designed to be executed in a cronjob 
 
     Example Organization
 
-        [OrgName1]
+        [SourceName1]
         server_url = defense.conferdeploy.net
         org_key = ABCD1234
         custom_api_id = ABCDE12345
@@ -198,11 +198,11 @@ The `cbc_syslog_forwarder` poll command is designed to be executed in a cronjob 
 
     Example Alert Rules
 
-        [[OrgName1.alert_rules]]
+        [[SourceName1.alert_rules]]
         type = [ "WATCHLIST", "DEVICE_CONTROL" ]
         minimum_severity = 7
 
-        [[OrgName1.alert_rules]]
+        [[SourceName1.alert_rules]]
         type = [ "CB_ANALYTICS" ]
         minimum_severity = 3
 
@@ -210,7 +210,7 @@ The `cbc_syslog_forwarder` poll command is designed to be executed in a cronjob 
 
     If you want to fetch `ALL` alerts then use the following `alert_rules`
 
-        [[OrgName1.alert_rules]]
+        [[SourceName1.alert_rules]]
         minimum_severity = 1
 
 
