@@ -139,7 +139,7 @@
 #
 # audit_logs_enabled = Whether you want to forward Audit logs - e.g. true
 #
-# [OrgName1]
+# [SourceName1]
 # server_url =
 # org_key =
 # custom_api_id =
@@ -156,14 +156,14 @@
 #
 # Example:
 #
-# [[OrgName1.alert_rules]]
+# [[SourceName1.alert_rules]]
 # type = [ "WATCHLIST" ]
 # minimum_severity = 7
 #
-# [[OrgName1.alert_rules]]
+# [[SourceName1.alert_rules]]
 # type = [ "CB_ANALYTICS" ]
 # minimum_severity = 3
 #
 #
-# [[OrgName1.alert_rules]]
+# [[SourceName1.alert_rules]]
 # str = [ "str" ]
