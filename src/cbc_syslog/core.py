@@ -272,12 +272,12 @@ def history(config, start, end, org_key=None):
     return success and output_success
 
 
-def wizard(output_file):
+def wizard(output_file_path):
     """
     Setup Wizard Command
 
     Args:
-        output_file (str): Output destination
+        output_file_path (str): Output destination
 
     Returns:
         bool: Indicates short exit based on failure to execute
@@ -302,8 +302,9 @@ def wizard(output_file):
             valid_input(prompt, func, error_message)
         return response
 
-    with pathlib.Path(output_file).open("w+") as output_file:
+    with pathlib.Path(output_file_path).open("w+") as output_file:
 
+        output_file.write("[general]")
         backup_dir = valid_input("Provide an absolute path to an existing backup directory: ",
                                  lambda resp: pathlib.Path(resp).exists(),
                                  "Directory not found")
@@ -415,8 +416,8 @@ def wizard(output_file):
                     \n""")
 
         while True:
-            org_name = input("Provide an org name (letters and numbers only): ").replace(" ", "")
-            output_file.write(f"[{org_name}]\n")
+            source_name = input("Provide a source name (letters and numbers only): ").replace(" ", "")
+            output_file.write(f"[{source_name}]\n")
 
             server_url = input("Provide the HOSTNAME for the Carbon Black Cloud instance: ")
             output_file.write(f"server_url = \"{server_url}\"\n")
@@ -427,8 +428,8 @@ def wizard(output_file):
             custom_api_id = input("Provide the ID for the custom API key: ")
             output_file.write(f"custom_api_id = \"{custom_api_id}\"\n")
 
-            custom_api_secret = input("Provide the SECRET for the custom API key: ")
-            output_file.write(f"custom_api_secret = \"{custom_api_secret}\"\n")
+            custom_api_key = input("Provide the KEY for the custom API key: ")
+            output_file.write(f"custom_api_key = \"{custom_api_key}\"\n")
 
             audit_logs_enabled = input("Do you want to enable Audit Logs (y or n): ").lower() == "y"
             output_file.write(f"audit_logs_enabled = {'true' if audit_logs_enabled else 'false'}\n")
@@ -437,7 +438,7 @@ def wizard(output_file):
             output_file.write(f"alerts_enabled = {'true' if alerts_enabled else 'false'}\n")
 
             if alerts_enabled:
-                output_file.write(f"\n[[{org_name}.alert_rules]]\n")
+                output_file.write(f"\n[[{source_name}.alert_rules]]\n")
 
                 minimum_severity = valid_input("Provide a minimum severity between 1 and 10: ",
                                                lambda x: int(x) > 0 and int(x) <= 10)
@@ -447,8 +448,8 @@ def wizard(output_file):
 
             if input("Do you want to add another organization (y or n): ").lower() == "n":
                 break
-    print(f"""To test your configuration use:
-cbc_syslog_forwarer --log-file /some/path/cbc-syslog.log check {output_file}
+    print(f"""\nTo test your configuration use:
+cbc_syslog_forwarder --log-file /some/path/cbc-syslog.log check {output_file_path}
 
 To run the syslog forwarder use:
-cbc_syslog_forwarer --log-file /some/path/cbc-syslog.log poll {output_file}""")
+cbc_syslog_forwarder --log-file /some/path/cbc-syslog.log poll {output_file_path}""")
