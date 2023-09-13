@@ -5,7 +5,11 @@ COPY . /app
 WORKDIR /app
 
 RUN zypper --non-interactive install python3-devel
-RUN zypper --non-interactive install python3-pipx
+RUN zypper --non-interactive install python3-pip
 RUN zypper --non-interactive install gcc
-RUN pipx install -r requirements.txt
-RUN pipx install .
+
+RUN python3 -m venv env
+RUN source env/bin/activate
+
+RUN env/bin/pip install -r requirements.txt
+RUN env/bin/pip install .
