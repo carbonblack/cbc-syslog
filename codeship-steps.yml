@@ -19,4 +19,4 @@
 
   - name: OS - SUSE
     service: testingsuse
-    command: pytest
+    command: env/bin/python3 -m pytest
