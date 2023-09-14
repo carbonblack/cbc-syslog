@@ -88,7 +88,11 @@ The `cbc_syslog_forwarder` poll command is designed to be executed in a cronjob 
 
 ### Create a Config file
 
-**Coming Soon:** _Wizard setup command to walk through creating a config file from scratch_
+If you are creating a CBC Syslog toml file for the first time checkout the setup wizard which walks you through the basic configuration steps.
+
+    cbc_syslog_forwarer setup my-config.toml
+
+For more information on each section follow the guide below:
 
 1. Create a CUSTOM API key in at least one Carbon Black Cloud instance with the following permissions `org.alerts READ` and `org.audits READ`
 
