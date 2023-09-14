@@ -310,7 +310,7 @@ def wizard(output_file_path):
                                  "Directory not found")
         output_file.write(f"backup_dir = \"{backup_dir}\"\n")
 
-        output_format = valid_input("What format would you like the data to be sent json or template: ",
+        output_format = valid_input("What format would you like the data to be sent (json / template): ",
                                     lambda resp: resp.lower() in ["json", "template"]).lower()
         output_file.write(f"output_format = \"{output_format}\"\n")
 
