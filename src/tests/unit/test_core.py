@@ -480,7 +480,6 @@ def test_history_invalid_config():
 def test_setup_wizard(input, valid_file, monkeypatch):
     """Test setup wizard"""
     monkeypatch.setattr('sys.stdin', StringIO(input))
-    # test code
 
     wizard(TMP_PATH.joinpath("config-test.toml"))
 
