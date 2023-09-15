@@ -1,0 +1,39 @@
+[general]
+backup_dir = "/Users/avanbrunt/work/cbc-syslog/src/tests/fixtures/tmp"
+output_format = "template"
+output_type = "tcp+tls"
+tcp_out = "0.0.0.0:8080"
+ca_cert = "/Users/avanbrunt/work/cbc-syslog/src/tests/fixtures/certs/rootCACert.pem"
+tls_verify = true
+cert = "/Users/avanbrunt/work/cbc-syslog/src/tests/fixtures/certs/rootCACert.pem"
+key = "/Users/avanbrunt/work/cbc-syslog/src/tests/fixtures/certs/rootCAKey.pem"
+key_password = ""
+
+[alerts_template]
+template =
+type_field =
+time_format =
+time_fields =
+
+[alerts_template.extension]
+default =
+
+[audit_logs_template]
+template =
+type_field =
+time_format =
+time_fields =
+
+[audit_logs_template.extension]
+default =
+
+[Source1]
+server_url = "defense-conferdeploy.net"
+org_key = "orgkey"
+custom_api_id = "api_id"
+custom_api_key = "api_key"
+audit_logs_enabled = false
+alerts_enabled = true
+
+[[Source1.alert_rules]]
+minimum_severity = 5

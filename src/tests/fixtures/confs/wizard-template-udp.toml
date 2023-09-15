@@ -1,0 +1,38 @@
+[general]
+backup_dir = "/Users/avanbrunt/work/cbc-syslog/src/tests/fixtures/tmp"
+output_format = "template"
+output_type = "udp"
+udp_out = "0.0.0.0:8080"
+
+[alerts_template]
+template = "{{datetime_utc}} localhost LEEF:2.0|{{vendor}}|{{product}}|{{product_version}}|x09|{{extension}}"
+type_field = "type"
+time_format = "%b-%d-%Y %H:%M:%S GMT"
+time_fields = ["backend_timestamp"]
+
+[alerts_template.extension]
+default = """\
+    cat={{type}}\tdevTime={{backend_timestamp}}\tdevTimeFormat=MMM dd yyyy HH:mm:ss z\tsev={{severity}}\
+    \tidentSrc={{device_external_ip}}\tresource={{device_name}}\tpolicy={{device_policy}}\tusrName={{device_username}}"""
+
+[Source1]
+server_url = "defense-conferdeploy.net"
+org_key = "orgkey"
+custom_api_id = "api_id"
+custom_api_key = "api_key"
+audit_logs_enabled = false
+alerts_enabled = true
+
+[[Source1.alert_rules]]
+minimum_severity = 8
+
+[Source2]
+server_url = "defense-conferdeploy.net"
+org_key = "orgkey2"
+custom_api_id = "api_id2"
+custom_api_key = "api_key2"
+audit_logs_enabled = false
+alerts_enabled = true
+
+[[Source2.alert_rules]]
+minimum_severity = 3

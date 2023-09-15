@@ -1,0 +1,13 @@
+[general]
+backup_dir = "/Users/avanbrunt/work/cbc-syslog/src/tests/fixtures/tmp"
+output_format = "json"
+output_type = "file"
+file_path = "/Users/avanbrunt/work/cbc-syslog/src/tests/fixtures/tmp"
+
+[Source1]
+server_url = "defense-conferdeploy.net"
+org_key = "orgkey"
+custom_api_id = "api_id"
+custom_api_key = "api_key"
+audit_logs_enabled = true
+alerts_enabled = false
