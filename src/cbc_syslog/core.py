@@ -20,7 +20,9 @@ from cbc_syslog.util import CarbonBlackCloud, Transform, Output
 from cbc_syslog.util.example import (EXAMPLE_ALERT_CEF_TEMPLATE,
                                      EXAMPLE_ALERT_LEEF_TEMPLATE,
                                      EXAMPLE_AUDIT_CEF_TEMPLATE,
-                                     EXAMPLE_AUDIT_LEEF_TEMPLATE)
+                                     EXAMPLE_AUDIT_LEEF_TEMPLATE,
+                                     EXAMPLE_ALERT_TEMPLATE,
+                                     EXAMPLE_AUDIT_TEMPLATE)
 
 log = logging.getLogger(__name__)
 
@@ -293,18 +295,23 @@ def wizard(output_file_path):
             error_message (str): The message to return in the case of failure
         """
         response = input(prompt)
+        try:
+            valid = func(response)
+        except:
+            valid = False
 
-        if not func(response):
+        if not valid:
             if error_message:
                 print(error_message + "\n")
             else:
                 print("Invalid Input\n")
-            valid_input(prompt, func, error_message)
+            response = valid_input(prompt, func, error_message)
+
         return response
 
     with pathlib.Path(output_file_path).open("w+") as output_file:
 
-        output_file.write("[general]")
+        output_file.write("[general]\n")
         backup_dir = valid_input("Provide an absolute path to an existing backup directory: ",
                                  lambda resp: pathlib.Path(resp).exists(),
                                  "Directory not found")
@@ -383,16 +390,7 @@ def wizard(output_file_path):
                 else:
                     print("Template properties added. See "
                           "https://github.com/carbonblack/cbc-syslog/tree/main#creating-a-custom-message-with-templates")
-                    output_file.write("""
-                    [alerts_template]
-                    template =
-                    type_field =
-                    time_format =
-                    time_fields =
-
-                    [alerts_template.extension]
-                    default =
-                    \n""")
+                    output_file.write(EXAMPLE_ALERT_TEMPLATE)
 
             if input("Do you want to add an audit log template (y or n): ").lower() == "y":
                 if input("Do you want to use the example CEF template (y or n): ").lower() == "y":
@@ -404,18 +402,10 @@ def wizard(output_file_path):
                 else:
                     print("Template properties added. See "
                           "https://github.com/carbonblack/cbc-syslog/tree/main#creating-a-custom-message-with-templates")
-                    output_file.write("""
-                    [audit_logs_template]
-                    template =
-                    type_field =
-                    time_format =
-                    time_fields =
-
-                    [audit_logs_template.extension]
-                    default =
-                    \n""")
+                    output_file.write(EXAMPLE_AUDIT_TEMPLATE)
 
         while True:
+            output_file.write("\n")
             source_name = input("Provide a source name (letters and numbers only): ").replace(" ", "")
             output_file.write(f"[{source_name}]\n")
 

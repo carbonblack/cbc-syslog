@@ -17,11 +17,13 @@ import pathlib
 import pytest
 import time
 
+from io import StringIO
 from freezegun import freeze_time
 from tests.fixtures.mock_alerts import GET_ALERTS_BULK
 from tests.fixtures.mock_audit_logs import GET_AUDIT_LOGS_BULK
+from tests.fixtures.mock_stdin import TEMPLATE_HTTP, TEMPLATE_TCP_TLS, TEMPLATE_UDP, JSON_FILE
 
-from cbc_syslog import poll, check, history
+from cbc_syslog import poll, check, history, wizard
 from cbc_syslog.util import Config
 
 CONFS_PATH = pathlib.Path(__file__).joinpath("../../fixtures/confs").resolve()
@@ -468,3 +470,27 @@ def test_history_invalid_config():
     assert not history(config, "2023-07-05T00:00:00.000Z", "2023-07-01T00:00:00.000Z")
 
     assert len(pytest.recv_history) == 0
+
+
+@pytest.mark.parametrize("input, valid_file", [
+    (TEMPLATE_HTTP, "wizard-template-http.toml"),
+    (TEMPLATE_TCP_TLS, "wizard-template-tcp-tls.toml"),
+    (JSON_FILE, "wizard-json-file.toml"),
+    (TEMPLATE_UDP, "wizard-template-udp.toml")])
+def test_setup_wizard(input, valid_file, monkeypatch):
+    """Test setup wizard"""
+    monkeypatch.setattr('sys.stdin', StringIO(input))
+    # test code
+
+    wizard(TMP_PATH.joinpath("config-test.toml"))
+
+    file1 = open(TMP_PATH.joinpath("config-test.toml"), 'r')
+    file2 = open(CONFS_PATH.joinpath(valid_file), 'r')
+
+    file1_lines = file1.readlines()
+    file2_lines = file2.readlines()
+
+    for i in range(len(file1_lines)):
+        if "backup_dir" in file1_lines[i] or "cert =" in file1_lines[i] or "key = " in file1_lines[i]:
+            continue
+        assert file1_lines[i] == file2_lines[i]

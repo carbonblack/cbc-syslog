@@ -88,7 +88,7 @@ WATCHLIST = \"\"\"\\
     \\tcs4Label=Process_Effective_Reputation\\tcs5={{parent_name}}\\tcs5Label=Parent_Name\\
     \\tcs6={{parent_sha256}}\\tcs6Label=Parent_Hash\\tc6a1={{device_external_ip}}\\
     \\tc6a1Label=External_Device_Address\"\"\"
-\n"""
+"""
 
 EXAMPLE_ALERT_LEEF_TEMPLATE = """
 [alerts_template]
@@ -101,7 +101,7 @@ time_fields = [\"backend_timestamp\"]
 default = \"\"\"\\
     cat={{type}}\\tdevTime={{backend_timestamp}}\\tdevTimeFormat=MMM dd yyyy HH:mm:ss z\\tsev={{severity}}\\
     \\tidentSrc={{device_external_ip}}\\tresource={{device_name}}\\tpolicy={{device_policy}}\\tusrName={{device_username}}\"\"\"
-\n"""
+"""
 
 EXAMPLE_AUDIT_CEF_TEMPLATE = """
 [audit_logs_template]
@@ -111,7 +111,7 @@ time_fields = [\"eventTime\"]
 
 [audit_logs_template.extension]
 default = \"rt={{eventTime}}\\tdvchost={{orgName}}\\tduser={{loginName}}\\tdvc={{clientIp}}\\tcs4Label=Event_ID\\tcs4={{eventId}}\"
-\n"""
+"""
 
 EXAMPLE_AUDIT_LEEF_TEMPLATE = """
 [audit_logs_template]
@@ -121,4 +121,26 @@ time_fields = [\"eventTime\"]
 
 [audit_logs_template.extension]
 default = \"devTime={{eventTime}}\\tdevTimeFormat=MMM dd yyyy HH:mm:ss z\\tusrName={{{{loginName}}}}\\tidentSrc={{clientIp}}\"
-\n"""
+"""
+
+EXAMPLE_ALERT_TEMPLATE = """
+[alerts_template]
+template =
+type_field =
+time_format =
+time_fields =
+
+[alerts_template.extension]
+default =
+"""
+
+EXAMPLE_AUDIT_TEMPLATE = """
+[audit_logs_template]
+template =
+type_field =
+time_format =
+time_fields =
+
+[audit_logs_template.extension]
+default =
+"""
