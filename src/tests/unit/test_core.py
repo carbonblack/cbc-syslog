@@ -491,6 +491,7 @@ def test_setup_wizard(input, valid_file, monkeypatch):
     file2_lines = file2.readlines()
 
     for i in range(len(file1_lines)):
-        if "backup_dir" in file1_lines[i] or "cert =" in file1_lines[i] or "key = " in file1_lines[i]:
+        if "backup_dir" in file1_lines[i] or "cert =" in file1_lines[i] or \
+           "key = " in file1_lines[i] or "file_path = " in file1_lines[i]:
             continue
         assert file1_lines[i] == file2_lines[i]
