@@ -83,14 +83,14 @@ options:
 The `cbc_syslog_forwarder` poll command is designed to be executed in a cronjob for continual syslog forwarding
 
 ```
-5  *  *  *  * root cbc_syslog_forwarer --log-file /some/path/cbc-syslog.log poll /some/path/my-config.toml
+5  *  *  *  * root cbc_syslog_forwarder --log-file /some/path/cbc-syslog.log poll /some/path/my-config.toml
 ```
 
 ### Create a Config file
 
 If you are creating a CBC Syslog toml file for the first time checkout the setup wizard which walks you through the basic configuration steps.
 
-    cbc_syslog_forwarer setup my-config.toml
+    cbc_syslog_forwarder setup my-config.toml
 
 For more information on each section follow the guide below:
 
