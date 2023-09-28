@@ -21,9 +21,15 @@ from io import StringIO
 from freezegun import freeze_time
 from tests.fixtures.mock_alerts import GET_ALERTS_BULK
 from tests.fixtures.mock_audit_logs import GET_AUDIT_LOGS_BULK
-from tests.fixtures.mock_stdin import TEMPLATE_HTTP, TEMPLATE_TCP_TLS, TEMPLATE_UDP, JSON_FILE
+from tests.fixtures.mock_stdin import (TEMPLATE_HTTP,
+                                       TEMPLATE_TCP_TLS,
+                                       TEMPLATE_UDP,
+                                       JSON_FILE,
+                                       CONVERT_UDP,
+                                       CONVERT_TEMPLATE_TCP_TLS,
+                                       CONVERT_TEMPLATE_HTTP)
 
-from cbc_syslog import poll, check, history, wizard
+from cbc_syslog import poll, check, history, wizard, convert
 from cbc_syslog.util import Config
 
 CONFS_PATH = pathlib.Path(__file__).joinpath("../../fixtures/confs").resolve()
@@ -482,6 +488,29 @@ def test_setup_wizard(input, valid_file, monkeypatch):
     monkeypatch.setattr('sys.stdin', StringIO(input))
 
     wizard(TMP_PATH.joinpath("config-test.toml"))
+
+    file1 = open(TMP_PATH.joinpath("config-test.toml"), 'r')
+    file2 = open(CONFS_PATH.joinpath(valid_file), 'r')
+
+    file1_lines = file1.readlines()
+    file2_lines = file2.readlines()
+
+    for i in range(len(file1_lines)):
+        if "backup_dir" in file1_lines[i] or "cert =" in file1_lines[i] or \
+           "key = " in file1_lines[i] or "file_path = " in file1_lines[i]:
+            continue
+        assert file1_lines[i] == file2_lines[i]
+
+
+@pytest.mark.parametrize("input, ini_file, valid_file", [
+    (CONVERT_TEMPLATE_HTTP, "legacy_http.ini", "wizard-template-http.toml"),
+    (CONVERT_TEMPLATE_TCP_TLS, "legacy_tcp_tls.ini", "wizard-template-tcp-tls.toml"),
+    (CONVERT_UDP, "legacy_udp.ini", "wizard-template-udp.toml")])
+def test_convert(input, ini_file, valid_file, monkeypatch):
+    """Test convert"""
+    monkeypatch.setattr('sys.stdin', StringIO(input))
+
+    convert(str(CONFS_PATH.joinpath(ini_file)), TMP_PATH.joinpath("config-test.toml"))
 
     file1 = open(TMP_PATH.joinpath("config-test.toml"), 'r')
     file2 = open(CONFS_PATH.joinpath(valid_file), 'r')
