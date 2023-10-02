@@ -389,7 +389,7 @@ def wizard(output_file_path):
                           "https://developer.carbonblack.com/reference/carbon-black-cloud/integrations/qradar-app\n")
                     output_file.write(EXAMPLE_ALERT_LEEF_TEMPLATE)
                 else:
-                    print("Template properties added. SFor more information on templates check outee "
+                    print("Template properties added. For more information on templates check out "
                           "https://github.com/carbonblack/cbc-syslog/tree/main#creating-a-custom-message-with-templates\n")
                     output_file.write(EXAMPLE_ALERT_TEMPLATE)
 
