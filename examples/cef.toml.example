@@ -90,6 +90,7 @@ WATCHLIST = """\
 
 [audit_logs_template]
 template = "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|Audit Logs|{{description}}|1|{{extension}}"
+type_field = ""
 time_format = "%b %d %Y %H:%m:%S"
 time_fields = ["eventTime"]
 

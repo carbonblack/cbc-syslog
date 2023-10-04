@@ -300,7 +300,6 @@ def test_poll_audit_logs_exception(wipe_tmp):
         "Valid alerts permission detected for DIFFERENT_ORG"
     ]),
     ("audit-logs-only.toml", True, [
-        "Section (audit_logs_template): type_field missing extension will only use default",
         "Valid audit logs permission detected for SOME_ORG",
         "1 audit log(s) dropped for SOME_ORG"
     ])

@@ -106,6 +106,7 @@ default = \"\"\"\\
 EXAMPLE_AUDIT_CEF_TEMPLATE = """
 [audit_logs_template]
 template = \"{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}|Audit Logs|{{description}}|1|{{extension}}\"
+type_field = \"\"
 time_format = \"%b %d %Y %H:%m:%S\"
 time_fields = [\"eventTime\"]
 
@@ -116,6 +117,7 @@ default = \"rt={{eventTime}}\\tdvchost={{orgName}}\\tduser={{loginName}}\\tdvc={
 EXAMPLE_AUDIT_LEEF_TEMPLATE = """
 [audit_logs_template]
 template = \"{{datetime_utc}} localhost LEEF:2.0|{{vendor}}|{{product}}|{{product_version}}|Audit|x09|{{extension}}\"
+type_field = \"\"
 time_format = \"%b-%d-%Y %H:%M:%S GMT\"
 time_fields = [\"eventTime\"]
 
