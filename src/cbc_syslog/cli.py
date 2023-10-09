@@ -1,5 +1,3 @@
-#!python
-
 # *******************************************************
 # Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
@@ -11,7 +9,7 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""CBC Syslog Forwarder main script"""
+"""CBC Syslog Forwarder CLI"""
 
 import argparse
 import logging
@@ -25,31 +23,11 @@ from cbc_syslog.util import Config
 log = logging.getLogger(__name__)
 
 
-def main(args):
-    """Core CBC Syslog Forwarder Commands"""
-    if args.command == "poll":
-        succeeded = poll(Config(args.config_file))
-
-    elif args.command == "check":
-        succeeded = check(Config(args.config_file), args.force)
-
-    elif args.command == "history":
-        succeeded = history(Config(args.config_file), args.start, args.end, args.get("source"))
-    elif args.command == "setup":
-        succeeded = wizard(args.output_file)
-    elif args.command == "convert":
-        succeeded = convert(args.config_file, args.output_file)
-    else:
-        log.error("Command not recognized use --help for more information on supported commands")
-        sys.exit(0)
-
-    if not succeeded:
-        sys.exit(0)
-
-
-if __name__ == "__main__":
+def cli():
     """
-    CLI interface
+    CBC Syslog Forwarder CLI interface
+
+    Commands:
          --log-file
 
         poll
@@ -68,7 +46,6 @@ if __name__ == "__main__":
             config_file
             --force
     """
-
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--log-file", "-l", help="Log file location", default="stdout")
     argparser.add_argument(
@@ -134,7 +111,24 @@ if __name__ == "__main__":
             except psutil.ZombieProcess:
                 continue
 
-        main(args)
+        if args.command == "poll":
+            succeeded = poll(Config(args.config_file))
+
+        elif args.command == "check":
+            succeeded = check(Config(args.config_file), args.force)
+
+        elif args.command == "history":
+            succeeded = history(Config(args.config_file), args.start, args.end, args.get("source"))
+        elif args.command == "setup":
+            succeeded = wizard(args.output_file)
+        elif args.command == "convert":
+            succeeded = convert(args.config_file, args.output_file)
+        else:
+            log.error("Command not recognized use --help for more information on supported commands")
+            sys.exit(0)
+
+        if not succeeded:
+            sys.exit(-1)
     except Exception as e:
         log.error(e, exc_info=True)
         sys.exit(-1)

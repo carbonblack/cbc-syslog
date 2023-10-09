@@ -33,7 +33,11 @@ extras_require = {
 with io.open("README.md", "rt", encoding="utf8") as f:
     long_description = f.read()
 
-scripts = ["scripts/cbc_syslog_forwarder"]
+entry_points = {
+    "console_scripts": [
+        "cbc_syslog_forwarder = cbc_syslog:cli"
+    ]
+}
 
 setup(
     name="cbc_syslog",
@@ -43,7 +47,7 @@ setup(
     package_dir={"": "src"},
     include_package_data=True,
     packages=packages,
-    scripts=scripts,
+    entry_points=entry_points,
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/carbonblack/cbc-syslog",
