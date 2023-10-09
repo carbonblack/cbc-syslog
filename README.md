@@ -61,14 +61,14 @@ The script `cbc_syslog_forwarder` is installed into the OS bin directory for eas
 
 ```
 >>> cbc_syslog_forwarder --help
-usage: cbc_syslog_forwarder [-h] [--log-file LOG_FILE] [-d] [-v] {poll,history,check} ...
+usage: cbc_syslog_forwarder [-h] [--log-file LOG_FILE] [-d] [-v] {poll,history,convert,setup,check} ...
 
 positional arguments:
-  {poll,history,check}  The action to be taken
-    poll                Fetches data from configured sources and forwards to configured output since last poll
-                        attempt
-    history             Fetches data from source(s) for specified time range and forwards to configured
-                        output
+  {poll,history,convert,setup,check}
+                        The action to be taken
+    poll                Fetches data from configured sources and forwards to configured output since last poll attempt
+    history             Fetches data from specified source for specified time range and forwards to configured output
+    convert             Convert CBC Syslog 1.0 conf to new 2.0 toml
     setup               Setup wizard to walkthrough configuration
     check               Check config for valid API keys with correct permissions
 
@@ -80,11 +80,45 @@ options:
   -v, --verbose         Set log level to info
 ```
 
-The `cbc_syslog_forwarder` poll command is designed to be executed in a cronjob for continual syslog forwarding
+The `cbc_syslog_forwarder` poll command is designed to be executed in a cronjob or scheduled task for continual syslog forwarding
+
+**Mac/Linux:**
+
+Create a file to save the cronjob such as `syslog-job.txt`. Cronjobs use the [UNIX cron format](https://www.tutorialspoint.com/unix_commands/crontab.htm) for specifying the schedule for the job to be executed
 
 ```
-5  *  *  *  * root cbc_syslog_forwarder --log-file /some/path/cbc-syslog.log poll /some/path/my-config.toml
+5  *  *  *  *  cbc_syslog_forwarder --log-file /some/path/cbc-syslog.log poll /some/path/my-config.toml
 ```
+
+To start the job once the file is created run the following command
+
+```
+crontab syslog-job.txt
+```
+
+**Windows:**
+
+Windows uses Task Scheduler for running scheduled applications.
+
+1. Search for **Task Scheduler**
+2. Click on **Action** then **Create Task**
+3. Name your Scheduled Task
+5. Click on the **Actions** Tab and Click **New**
+6. Under **Program/script** enter `cbc_syslog_forwarder`.
+7. Under **Add arguments** provide the arguments you use to run the poll command with absolute paths to any files
+8. Click OK
+9. Click on the **Triggers** tab and Click **New**
+10. Now is the time to schedule your Task. Fill out the information as needed and Click Ok
+
+
+Your Task has been created! To test your Scheduled Task, follow these instructions below:
+
+1. Search for Task Scheduler
+2. Click on the folder **Task Scheduler Library** on the left hand column
+3. Select the Task you want to Test
+4. Select **Run** on the Actions column on the right hand column.
+
+For more information on windows task scheduler checkout [how-create-automated-task-using-task-scheduler](https://www.windowscentral.com/how-create-automated-task-using-task-scheduler-windows-10)
 
 ### Create a Config file
 
