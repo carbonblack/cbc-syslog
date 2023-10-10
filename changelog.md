@@ -11,7 +11,7 @@ The CBC Syslog tool has been rewritten from the ground up to provide increased c
     * Supports customizable timestamp format
 * Audit logs and Alerts can be enabled independently
 * Added new cbc_syslog_forwarder script which is installed into OS bin directory
-* New CBC Syslog commands to support config validation, polling, and historical fetch for alerts
+* New CBC Syslog commands to support config validation, setup wizard, configuration convert, polling, and historical fetch for alerts
 * All current and future alert types are supported by default
 * Built in notification rule style support using alert_rules to configure specific filters that reduce noise and alert fatigue
 * Only one API key required to fetch all Carbon Black Cloud data
