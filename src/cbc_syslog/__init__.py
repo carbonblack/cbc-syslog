@@ -8,4 +8,4 @@ __version__ = '2.0.0'
 
 from .core import poll, check, history, wizard, convert
 
-from .cli import cli
+from .cli import main
