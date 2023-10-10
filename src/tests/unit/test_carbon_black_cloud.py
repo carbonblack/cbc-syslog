@@ -9,7 +9,7 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Tests for the Config object."""
+"""Tests for the Carbon Black Cloud object."""
 
 import pytest
 import logging

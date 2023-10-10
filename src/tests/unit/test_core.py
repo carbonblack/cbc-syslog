@@ -9,7 +9,7 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Tests for the Output object."""
+"""Tests for the Core commands."""
 
 import json
 import logging

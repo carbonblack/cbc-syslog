@@ -23,7 +23,7 @@ from cbc_syslog.util import Config
 log = logging.getLogger(__name__)
 
 
-def cli():
+def main():
     """
     CBC Syslog Forwarder CLI interface
 
@@ -118,7 +118,7 @@ def cli():
             succeeded = check(Config(args.config_file), args.force)
 
         elif args.command == "history":
-            succeeded = history(Config(args.config_file), args.start, args.end, args.get("source"))
+            succeeded = history(Config(args.config_file), args.start, args.end, args.source)
         elif args.command == "setup":
             succeeded = wizard(args.output_file)
         elif args.command == "convert":

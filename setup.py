@@ -35,7 +35,7 @@ with io.open("README.md", "rt", encoding="utf8") as f:
 
 entry_points = {
     "console_scripts": [
-        "cbc_syslog_forwarder = cbc_syslog:cli"
+        "cbc_syslog_forwarder = cbc_syslog:main"
     ]
 }
 
