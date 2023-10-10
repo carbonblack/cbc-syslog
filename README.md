@@ -27,7 +27,7 @@ The following python packages are required to use CBC Syslog
 
 ## Installation
 
-You can install the Syslog Connector using either PyPI or GitHub.
+You can install the Syslog Connector using either [PyPI](https://pypi.org/project/cbc-syslog) or GitHub.
 
 ### PyPI Installation
 
