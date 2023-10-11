@@ -54,6 +54,14 @@ CONFS_PATH = pathlib.Path(__file__).joinpath("../../fixtures/confs").resolve()
       str(CONFS_PATH.joinpath("template.toml")),
       "--force",
       ], "check",
+     (Config, True)),
+    (["cbc_syslog_forwarder",
+      "--log-file",
+      "logs.log",
+      "check",
+      str(CONFS_PATH.joinpath("template.toml")),
+      "--force",
+      ], "check",
      (Config, True))])
 def test_cli(args, command, expected_args, monkeypatch):
     """Test cli"""
@@ -82,3 +90,34 @@ def test_cli(args, command, expected_args, monkeypatch):
     main()
 
     assert correct_command_called
+
+
+def test_cli_invalid(monkeypatch):
+    """Test cli invalid"""
+    monkeypatch.setattr("sys.argv", ["cbc_syslog_forwarder", "invalid"])
+    with pytest.raises(SystemExit):
+        main()
+
+
+def test_cli_non_success(monkeypatch):
+    """Test cli invalid"""
+    def patched_command(*args):
+        """Patched command"""
+        return False
+
+    monkeypatch.setattr("sys.argv", ["cbc_syslog_forwarder", "poll", str(CONFS_PATH.joinpath("template.toml"))])
+    monkeypatch.setattr("cbc_syslog.cli.poll", patched_command)
+    with pytest.raises(SystemExit):
+        main()
+
+
+def test_cli_exception(monkeypatch):
+    """Test cli invalid"""
+    def patched_command(*args):
+        """Patched command"""
+        raise Exception
+
+    monkeypatch.setattr("sys.argv", ["cbc_syslog_forwarder", "poll", str(CONFS_PATH.joinpath("template.toml"))])
+    monkeypatch.setattr("cbc_syslog.cli.poll", patched_command)
+    with pytest.raises(SystemExit):
+        main()
