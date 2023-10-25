@@ -55,7 +55,10 @@ def test_fetch_alerts():
         "alert_rules": [{
             "type": ["CB_ANALYTICS"],
             "policy_id": [7113786],
-            "minimum_severity": 3
+            "minimum_severity": 3,
+            "alert_notes_present": True,
+            "threat_notes_present": True,
+            "remote_is_private": False
         }]
     }
 
@@ -73,6 +76,9 @@ def test_fetch_alerts():
     assert pytest.alert_search_request["criteria"]["type"] == source["alert_rules"][0]["type"]
     assert pytest.alert_search_request["criteria"]["policy_id"] == source["alert_rules"][0]["policy_id"]
     assert pytest.alert_search_request["criteria"]["minimum_severity"] == source["alert_rules"][0]["minimum_severity"]
+    assert pytest.alert_search_request["criteria"]["alert_notes_present"] == source["alert_rules"][0]["alert_notes_present"]
+    assert pytest.alert_search_request["criteria"]["threat_notes_present"] == source["alert_rules"][0]["threat_notes_present"]
+    assert pytest.alert_search_request["criteria"]["remote_is_private"] == source["alert_rules"][0]["remote_is_private"]
 
 
 def test_fetch_alerts_overflow():
