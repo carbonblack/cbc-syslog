@@ -108,7 +108,7 @@ class CarbonBlackCloud:
 
         if self.instance["alerts_enabled"]:
             try:
-                cb.select(Alert).where("").first()
+                cb.select(Alert).first()
                 log.info(f"Valid alerts permission detected for {org_key}")
             except ClientError as e:
                 if e.error_code == 403:
@@ -160,15 +160,17 @@ class CarbonBlackCloud:
         all_alerts = []
         failed = False
 
-        time_field = "last_update_time"
+        time_field = "backend_update_timestamp"
         time_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
         def build_query(cb, alert_rule, start, end):
             """Build CBC SDK Alert Query"""
             query = cb.select(Alert) \
-                      .set_time_range(time_field,
-                                      start=start.strftime(time_format),
-                                      end=end.strftime(time_format)) \
+                      .add_time_criteria(time_field,
+                                         start=start.strftime(time_format),
+                                         end=end.strftime(time_format)) \
+                      .set_time_range(start=(start - timedelta(days=1)),
+                                      end=(end + timedelta(days=1))) \
                       .sort_by(time_field, "ASC") \
                       .set_rows(10000)
 
@@ -179,9 +181,12 @@ class CarbonBlackCloud:
                     query.set_minimum_severity(alert_rule[key])
 
                 # Changes with UAE v7 alerts
-                elif key == "policy_applied":
-                    continue
-                    # TODO: query.set_policy_applied(alert_rule[key])
+                elif key == "alert_notes_present":
+                    query.set_alert_notes_present(alert_rule[key])
+                elif key == "threat_notes_present":
+                    query.set_threat_notes_present(alert_rule[key])
+                elif key == "remote_is_private":
+                    query.set_remote_is_private(alert_rule[key])
 
                 # Add standard list value criteria
                 else:
@@ -198,7 +203,7 @@ class CarbonBlackCloud:
 
             try:
                 # Fetch initial Alert batch
-                rule_alerts.extend(build_query(cb, alert_rule, start, end))
+                rule_alerts.extend(build_query(cb, alert_rule, start, end).all())
 
                 # Check if 10k limit was hit and iteratively fetch remaining alerts
                 #   by increasing start time to the last alert fetched
@@ -209,7 +214,7 @@ class CarbonBlackCloud:
                         overflow = build_query(cb, alert_rule, new_start, end)
 
                         # Extend alert list with follow up alert batches
-                        rule_alerts.extend(overflow)
+                        rule_alerts.extend(overflow.all())
                         if len(overflow) >= 10000:
                             last_alert = rule_alerts[-1]
                         else:
