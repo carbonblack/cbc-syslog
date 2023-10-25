@@ -52,9 +52,13 @@ def test_poll(wipe_tmp):
     # Add small sleep to wait for TCP response
     time.sleep(0.1)
 
-    assert pytest.alert_search_request["criteria"]["last_update_time"] == {
+    assert pytest.alert_search_request["criteria"]["backend_update_timestamp"] == {
         "end": "2023-07-04T23:59:30.000000Z",
         "start": "2023-07-04T23:58:30.000000Z"
+    }
+    assert pytest.alert_search_request["time_range"] == {
+        "end": "2023-07-05T23:59:30.000000Z",
+        "start": "2023-07-03T23:58:30.000000Z"
     }
     assert pytest.tcp_recv_data.decode() == "2023-07-05T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|2.0.0|R_NET_SERVER" \
                                             "|The application run.js acted as a network server.|3|cat=CB_ANALYTICS\tact=ALLOW\t" \
@@ -113,9 +117,13 @@ def test_poll_retry_failed_org(wipe_tmp):
 
     poll(config)
 
-    assert pytest.alert_search_request["criteria"]["last_update_time"] == {
+    assert pytest.alert_search_request["criteria"]["backend_update_timestamp"] == {
         "end": "2023-07-05T00:00:30.000000Z",
         "start": "2023-07-04T23:58:30.000000Z"
+    }
+    assert pytest.alert_search_request["time_range"] == {
+        "end": "2023-07-06T00:00:30.000000Z",
+        "start": "2023-07-03T23:58:30.000000Z"
     }
 
     assert json.loads(pytest.http_recv_data.decode("utf-8")) == GET_ALERTS_BULK(1, 1)["results"][0]
@@ -366,9 +374,15 @@ def test_history():
 
     def alert_output(request):
         """Alert output callable"""
-        if request.get("criteria", {}).get("last_update_time", {}) != {
+        if request.get("criteria", {}).get("backend_update_timestamp", {}) != {
             "end": "2023-07-05T00:00:00.000000Z",
             "start": "2023-07-01T00:00:00.000000Z"
+        }:
+            pytest.fail("Request time range did not match expected start and end time")
+
+        if request.get("time_range", {}) != {
+            "end": "2023-07-06T00:00:00.000000Z",
+            "start": "2023-06-30T00:00:00.000000Z"
         }:
             pytest.fail("Request time range did not match expected start and end time")
 

@@ -62,7 +62,7 @@ def wipe_tmp():
 #
 # Carbon Black Cloud Mocked Endpoints
 #
-@app.route('/appservices/v6/orgs/<org_key>/alerts/_search', methods=['POST'])
+@app.route('/api/alerts/v7/orgs/<org_key>/alerts/_search', methods=['POST'])
 def alert_search(org_key):
     """alert_search"""
     log.info("Fetched Alerts")

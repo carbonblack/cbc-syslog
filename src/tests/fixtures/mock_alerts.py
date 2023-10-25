@@ -11,7 +11,6 @@ CB_ANALYTICS_ALERT = {
     "detection_timestamp": "2023-05-03T11:18:01.698Z",
     "first_event_timestamp": "2023-05-03T11:17:24.429Z",
     "last_event_timestamp": "2023-05-03T11:17:24.957Z",
-    "last_update_time": "2023-05-03T11:18:01.698Z",  # Adding for backwards compatibility until CBC SDK support v7
     "category": "MONITORED",
     "severity": 3,
     "reason": "The application run.js acted as a network server.",

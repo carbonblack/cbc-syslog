@@ -138,34 +138,38 @@ def test_fetch_alerts_multiple_rules():
     }
 
     num_requests = 0
+    end = datetime.now(timezone.utc) - timedelta(seconds=30)
+    start = end - timedelta(minutes=5)
 
     def alert_output(request):
         """Alert output callable"""
         nonlocal num_requests
 
-        # Remove last_update_time to enable easier comparison
-        del request["criteria"]["last_update_time"]
+        # Delete request criteria for easier comparison
+        assert request["criteria"]["backend_update_timestamp"] == {
+            "start": start.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "end": end.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        }
+        del request["criteria"]["backend_update_timestamp"]
 
         # First request for alert rule 0
         if num_requests == 0:
             if request["criteria"] != source["alert_rules"][0]:
                 pytest.fail(f"Received unexpected request for rule {source['alert_rules'][0]} != {request['criteria']}")
             num_requests += 1
-            return GET_ALERTS_BULK(1, 1)
+            return GET_ALERTS_SINGLE
         # Second request for alert rule 1
         elif num_requests == 1:
             if request["criteria"] != source["alert_rules"][1]:
                 pytest.fail(f"Received unexpected request for rule {source['alert_rules'][1]} != {request['criteria']}")
             num_requests += 1
-            return GET_ALERTS_BULK(1, 1)
+            return GET_ALERTS_SINGLE
         else:
             pytest.fail(f"Received unexpected number of API requests: {num_requests}")
 
     # Set Alert Response
     pytest.alert_search_response = alert_output
 
-    end = datetime.now(timezone.utc) - timedelta(seconds=30)
-    start = end - timedelta(minutes=5)
     cbcloud = CarbonBlackCloud(source)
 
     alerts = cbcloud.fetch_alerts(start, end)
