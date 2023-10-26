@@ -90,7 +90,7 @@ def main():
         logging.basicConfig(
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             level=args.loglevel,
-            filename="args.log_file"
+            filename=args.log_file
         )
     else:
         logging.basicConfig(
