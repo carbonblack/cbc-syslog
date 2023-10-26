@@ -115,7 +115,7 @@ class Output:
                 file_name = f"{datetime.now().strftime('%Y-%m-%dT%H:%M:00.000Z')}.txt"
                 new_file_path = pathlib.Path(self.output_params.get("file_path")).joinpath(file_name)
                 with open(new_file_path, "a") as new_file:
-                    new_file.write(data)
+                    new_file.write(data + "\n")
             except Exception:
                 log.error(traceback.format_exc())
                 success = False
