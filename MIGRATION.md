@@ -31,7 +31,16 @@ For more information on the `toml` specification see https://toml.io/en/
 * `template` moved inside `alerts_template` table
 * Removed `policy_action_severity`
 
-**Coming Soon:** `convert` command in `cbc_syslog_forwarder` to more easily migrate to the latest `toml` file structure
+
+If you want assistance migrating from a 1.x config file to the latest 2.x `toml` file check out the `convert` command:
+```
+cbc_syslog_forwarder convert {config_file} {output_file}
+```
+
+If you want to start fresh check out the `setup` command for a walkthrough:
+```
+cbc_syslog_forwarder convert {output_file}
+```
 
 ### Template
 
