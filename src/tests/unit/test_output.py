@@ -143,7 +143,7 @@ def test_send_file(wipe_tmp):
 
     # Read only file in tmp directory
     with output_file_path.open() as file:
-        assert file.readline() == "Hello World"
+        assert file.readline() == "Hello World\n"
 
 
 def test_send_file_invalid(caplog, wipe_tmp):
