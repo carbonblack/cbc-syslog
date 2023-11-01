@@ -11,6 +11,7 @@
 
 """Tests for the Transform object."""
 
+from cbc_syslog import __version__
 from cbc_syslog.util import Transform
 
 from freezegun import freeze_time
@@ -28,8 +29,8 @@ def test_render_template():
     transform = Transform(**config)
     result = transform.render(CB_ANALYTICS_ALERT)
 
-    expected_result = "2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|2.0.0|R_NET_SERVER|" \
-                      "The application run.js acted as a network server.|3|"
+    expected_result = f"2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|{__version__}|R_NET_SERVER|" \
+                      f"The application run.js acted as a network server.|3|"
     assert result == expected_result
 
 
@@ -56,19 +57,19 @@ def test_render_custom_template():
     transform = Transform(**config)
     result = transform.render(CB_ANALYTICS_ALERT)
 
-    expected_result = "2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|2.0.0|R_NET_SERVER|" \
-                      "The application run.js acted as a network server.|3|cat=CB_ANALYTICS\tframeworkName=MITRE_ATT&CK\t" \
-                      "threatAttackID=:\tact=ALLOW\texternalId=4ef0639c-4b4f-11d1-5695-d74e9dc506ec\trt=May 03 2023 11:05:36\t" \
-                      "start=May 03 2023 11:05:24\toutcome=RAN\tdeviceProcessId=2856\t" \
-                      "deviceProcessName=c:\\program files\\logrhythm\\logrhythm common\\logrhythm api gateway\\run.js\t" \
-                      "fileHash=cb67bdbbbd4ae997204d76eae913dac7117fe3f0ef8a42a3255f64266496898b\tdeviceExternalId=6360983\t" \
-                      "dvc=10.128.65.193\tduser=shalaka.makeshwar@logrhythm.com\tcs1=1f3e23938445418af225bfbcedc33ac2\t" \
-                      "cs1Label=Threat_ID\tcs2=https://defense.conferdeploy.net/alerts?s[c][query_string]=" \
-                      "id:4ef0639c-4b4f-11d1-5695-d74e9dc506ec&orgKey=7DESJ9GN\tcs2Label=Link\tcs3=QA\\SM-2K16\t" \
-                      "cs3Label=Device_Name\tcs4=LOCAL_WHITE\tcs4Label=Process_Effective_Reputation\t" \
-                      "cs5=c:\\program files\\logrhythm\\logrhythm common\\logrhythm api gateway\\dependencies\\procman\\procman.exe\t" \
-                      "cs5Label=Parent_Name\tcs6=be3daaaa1597094a597e71ff95382afbb502dfe0c25bc1d7eb488b8ca658c69e\tcs6Label=Parent_Hash\t" \
-                      "c6a1=65.38.174.94\tc6a1Label=External_Device_Address"
+    expected_result = f"2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|{__version__}|R_NET_SERVER|" \
+                      f"The application run.js acted as a network server.|3|cat=CB_ANALYTICS\tframeworkName=MITRE_ATT&CK\t" \
+                      f"threatAttackID=:\tact=ALLOW\texternalId=4ef0639c-4b4f-11d1-5695-d74e9dc506ec\trt=May 03 2023 11:05:36\t" \
+                      f"start=May 03 2023 11:05:24\toutcome=RAN\tdeviceProcessId=2856\t" \
+                      f"deviceProcessName=c:\\program files\\logrhythm\\logrhythm common\\logrhythm api gateway\\run.js\t" \
+                      f"fileHash=cb67bdbbbd4ae997204d76eae913dac7117fe3f0ef8a42a3255f64266496898b\tdeviceExternalId=6360983\t" \
+                      f"dvc=10.128.65.193\tduser=shalaka.makeshwar@logrhythm.com\tcs1=1f3e23938445418af225bfbcedc33ac2\t" \
+                      f"cs1Label=Threat_ID\tcs2=https://defense.conferdeploy.net/alerts?s[c][query_string]=" \
+                      f"id:4ef0639c-4b4f-11d1-5695-d74e9dc506ec&orgKey=7DESJ9GN\tcs2Label=Link\tcs3=QA\\SM-2K16\t" \
+                      f"cs3Label=Device_Name\tcs4=LOCAL_WHITE\tcs4Label=Process_Effective_Reputation\t" \
+                      f"cs5=c:\\program files\\logrhythm\\logrhythm common\\logrhythm api gateway\\dependencies\\procman\\procman.exe\t" \
+                      f"cs5Label=Parent_Name\tcs6=be3daaaa1597094a597e71ff95382afbb502dfe0c25bc1d7eb488b8ca658c69e\t" \
+                      f"cs6Label=Parent_Hash\tc6a1=65.38.174.94\tc6a1Label=External_Device_Address"
     assert result == expected_result
 
 
@@ -84,8 +85,8 @@ def test_render_with_invalid_type():
     transform = Transform(**config)
     result = transform.render(CB_ANALYTICS_ALERT)
 
-    expected_result = "2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|2.0.0|R_NET_SERVER|" \
-                      "The application run.js acted as a network server.|3|"
+    expected_result = f"2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|{__version__}|R_NET_SERVER|" \
+                      f"The application run.js acted as a network server.|3|"
     assert result == expected_result
 
 
@@ -103,8 +104,8 @@ def test_render_with_default_fallback():
     transform = Transform(**config)
     result = transform.render(CB_ANALYTICS_ALERT)
 
-    expected_result = "2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|2.0.0|R_NET_SERVER|" \
-                      "The application run.js acted as a network server.|3|cat=CB_ANALYTICS\tact=ALLOW\toutcome=RAN"
+    expected_result = f"2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|{__version__}|R_NET_SERVER|" \
+                      f"The application run.js acted as a network server.|3|cat=CB_ANALYTICS\tact=ALLOW\toutcome=RAN"
     assert result == expected_result
 
 
@@ -123,6 +124,6 @@ def test_render_with_invalid_time_format():
     transform = Transform(**config)
     result = transform.render(CB_ANALYTICS_ALERT)
 
-    expected_result = "2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|2.0.0|R_NET_SERVER|" \
-                      "The application run.js acted as a network server.|3|rt=2023-05-03T11:18:36.184Z\tstart=2023-05-03T11:17:24.429Z"
+    expected_result = f"2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|{__version__}|R_NET_SERVER|" \
+                      f"The application run.js acted as a network server.|3|rt=2023-05-03T11:18:36.184Z\tstart=2023-05-03T11:17:24.429Z"
     assert result == expected_result

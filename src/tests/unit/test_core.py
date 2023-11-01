@@ -29,7 +29,7 @@ from tests.fixtures.mock_stdin import (TEMPLATE_HTTP,
                                        CONVERT_TEMPLATE_TCP_TLS,
                                        CONVERT_TEMPLATE_HTTP)
 
-from cbc_syslog import poll, check, history, wizard, convert
+from cbc_syslog import poll, check, history, wizard, convert, __version__
 from cbc_syslog.util import Config
 
 CONFS_PATH = pathlib.Path(__file__).joinpath("../../fixtures/confs").resolve()
@@ -60,9 +60,9 @@ def test_poll(wipe_tmp):
         "end": "2023-07-05T23:59:30.000000Z",
         "start": "2023-07-03T23:58:30.000000Z"
     }
-    assert pytest.tcp_recv_data.decode() == "2023-07-05T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|2.0.0|R_NET_SERVER" \
-                                            "|The application run.js acted as a network server.|3|cat=CB_ANALYTICS\tact=ALLOW\t" \
-                                            "outcome=RAN\tframeworkName=MITRE_ATT&CK\tthreatAttackID=:"
+    assert pytest.tcp_recv_data.decode() == f"2023-07-05T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|{__version__}|" \
+                                            f"R_NET_SERVER|The application run.js acted as a network server.|3|cat=CB_ANALYTICS\t" \
+                                            f"act=ALLOW\toutcome=RAN\tframeworkName=MITRE_ATT&CK\tthreatAttackID=:"
     assert len(pytest.recv_history) == 2
 
     with open(STATE_FILEPATH, "r") as state_file:
@@ -248,9 +248,9 @@ def test_poll_audit_logs(wipe_tmp):
 
     poll(config)
 
-    assert pytest.http_recv_data.decode("utf-8") == "2023-07-05T00:01:00.000000Z localhost " \
-        "CEF:1|CarbonBlack|CBCSyslog|2.0.0|Audit Logs|Logged in successfully|1|rt=1529332687006" \
-        "\tdvchost=example.org\tduser=bs@carbonblack.com\tdvc=192.0.2.3\tcs4Label=Event_ID\tcs4=37075c01730511e89504c9ba022c3fbf"
+    assert pytest.http_recv_data.decode("utf-8") == f"2023-07-05T00:01:00.000000Z localhost " \
+        f"CEF:1|CarbonBlack|CBCSyslog|{__version__}|Audit Logs|Logged in successfully|1|rt=1529332687006" \
+        f"\tdvchost=example.org\tduser=bs@carbonblack.com\tdvc=192.0.2.3\tcs4Label=Event_ID\tcs4=37075c01730511e89504c9ba022c3fbf"
 
 
 @freeze_time("2023-07-05 00:01:00")
