@@ -9,7 +9,7 @@ packages = [
 ]
 
 install_requires = [
-    "carbon-black-cloud-sdk",
+    "carbon-black-cloud-sdk >= 1.5.0",
     "Jinja2",
     "psutil",
     "tomli >= 1.1.0; python_version < '3.11'"
@@ -41,7 +41,7 @@ entry_points = {
 
 setup(
     name="cbc_syslog",
-    version="2.0.0",
+    version="2.0.1",
     install_requires=install_requires,
     extras_require=extras_require,
     package_dir={"": "src"},

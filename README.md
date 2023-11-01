@@ -6,7 +6,7 @@ The Carbon Black Cloud Syslog connector lets administrators forward alerts and a
 
 Still need CBC Syslog 1.x? Checkout the `legacy` branch
 
-If you are looking to migrate from CBC Syslog 1.x to 2.x take a look at the [migration doc](MIGRATION.md).
+If you are looking to migrate from CBC Syslog 1.x to 2.x take a look at the [migration doc](https://github.com/carbonblack/cbc-syslog/blob/main/MIGRATION.md).
 
 ## Features
 
@@ -297,7 +297,7 @@ The following fields are available for building the Syslog header
 * `{{datetime_legacy}}` - Uses current time with format e.g. Jan 18 11:07:53
 * `{{vendor}}` - CarbonBlack
 * `{{product}}` - CBCSyslog
-* `{{product_version}}` - Current CBC Syslog version e.g. 2.0.0
+* `{{product_version}}` - Current CBC Syslog version e.g. 2.0.1
 
 
 For the available Alert fields see [Search Fields - Alerts](https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields)

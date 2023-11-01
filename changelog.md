@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 2.0.1
+
+**Bug Fixes:**
+* Enforce carbon-black-cloud-sdk >= 1.5.0
+* Fix broken link in readme for pypi
+
 ## Version 2.0.0
 
 The CBC Syslog tool has been rewritten from the ground up to provide increased customization and improved Alert data with support for the latest Carbon Black Cloud alert types
