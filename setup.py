@@ -41,7 +41,7 @@ entry_points = {
 
 setup(
     name="cbc_syslog",
-    version="2.0.1",
+    version="2.0.2",
     install_requires=install_requires,
     extras_require=extras_require,
     package_dir={"": "src"},

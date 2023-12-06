@@ -4,7 +4,7 @@ __title__ = 'cbc_syslog'
 __author__ = 'Carbon Black Developer Network'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2018-2023 VMware Carbon Black'
-__version__ = '2.0.1'
+__version__ = '2.0.2'
 
 from .core import poll, check, history, wizard, convert
 

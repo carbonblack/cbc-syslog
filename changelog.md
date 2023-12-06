@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 2.0.2
+
+**Bug Fixes:**
+* Adjust filename output and backup to use base64 instead of datetime
+* Fix windows escape issue when using setup or convert commands to create config file
+
 ## Version 2.0.1
 
 **Bug Fixes:**
