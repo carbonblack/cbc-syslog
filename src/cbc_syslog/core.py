@@ -11,6 +11,7 @@
 
 """CBC Syslog Core Functions"""
 
+import base64
 import json
 import logging
 import pathlib
@@ -141,7 +142,8 @@ def poll(config):
                     if not failed_org:
                         del past_failed_orgs[source["org_key"]]
 
-                backup_filename = f"cbc-{start_time.strftime(TIME_FORMAT)}.bck"
+                encoded = base64.b64encode(start_time.strftime(TIME_FORMAT).encode("ascii"))
+                backup_filename = f"cbc-{encoded.decode('ascii')}.bck"
                 backup_file = pathlib.Path(config.get("general.backup_dir")).joinpath(backup_filename).resolve()
 
                 log.info(f"Sending {len(data)} {input} for {source.get('org_key')}")
@@ -316,6 +318,7 @@ def wizard(output_file_path):
         backup_dir = valid_input("Provide an absolute path to an existing backup directory: ",
                                  lambda resp: pathlib.Path(resp).exists(),
                                  "Directory not found")
+        backup_dir = backup_dir.replace("\\", "\\\\")
         output_file.write(f"backup_dir = \"{backup_dir}\"\n")
 
         output_format = valid_input("What format would you like the data to be sent (json / template): ",
@@ -330,6 +333,7 @@ def wizard(output_file_path):
             file_path = valid_input("Provide an absolute path to where you want the files to be output: ",
                                     lambda resp: pathlib.Path(resp).exists(),
                                     "Directory not found")
+            file_path = file_path.replace("\\", "\\\\")
             output_file.write(f"file_path = \"{file_path}\"\n")
 
         elif output_type == "http":
@@ -356,6 +360,7 @@ def wizard(output_file_path):
                 ca_cert = valid_input("Provide an absolute path to the ca cert: ",
                                       lambda resp: pathlib.Path(resp).exists(),
                                       "File not found")
+                ca_cert = ca_cert.replace("\\", "\\\\")
                 output_file.write(f"ca_cert = \"{ca_cert}\"\n")
 
                 tls_verify = input("Would you like to enable tls verification (y or n): ").lower() == "y"
@@ -365,11 +370,13 @@ def wizard(output_file_path):
                     cert = valid_input("Provide an absolute path to the cert: ",
                                        lambda resp: pathlib.Path(resp).exists(),
                                        "File not found")
+                    cert = cert.replace("\\", "\\\\")
                     output_file.write(f"cert = \"{cert}\"\n")
 
                     key = valid_input("Provide an absolute path to the key: ",
                                       lambda resp: pathlib.Path(resp).exists(),
                                       "File not found")
+                    key = key.replace("\\", "\\\\")
                     output_file.write(f"key = \"{key}\"\n")
 
                     key_password = input("Provide key password if set otherwise leave empty: ")
@@ -464,6 +471,7 @@ def convert(config_file_path, output_file_path):
         output_file.write("[general]\n")
 
         backup_dir = v1config.get("general", "back_up_dir")
+        backup_dir = backup_dir.replace("\\", "\\\\")
         output_file.write(f"backup_dir = \"{backup_dir}\"\n")
 
         output_format = v1config.get("general", "output_format").lower()
@@ -490,6 +498,7 @@ def convert(config_file_path, output_file_path):
             try:
                 if "tls" in output_type:
                     ca_cert = v1config.get("tls", "ca_cert")
+                    ca_cert = ca_cert.replace("\\", "\\\\")
                     output_file.write(f"ca_cert = \"{ca_cert}\"\n")
 
                     tls_verify = v1config.get("tls", "tls_verify").lower()
@@ -497,9 +506,11 @@ def convert(config_file_path, output_file_path):
 
                     if tls_verify == 'true':
                         cert = v1config.get("tls", "cert")
+                        cert = cert.replace("\\", "\\\\")
                         output_file.write(f"cert = \"{cert}\"\n")
 
                         key = v1config.get("tls", "key")
+                        key = key.replace("\\", "\\\\")
                         output_file.write(f"key = \"{key}\"\n")
 
                         key_password = v1config.get("tls", "key_password")
