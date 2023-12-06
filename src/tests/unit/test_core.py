@@ -167,7 +167,7 @@ def test_poll_backup(wipe_tmp):
         previous_state = json.load(state_file)
         assert previous_state["end_time"] == "2023-07-05T00:00:30.000000Z"
 
-    with open(TMP_PATH.joinpath("cbc-2023-07-04T23:59:30.000000Z.bck").resolve(), "r") as backup_file:
+    with open(TMP_PATH.joinpath("cbc-MjAyMy0wNy0wNFQyMzo1OTozMC4wMDAwMDBa.bck").resolve(), "r") as backup_file:
         json_string = backup_file.readline()
         assert json.loads(json_string) == GET_ALERTS_BULK(1, 1)["results"][0]
 
@@ -183,7 +183,7 @@ def test_poll_retry_output_backup(wipe_tmp):
 
     pytest.alert_search_response = GET_ALERTS_BULK(1, 1)
 
-    BACKUP_FILEPATH = TMP_PATH.joinpath("cbc-2023-07-04T23:59:30.000000Z.bck").resolve()
+    BACKUP_FILEPATH = TMP_PATH.joinpath("cbc-MjAyMy0wNy0wNFQyMzo1OTozMC4wMDAwMDBa.bck").resolve()
 
     with open(BACKUP_FILEPATH, "w") as backup_file:
         backup_file.write(json.dumps(GET_ALERTS_BULK(1, 1)["results"][0]))
@@ -219,7 +219,7 @@ def test_poll_retry_output_backup_failure(wipe_tmp):
         json_string = backup_file.readline()
         assert json.loads(json_string) == GET_ALERTS_BULK(1, 1)["results"][0]
 
-    with open(TMP_PATH.joinpath("cbc-2023-07-04T23:59:30.000000Z.bck").resolve(), "r") as backup_file:
+    with open(TMP_PATH.joinpath("cbc-MjAyMy0wNy0wNFQyMzo1OTozMC4wMDAwMDBa.bck").resolve(), "r") as backup_file:
         json_string = backup_file.readline()
         assert json.loads(json_string) == GET_ALERTS_BULK(1, 1)["results"][0]
 
