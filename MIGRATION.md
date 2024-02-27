@@ -73,3 +73,9 @@ For more information on LEEF check out the [LEEF Mapping Specification](https://
 Previously CBC Syslog was executed from the python site-packages which can be a challenge to find based on your installation or operating system. With CBC Syslog 2.0, we have moved the exectuable to be installed to your operating system bin directory so that it can be executed from wherever you'd prefer.
 
 See [Running cbc_syslog_forwarder](README.md#running-cbc_syslog_forwarder) for more information
+
+After making the switch from the CBC Syslog Forwarder 1.0 to 2.x you may have a small gap in alerts given the initial poll cycle will fetch 90s of history from the current time. The recommended method to retrieve any additional gap is to use the `history` command using the last alert backend timestamp from the previous CBC Syslog 1.0 data and the first alert backend timestamp from the initial CBC Syslog 2.0 poll. The new 2.0 alert data includes more context so it may be beneficial to perform a larger `history` command if you can handle alert duplicates. Below is a sample history command.
+
+```
+cbc_syslog_forwarder --log-file cbc-syslog.log history my-config.toml 2024-01-15T00:00:00.000Z 2024-01-20T12:31:43.112Z
+```
