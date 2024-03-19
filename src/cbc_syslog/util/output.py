@@ -20,7 +20,7 @@ import socket
 import ssl
 import traceback
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 log = logging.getLogger(__name__)
 
@@ -113,7 +113,7 @@ class Output:
 
         elif type == "file":
             try:
-                encoded = base64.b64encode(datetime.now().strftime('%Y-%m-%dT%H:%M:00.000Z').encode("ascii"))
+                encoded = base64.b64encode(datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:00.000Z').encode("ascii"))
                 file_name = f"{encoded.decode('ascii')}.txt"
                 new_file_path = pathlib.Path(self.output_params.get("file_path")).joinpath(file_name)
                 with open(new_file_path, "a") as new_file:

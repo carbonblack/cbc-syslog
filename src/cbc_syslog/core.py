@@ -17,7 +17,7 @@ import logging
 import pathlib
 
 from configparser import ConfigParser, NoSectionError
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from cbc_syslog.util import CarbonBlackCloud, Transform, Output
 from cbc_syslog.util.example import (EXAMPLE_ALERT_CEF_TEMPLATE,
                                      EXAMPLE_ALERT_LEEF_TEMPLATE,
@@ -61,11 +61,12 @@ def poll(config):
         previous_state = {}
 
     # Use last end_time unless no state is available use 90s ago
-    new_start_time_str = previous_state.get("end_time", (datetime.now() - timedelta(seconds=90)).strftime(TIME_FORMAT))
+    new_start_time_str = previous_state.get("end_time", (datetime.now(timezone.utc) - timedelta(seconds=90)).strftime(TIME_FORMAT))
     new_start_time = datetime.strptime(new_start_time_str, TIME_FORMAT)
+    new_start_time = new_start_time.replace(tzinfo=timezone.utc)
 
     # Should stay behind 30s to ensure backend data is available
-    end_time = datetime.now() - timedelta(seconds=30)
+    end_time = datetime.now(timezone.utc) - timedelta(seconds=30)
 
     if end_time < new_start_time:
         log.error("Unable to fetch data please wait a minimum of 60s before next poll")
