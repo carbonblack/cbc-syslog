@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 2.0.3
+
+**Bug Fixes:**
+* Fix datetime.now UTC issue that prevents polling alerts
+
 ## Version 2.0.2
 
 **Bug Fixes:**
