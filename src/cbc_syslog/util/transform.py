@@ -1,6 +1,6 @@
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2024. All Rights Reserved.
+# Copyright (c) Broadcom, Inc. 2020-2024. All Rights Reserved. Carbon Black.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
