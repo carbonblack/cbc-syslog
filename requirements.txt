@@ -5,7 +5,7 @@ Jinja2
 psutil
 
 # Dev dependencies
-flask
+flask >=3.0.3
 cryptography
 pytest==7.2.1
 coverage==6.5.0
