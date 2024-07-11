@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 2.0.4
+
+**Bug Fixes**
+* Update copyrights on code to reflect current date and Broadcom.
+* Update dependencies to fixed version of CBC SDK.
+
 ## Version 2.0.3
 
 **Bug Fixes:**
