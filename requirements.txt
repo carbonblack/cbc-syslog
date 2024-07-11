@@ -1,11 +1,11 @@
 # Package dependencies
-carbon-black-cloud-sdk >= 1.5.0
+carbon-black-cloud-sdk >= 1.5.5
 tomli >= 1.1.0; python_version < '3.11'
 Jinja2
 psutil
 
 # Dev dependencies
-flask
+flask >=3.0.3
 cryptography
 pytest==7.2.1
 coverage==6.5.0

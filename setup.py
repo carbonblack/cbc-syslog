@@ -9,7 +9,7 @@ packages = [
 ]
 
 install_requires = [
-    "carbon-black-cloud-sdk >= 1.5.0",
+    "carbon-black-cloud-sdk >= 1.5.5",
     "Jinja2",
     "psutil",
     "tomli >= 1.1.0; python_version < '3.11'"
