@@ -1,5 +1,5 @@
 # Package dependencies
-carbon-black-cloud-sdk >= 1.5.4
+carbon-black-cloud-sdk >= 1.5.5
 tomli >= 1.1.0; python_version < '3.11'
 Jinja2
 psutil
