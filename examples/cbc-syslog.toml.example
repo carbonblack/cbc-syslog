@@ -139,6 +139,8 @@
 #
 # audit_logs_enabled = Whether you want to forward Audit logs - e.g. true
 #
+# proxy = The url to proxy server - e.g. "0.0.0.0:8889"
+#
 # [SourceName1]
 # server_url =
 # org_key =
@@ -146,6 +148,7 @@
 # custom_api_key =
 # alerts_enabled =
 # audit_logs_enabled =
+# proxy =
 
 #
 # At least one alert_rules is needed to match alerts multiple groups of rules can be added

@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 2.0.5
+
+**NEW:**
+* Added support to configure a proxy for Carbon Black Cloud requests
+
 ## Version 2.0.4
 
 **Bug Fixes**
