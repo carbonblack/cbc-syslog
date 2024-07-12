@@ -11,9 +11,11 @@
 
 """Tests for the Core commands."""
 
+import ipaddress
 import json
 import logging
 import pathlib
+import proxy
 import pytest
 import time
 
@@ -536,3 +538,31 @@ def test_convert(input, ini_file, valid_file, monkeypatch):
            "key = " in file1_lines[i] or "file_path = " in file1_lines[i]:
             continue
         assert file1_lines[i] == file2_lines[i]
+
+
+def test_proxy_enabled():
+    """Test proxy enabled"""
+    with proxy.Proxy(hostname=ipaddress.IPv6Address('::'), port=8889):
+        config = Config(str(CONFS_PATH.joinpath("single-tenant.toml")))
+
+        def alert_output(request):
+            """Alert output callable"""
+            if request.get("criteria", {}).get("backend_update_timestamp", {}) != {
+                "end": "2023-07-05T00:00:00.000000Z",
+                "start": "2023-07-01T00:00:00.000000Z"
+            }:
+                pytest.fail("Request time range did not match expected start and end time")
+
+            if request.get("time_range", {}) != {
+                "end": "2023-07-06T00:00:00.000000Z",
+                "start": "2023-06-30T00:00:00.000000Z"
+            }:
+                pytest.fail("Request time range did not match expected start and end time")
+
+            return GET_ALERTS_BULK(50, 50)
+
+        pytest.alert_search_response = alert_output
+
+        assert history(config, "2023-07-01T00:00:00.000Z", "2023-07-05T00:00:00.000Z")
+
+        assert len(pytest.recv_history) == 50

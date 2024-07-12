@@ -85,7 +85,8 @@ class CarbonBlackCloud:
                               org_key=source["org_key"],
                               token=(source["custom_api_key"] + "/" + source["custom_api_id"]),
                               integration_name=f"CBC_SYSLOG/{__version__}",
-                              ssl_verify=not SSL_VERIFY_TEST_MODE),
+                              ssl_verify=not SSL_VERIFY_TEST_MODE,
+                              proxy=source.get("proxy", None)),
             "alerts_enabled": source.get("alerts_enabled", False),
             "alert_rules": source.get("alert_rules", []),
             "audit_logs_enabled": source.get("audit_logs_enabled", False)

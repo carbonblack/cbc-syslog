@@ -145,7 +145,8 @@ def test_output(file_path, expected_params):
             "server_url": "http://0.0.0.0:5001",
             "alerts_enabled": False,
             "alert_rules": [{}],
-            'audit_logs_enabled': True
+            'audit_logs_enabled': True,
+            "proxy": None
         }]),
     ("multi-tenant.toml",
         [{
@@ -155,7 +156,8 @@ def test_output(file_path, expected_params):
             "server_url": "http://0.0.0.0:5001",
             "alerts_enabled": False,
             "alert_rules": [{}],
-            'audit_logs_enabled': False
+            'audit_logs_enabled': False,
+            "proxy": None
         }, {
             "custom_api_id": "RANDOM_ID",
             "custom_api_key": "RANDOM_SECRET",
@@ -170,7 +172,23 @@ def test_output(file_path, expected_params):
                 "type": ["WATCHLIST"],
                 "minimum_severity": 7
             }],
-            'audit_logs_enabled': False
+            'audit_logs_enabled': False,
+            "proxy": None
+        }]),
+    ("single-tenant-proxy.toml",
+        [{
+            "custom_api_id": "RANDOM_ID",
+            "custom_api_key": "RANDOM_SECRET",
+            "org_key": "SOME_ORG",
+            "server_url": "https://0.0.0.0:5001",
+            "alerts_enabled": True,
+            "alert_rules": [{
+                "minimum_severity": 3,
+                "policy_applied": True,
+                "type": ["CB_ANALYTICS"]
+            }],
+            'audit_logs_enabled': False,
+            "proxy": "0.0.0.0:8889"
         }]),
 ])
 def test_sources(file_path, expected_sources):

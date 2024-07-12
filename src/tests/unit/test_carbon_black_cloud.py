@@ -11,6 +11,8 @@
 
 """Tests for the Carbon Black Cloud object."""
 
+import ipaddress
+import proxy
 import pytest
 import logging
 from cbc_syslog.util import CarbonBlackCloud
@@ -304,3 +306,34 @@ def test_fetch_audit_logs_multiple_batches_short_circuit():
 
     audit_logs = cbcloud.fetch_audit_logs(5)
     assert len(audit_logs) == 1
+
+
+def test_proxy():
+    """Test CarbonBlackCloud proxy"""
+    source = {
+        "custom_api_id": "CUSTOM_ID",
+        "custom_api_key": "CUSTOM_KEY",
+        "org_key": "ORG_KEY",
+        "server_url": "https://0.0.0.0:5001",
+        "audit_logs_enabled": True,
+        "alerts_enabled": True,
+        "alert_rules": [{
+            "type": ["CB_ANALYTICS"],
+            "policy_id": [7113786],
+            "minimum_severity": 3,
+            "alert_notes_present": True,
+            "threat_notes_present": True,
+            "remote_is_private": False
+        }],
+        "proxy": "0.0.0.0:8889"
+    }
+    with proxy.Proxy(hostname=ipaddress.IPv6Address('::'), port=8889):
+        # Set Alert Response
+        pytest.alert_search_response = GET_ALERTS_SINGLE
+
+        end = datetime.now(timezone.utc) - timedelta(seconds=30)
+        start = end - timedelta(minutes=5)
+        cbcloud = CarbonBlackCloud(source)
+
+        alerts = cbcloud.fetch_alerts(start, end)
+        assert len(alerts) == 1

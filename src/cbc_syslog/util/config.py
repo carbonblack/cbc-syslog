@@ -359,6 +359,7 @@ class Config:
                     "alerts_enabled": section.get("alerts_enabled", False),
                     "alert_rules": section.get("alert_rules", [{}]),
                     "audit_logs_enabled": section.get("audit_logs_enabled", False),
+                    "proxy": section.get("proxy", None)
                 })
 
         return sources
