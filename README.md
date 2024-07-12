@@ -230,6 +230,8 @@ For more information on each section follow the guide below:
 
     d. Enable the desired data you would like to send for the organization
 
+    e. Optionally: Add a proxy server to route Carbon Black Cloud backend requests through `proxy = "0.0.0.0:8889"`
+
 7. If you set `alerts_enabled` to `true` then you will need to configure one or more `alert_rules`
 
     Each `alert_rules` is a separate request for alerts such that you can configure custom criteria for a desired usecase. See [Search Fields - Alert](https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/) for the fields marked **Searchable**.
@@ -297,7 +299,7 @@ The following fields are available for building the Syslog header
 * `{{datetime_legacy}}` - Uses current time with format e.g. Jan 18 11:07:53
 * `{{vendor}}` - CarbonBlack
 * `{{product}}` - CBCSyslog
-* `{{product_version}}` - Current CBC Syslog version e.g. 2.0.4
+* `{{product_version}}` - Current CBC Syslog version e.g. 2.0.5
 
 
 For the available Alert fields see [Search Fields - Alerts](https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields)

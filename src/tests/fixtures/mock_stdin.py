@@ -39,6 +39,7 @@ y
 y
 3
 n
+n
 """
 
 TEMPLATE_TCP_TLS = f"""{TMP_PATH}
@@ -67,6 +68,7 @@ y
 0
 5
 n
+n
 """
 
 TEMPLATE_UDP = f"""{TMP_PATH}
@@ -86,6 +88,7 @@ api_key
 n
 y
 8
+n
 y
 Source2
 defense-conferdeploy.net
@@ -95,6 +98,7 @@ api_key2
 n
 y
 3
+n
 n
 """
 
@@ -109,6 +113,8 @@ api_id
 api_key
 y
 n
+y
+0.0.0.0:8889
 n
 """
 

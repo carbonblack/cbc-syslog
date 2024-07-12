@@ -445,6 +445,10 @@ def wizard(output_file_path):
 
                 print("If you want to provide more rules or add additional filters check out the README for more information\n")
 
+            if input("Do you want to add a proxy (y or n): ").lower() == "y":
+                proxy_url = input("Provide the URL for the Proxy Server: ")
+                output_file.write(f"proxy = \"{proxy_url}\"\n")
+
             if input("Do you want to add another organization (y or n): ").lower() == "n":
                 break
     print(f"\nTo test your configuration use:\n"
