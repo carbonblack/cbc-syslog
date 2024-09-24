@@ -21,7 +21,6 @@ extras_require = {
         "cryptography",
         "pytest==7.2.1",
         "coverage==6.5.0",
-        "coveralls==3.3.1",
         "flake8==5.0.4",
         "flake8-colors==0.1.9",
         "flake8-docstrings==1.7.0",
