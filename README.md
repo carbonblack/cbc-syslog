@@ -234,7 +234,8 @@ For more information on each section follow the guide below:
 
 7. If you set `alerts_enabled` to `true` then you will need to configure one or more `alert_rules`
 
-    Each `alert_rules` is a separate request for alerts such that you can configure custom criteria for a desired usecase. See [Search Fields - Alert](https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/) for the fields marked **Searchable**.
+    Each `alert_rules` is a separate request for alerts such that you can configure custom criteria for a desired usecase. See [Search Fields - Alert](https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/) for the fields marked **Searchable**. All `alert_rules`
+   entries are equivalent to `criteria` in an Alerts API request.
 
     Example Alert Rules
 
@@ -246,13 +247,17 @@ For more information on each section follow the guide below:
         type = [ "CB_ANALYTICS" ]
         minimum_severity = 3
 
-    The key is the alert field you want to filter by and the value is a list of values you want to filter except `minimum_severity` which is a single integer. Each value is OR'd for a key and values are AND'd across keys e.g. `type:( WATCHLIST OR DEVICE_CONTROL) AND minimum_severity: 7`
+    The key is the alert field you want to filter by and the value is a list of values you want to filter except `minimum_severity` which is a single integer. Each value is OR'd for a key and values are AND'd across keys e.g. the first alert_rules entry would become `type:( WATCHLIST OR DEVICE_CONTROL) AND minimum_severity: 7`
 
-    If you want to fetch `ALL` alerts then use the following `alert_rules`
+    If you want to fetch `ALL` alerts then use the following `alert_rules`:
 
         [[SourceName1.alert_rules]]
         minimum_severity = 1
 
+    If you want to fetch all non-closed alerts then use the following `alert_rules`:
+
+        [[SourceName1.alert_rules]]
+        workflow_status = [ "OPEN", "IN_PROGRESS"]
 
 ### Creating a custom message with templates
 
