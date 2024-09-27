@@ -304,7 +304,7 @@ The following fields are available for building the Syslog header
 * `{{datetime_legacy}}` - Uses current time with format e.g. Jan 18 11:07:53
 * `{{vendor}}` - CarbonBlack
 * `{{product}}` - CBCSyslog
-* `{{product_version}}` - Current CBC Syslog version e.g. 2.0.5
+* `{{product_version}}` - Current CBC Syslog version e.g. 2.0.6
 
 
 For the available Alert fields see [Search Fields - Alerts](https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields)
