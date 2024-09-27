@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 2.0.6
+
+**Bug Fixes**
+* Add catch for epoch time transform with milliseconds
+
 ## Version 2.0.5
 
 **NEW:**
