@@ -251,7 +251,7 @@ def test_poll_audit_logs(wipe_tmp):
     poll(config)
 
     assert pytest.http_recv_data.decode("utf-8") == f"2023-07-05T00:01:00.000000Z localhost " \
-        f"CEF:1|CarbonBlack|CBCSyslog|{__version__}|Audit Logs|Logged in successfully|1|rt=1529332687006" \
+        f"CEF:1|CarbonBlack|CBCSyslog|{__version__}|Audit Logs|Logged in successfully|1|rt=Jun 18 2018 14:06:07" \
         f"\tdvchost=example.org\tduser=bs@carbonblack.com\tdvc=192.0.2.3\tcs4Label=Event_ID\tcs4=37075c01730511e89504c9ba022c3fbf"
 
 

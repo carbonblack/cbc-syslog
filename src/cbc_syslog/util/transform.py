@@ -96,7 +96,11 @@ class Transform:
                 if isinstance(data[field], str):
                     timestamp = datetime.strptime(data[field], "%Y-%m-%dT%H:%M:%S.%fZ")
                 elif isinstance(data[field], int):
-                    timestamp = datetime.fromtimestamp(data[field])
+                    # Try seconds first otherwise milliseconds
+                    try:
+                        timestamp = datetime.fromtimestamp(data[field])
+                    except ValueError:
+                        timestamp = datetime.fromtimestamp(data[field] / 1000)
                 else:
                     continue
                 defaulted_data[field] = timestamp.strftime(self.time_format)

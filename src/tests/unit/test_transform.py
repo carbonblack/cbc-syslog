@@ -16,6 +16,7 @@ from cbc_syslog.util import Transform
 
 from freezegun import freeze_time
 from tests.fixtures.mock_alerts import CB_ANALYTICS_ALERT
+from tests.fixtures.mock_audit_logs import AUDIT_LOGGED_IN
 
 
 @freeze_time("2023-05-01")
@@ -127,3 +128,22 @@ def test_render_with_invalid_time_format():
     expected_result = f"2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|{__version__}|R_NET_SERVER|" \
                       f"The application run.js acted as a network server.|3|rt=2023-05-03T11:18:36.184Z\tstart=2023-05-03T11:17:24.429Z"
     assert result == expected_result
+
+
+@freeze_time("2023-05-01")
+def test_render_custom_template_audit_log():
+    """Test render with custom template for Audit Log"""
+    config = {
+        "template": "{{datetime_utc}} localhost CEF:1|{{vendor}}|{{product}}|{{product_version}}"
+                    "|Audit Logs|{{description}}|1|{{extension}}",
+        "extension": {
+            "default": "rt={{eventTime}}\tdvchost={{orgName}}\tduser={{loginName}}\tdvc={{clientIp}}\tcs4Label=Event_ID\tcs4={{eventId}}"
+        },
+        "time_format": "%b %d %Y %H:%m:%S",
+        "time_fields": ["eventTime"]
+    }
+    transform = Transform(**config)
+    expected_result = f"2023-05-01T00:00:00.000000Z localhost CEF:1|CarbonBlack|CBCSyslog|{__version__}|Audit Logs|" \
+                      f"Logged in successfully|1|rt=Jun 18 2018 14:06:07	dvchost=example.org	duser=bs@carbonblack.com" \
+                      f"	dvc=192.0.2.3	cs4Label=Event_ID	cs4=37075c01730511e89504c9ba022c3fbf"
+    assert transform.render(AUDIT_LOGGED_IN) == expected_result
